@@ -409,7 +409,11 @@
         <!--<artifactId>kylin-jdbc</artifactId>-->
         <!--<version>2.3.0</version>-->
         <!--</dependency>-->
-
+        <dependency>
+            <groupId>com.cloudera</groupId>
+            <artifactId>ImpalaJDBC41</artifactId>
+            <version>2.6.3</version>
+        </dependency>
     </dependencies>
 
     <build>

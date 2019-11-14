@@ -50,6 +50,8 @@ public class ViewExecuteParam {
 
     private boolean nativeQuery = false;
 
+    private final String calculateFlag= "@calculate@";
+
     public ViewExecuteParam() {
     }
 
@@ -146,16 +148,25 @@ public class ViewExecuteParam {
             return String.join(EMPTY, func.trim(), PARENTHESES_START, column.trim(), PARENTHESES_END);
         } else {
             StringBuilder sb = new StringBuilder();
+            String field = ViewExecuteParam.getField(column, jdbcUrl, dbVersion);
             if ("COUNTDISTINCT".equals(func.trim().toUpperCase())) {
                 sb.append("COUNT").append(PARENTHESES_START).append("DISTINCT").append(SPACE);
-                sb.append(ViewExecuteParam.getField(column, jdbcUrl, dbVersion));
+                sb.append(field);
                 sb.append(PARENTHESES_END);
                 sb.append(" AS ").append(SqlUtils.getAliasPrefix(jdbcUrl, dbVersion)).append("COUNTDISTINCT").append(PARENTHESES_START);
                 sb.append(column);
                 sb.append(PARENTHESES_END).append(SqlUtils.getAliasSuffix(jdbcUrl, dbVersion));
-            } else {
+            }
+            else if(func.trim().toUpperCase().contains(calculateFlag.toUpperCase())){
+                sb.append(func.trim().replace(calculateFlag,PARENTHESES_START+field+PARENTHESES_END));
+                sb.append(" AS ").append(SqlUtils.getAliasPrefix(jdbcUrl, dbVersion));
                 sb.append(func.trim()).append(PARENTHESES_START);
-                sb.append(ViewExecuteParam.getField(column, jdbcUrl, dbVersion));
+                sb.append(column);
+                sb.append(PARENTHESES_END).append(SqlUtils.getAliasSuffix(jdbcUrl, dbVersion));
+            }
+            else {
+                sb.append(func.trim()).append(PARENTHESES_START);
+                sb.append(field);
                 sb.append(PARENTHESES_END);
                 sb.append(" AS ").append(SqlUtils.getAliasPrefix(jdbcUrl, dbVersion));
                 sb.append(func.trim()).append(PARENTHESES_START);

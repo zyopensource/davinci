@@ -31,6 +31,8 @@ public class Aggregator {
 
     private String func;
 
+    private Calculate calculate;
+
     public Aggregator() {
     }
 

@@ -6,7 +6,8 @@ import { Icon } from 'antd'
 import {
   AggregatorType,
   DragType,
-  IDataParamConfig
+  IDataParamConfig,
+  CalculateColumn
 } from '../Workbench/Dropbox'
 import { IDataParamProperty } from '../Workbench/OperatingPanel'
 import { IFieldFormatConfig } from '../Config/Format'
@@ -55,6 +56,7 @@ export interface IWidgetMetric {
   chart: IChartInfo
   field: IFieldConfig
   format: IFieldFormatConfig
+  calculate: CalculateColumn
 }
 
 export interface IWidgetSecondaryMetric {

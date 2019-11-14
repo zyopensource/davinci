@@ -6,7 +6,7 @@ import widgetlibs from '../../config'
 import { IDataRequestParams } from 'app/containers/Dashboard/Grid'
 import { IViewBase, IFormedView } from 'containers/View/types'
 import { ViewModelVisualTypes } from 'containers/View/constants'
-import Dropbox, { DropboxType, DropType, AggregatorType, IDataParamSource, IDataParamConfig, DragType, IDragItem} from './Dropbox'
+import Dropbox, { DropboxType, DropType, AggregatorType, IDataParamSource, IDataParamConfig, DragType, IDragItem,CalculateColumn} from './Dropbox'
 import { IWidgetProps, IChartStyles, IChartInfo, IPaginationParams, WidgetMode, RenderType, DimetionType } from '../Widget'
 import { IFieldConfig, getDefaultFieldConfig, FieldConfigModal } from '../Config/Field'
 import { IFieldFormatConfig, getDefaultFieldFormatConfig, FormatConfigModal } from '../Config/Format'
@@ -52,7 +52,7 @@ const styles = require('./Workbench.less')
 const defaultTheme = require('assets/json/echartsThemes/default.project.json')
 const defaultThemeColors = defaultTheme.theme.color
 const utilStyles = require('assets/less/util.less')
-
+import CalculateForm from './CalculateModal'
 export interface IDataParamProperty {
   title: string
   type: DropboxType
@@ -128,6 +128,7 @@ interface IOperatingPanelStates {
 
   computedConfigModalVisible: boolean
   selectedComputed: object
+  calculateModalVisible: boolean
 }
 
 export class OperatingPanel extends React.Component<IOperatingPanelProps, IOperatingPanelStates> {
@@ -163,7 +164,8 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
       categoryDragItems: [],
       valueDragItems: [],
       computedConfigModalVisible: false,
-      selectedComputed: null
+      selectedComputed: null,
+      calculateModalVisible: false,
     }
   }
 
@@ -685,7 +687,13 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
       formatModalVisible: true
     })
   }
-
+  private dropboxItemCalculate = (from: string) => (item: IDataParamSource) => {
+    this.setState({
+      currentEditingCommonParamKey: from,
+      currentEditingItem: item,
+      calculateModalVisible: true
+    })
+  }
   private saveFormatConfig = (formatConfig: IFieldFormatConfig) => {
     const {
       currentEditingCommonParamKey,
@@ -701,9 +709,46 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
     })
   }
 
+  private saveCalculateConfig = (calculate: CalculateColumn) => {
+    const {dataParams, styleParams, currentEditingCommonParamKey, currentEditingItem} = this.state
+    const prop = dataParams[currentEditingCommonParamKey]
+    currentEditingItem.calculate = calculate
+    if (currentEditingItem.agg.indexOf("@calculate@") != -1) {
+      currentEditingItem.agg = currentEditingItem.agg.split("@calculate@")[0] + "@calculate@" + calculate.symbol + calculate.expression
+    }
+    else {
+      currentEditingItem.agg = currentEditingItem.agg + "@calculate@" + calculate.symbol + calculate.expression
+
+    }
+    prop.items = [...prop.items]
+    this.setWidgetProps(dataParams, styleParams)
+    this.setState({
+      calculateModalVisible: false
+    })
+  }
+
+  private clearCalculateConfig = () => {
+    const {dataParams, styleParams, currentEditingCommonParamKey, currentEditingItem} = this.state
+    const prop = dataParams[currentEditingCommonParamKey]
+    currentEditingItem.calculate = null
+    if (currentEditingItem.agg.indexOf("@calculate@") != -1) {
+      currentEditingItem.agg = currentEditingItem.agg.split("@calculate@")[0]
+    }
+    prop.items = [...prop.items]
+    this.setWidgetProps(dataParams, styleParams)
+    this.setState({
+      calculateModalVisible: false
+    })
+  }
+
   private cancelFormatConfig = () => {
     this.setState({
       formatModalVisible: false
+    })
+  }
+  private cancelCalculateModal = () => {
+    this.setState({
+      calculateModalVisible: false
     })
   }
 
@@ -840,13 +885,15 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
       .filter((g) => g !== '指标名称')
     let aggregators = metrics.items.map((m) => ({
       column: decodeMetricName(m.name),
-      func: m.agg
+      func: m.agg,
+      calculate: m.calculate
     }))
     if (secondaryMetrics) {
       aggregators = aggregators.concat(secondaryMetrics.items
         .map((m) => ({
           column: decodeMetricName(m.name),
-          func: m.agg
+          func: m.agg,
+          calculate: m.calculate
         })))
     }
     if (color) {
@@ -860,35 +907,40 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
         .filter((l) => l.type === 'value')
         .map((l) => ({
           column: decodeMetricName(l.name),
-          func: l.agg
+          func: l.agg,
+          calculate: l.calculate
         })))
     }
     if (size) {
       aggregators = aggregators.concat(size.items
         .map((l) => ({
           column: decodeMetricName(l.name),
-          func: l.agg
+          func: l.agg,
+          calculate: l.calculate
         })))
     }
     if (xAxis) {
       aggregators = aggregators.concat(xAxis.items
         .map((l) => ({
           column: decodeMetricName(l.name),
-          func: l.agg
+          func: l.agg,
+          calculate: l.calculate
         })))
     }
     if (tip) {
       aggregators = aggregators.concat(tip.items
         .map((l) => ({
           column: decodeMetricName(l.name),
-          func: l.agg
+          func: l.agg,
+          calculate: l.calculate
         })))
     }
     if (yAxis) {
       aggregators = aggregators.concat(yAxis.items
         .map((l) => ({
           column: decodeMetricName(l.name),
-          func: l.agg
+          func: l.agg,
+          calculate: l.calculate
         })))
     }
 
@@ -1529,7 +1581,8 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
       controlConfigVisible,
       valueDragItems,
       computedConfigModalVisible,
-      selectedComputed
+      selectedComputed,
+      calculateModalVisible
     } = this.state
 
     const { metrics } = dataParams
@@ -1601,6 +1654,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
             onItemChangeAgg={this.getDropboxItemAggregator(k)}
             onItemChangeFieldConfig={this.dropboxItemChangeFieldConfig(k)}
             onItemChangeFormatConfig={this.dropboxItemChangeFormatConfig(k)}
+            onItemCalculate={this.dropboxItemCalculate(k)}
             onItemChangeColorConfig={this.dropboxItemChangeColorConfig}
             onItemChangeFilterConfig={this.dropboxItemChangeFilterConfig}
             onItemChangeChart={this.getDropboxItemChart}
@@ -2113,6 +2167,17 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
           />
         )
         ]}
+        {calculateModalVisible ?
+          <CalculateForm
+            key="CalculateFormModal"
+            visible={calculateModalVisible}
+            fields={valueDragItems}
+            onSave={this.saveCalculateConfig}
+            onClear={this.clearCalculateConfig}
+            onCancel={this.cancelCalculateModal}
+            calculate={this.state.currentEditingItem.calculate}
+          /> : ""}
+
         <Modal
           title="计算字段配置"
           wrapClassName="ant-modal-large"

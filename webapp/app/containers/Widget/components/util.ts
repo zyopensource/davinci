@@ -45,6 +45,7 @@ export function getAggregatorLocale (agg) {
     case 'stddev': return '标准偏差'
     case 'var': return '方差'
   }
+  return getAggregatorLocale(agg.split("@calculate@")[0])
 }
 
 export function encodeMetricName (name) {
@@ -53,6 +54,9 @@ export function encodeMetricName (name) {
 
 export function decodeMetricName (encodedName) {
   return encodedName.split(DEFAULT_SPLITER)[0]
+}
+export function decodeMetricAliasName (aliasName,encodedName) {
+  return aliasName != null && aliasName != '' ? aliasName : decodeMetricName(encodedName);
 }
 
 export function spanSize (arr, i, j) {

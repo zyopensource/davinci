@@ -24,7 +24,7 @@ import {
   getChartTooltipLabel,
   getTextWidth,
   getAggregatorLocale,
-  metricAxisLabelFormatter
+  metricAxisLabelFormatter, decodeMetricAliasName
 } from '../../components/util'
 import {
   getLegendOption,
@@ -219,8 +219,9 @@ export function getAixsMetrics (type, axisMetrics, data, stack, labelOption, sel
   const seriesAxis = []
   axisMetrics.forEach((m) => {
     const decodedMetricName = decodeMetricName(m.name)
+    const decodedMetricAliasName = decodeMetricAliasName(m.field.alias,m.name)
     const localeMetricName = `[${getAggregatorLocale(m.agg)}] ${decodedMetricName}`
-    seriesNames.push(decodedMetricName)
+    seriesNames.push(decodedMetricAliasName)
     const stackOption = stack && axisPosition.type === 'bar' && axisMetrics.length > 1 ? { stack: axisPosition.key } : null
     const itemData = data.map((g, index) => {
       const itemStyle = selectedItems && selectedItems.length && selectedItems.some((item) => item === index) ? {itemStyle: {normal: {opacity: 1, borderWidth: 6}}} : null
@@ -231,7 +232,7 @@ export function getAixsMetrics (type, axisMetrics, data, stack, labelOption, sel
     })
 
     seriesAxis.push({
-      name: decodedMetricName,
+      name: decodedMetricAliasName,
       type: axisPosition && axisPosition.type ? axisPosition.type : type === 'metrics' ? 'line' : 'bar',
       ...stackOption,
       yAxisIndex: type === 'metrics' ? 1 : 0,

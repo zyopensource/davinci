@@ -23,7 +23,7 @@ import {
   decodeMetricName,
   getChartTooltipLabel,
   getSizeValue,
-  getSizeRate
+  getSizeRate, decodeMetricAliasName
 } from '../../components/util'
 import {
   getMetricAxisOption,
@@ -266,8 +266,8 @@ export default function (chartProps: IChartProps, drillOptions?: any) {
   }
 
   return {
-    xAxis: getMetricAxisOption(xAxis, xAxisSplitLineConfig, decodeMetricName(metrics[0].name), 'x'),
-    yAxis: getMetricAxisOption(yAxis, yAxisSplitLineConfig, decodeMetricName(metrics[1].name)),
+    xAxis: getMetricAxisOption(xAxis, xAxisSplitLineConfig, decodeMetricAliasName(metrics[0].field.alias,metrics[0].name), 'x'),
+    yAxis: getMetricAxisOption(yAxis, yAxisSplitLineConfig, decodeMetricAliasName(metrics[1].field.alias,metrics[1].name)),
     series,
     tooltip: {
       formatter: getChartTooltipLabel('scatter', seriesData, { cols, metrics, color, tip })
