@@ -75,7 +75,7 @@ public class SourceUtils {
             connection = null;
         }
         try {
-            if (null == connection || connection.isClosed()) {
+            if (null == connection) {
                 log.info("connection is closed, retry get connection!");
                 releaseDataSource(jdbcSourceInfo);
                 dataSource = getDataSource(jdbcSourceInfo);
@@ -92,9 +92,7 @@ public class SourceUtils {
                 releaseDataSource(jdbcSourceInfo);
                 connection = null;
             }
-        }
-        catch (Exception e) {
-            // ignore
+        } catch (Exception e) {
         }
 
         if (null == connection) {
@@ -179,6 +177,13 @@ public class SourceUtils {
         if (!LoadSupportDataSourceRunner.getSupportDatasourceMap().containsKey(dataSourceName)) {
             throw new SourceException("Not supported data type: jdbcUrl=" + jdbcUrl);
         }
+
+        String urlPrefix = String.format(JDBC_PREFIX_FORMATER, dataSourceName);
+        String checkUrl = jdbcUrl.replaceFirst(DOUBLE_SLASH, EMPTY).replaceFirst(AT_SYMBOL, EMPTY);
+        if (urlPrefix.equals(checkUrl)) {
+            throw new SourceException("Communications link failure");
+        }
+
         return dataSourceName;
     }
 

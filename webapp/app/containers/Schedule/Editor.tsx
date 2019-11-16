@@ -52,7 +52,9 @@ import dashboardSaga from 'containers/Dashboard/sagas'
 import { Row, Col, Card, Button, Icon, Tooltip, message } from 'antd'
 import { FormComponentProps } from 'antd/lib/form/Form'
 
-import ScheduleBaseConfig, { ScheduleBaseFormProps } from './components/ScheduleBaseConfig'
+import ScheduleBaseConfig, {
+  ScheduleBaseFormProps
+} from './components/ScheduleBaseConfig'
 import ScheduleMailConfig from './components/ScheduleMailConfig'
 import ScheduleVizConfig from './components/ScheduleVizConfig'
 import { IRouteParams } from 'app/routes'
@@ -115,6 +117,7 @@ interface IScheduleEditorDispatchProps {
   onLoadScheduleDetail: (scheduleId: number) => void
   onAddSchedule: (schedule: ISchedule, resolve: () => void) => any
   onEditSchedule: (schedule: ISchedule, resolve: () => void) => any
+  onResetState: () => void
   onCheckUniqueName: (
     data: any,
     resolve: () => any,
@@ -133,6 +136,7 @@ const ScheduleEditor: React.FC<ScheduleEditorProps> = (props) => {
     onLoadDisplays,
     onLoadPortals,
     onLoadScheduleDetail,
+    onResetState,
     params,
     router
   } = props
@@ -143,6 +147,10 @@ const ScheduleEditor: React.FC<ScheduleEditorProps> = (props) => {
     onLoadPortals(+projectId)
     if (+scheduleId) {
       onLoadScheduleDetail(+scheduleId)
+    }
+
+    return () => {
+      onResetState()
     }
   }, [])
   const goBack = useCallback(() => {
@@ -157,19 +165,14 @@ const ScheduleEditor: React.FC<ScheduleEditorProps> = (props) => {
         return
       }
       const { contentList } = editingSchedule.config
-      const needLoadAllDashboards = contentList.some(({ contentType, id }) => {
-        if (contentType !== 'portal') {
-          return false // Display does not need to load slides currently
-        }
-        if (portals.findIndex((portal) => portal.id === id) < 0) {
-          return true // id from portal do not need to load portal's dashboards
-        }
-      })
-      if (needLoadAllDashboards) {
-        portals.forEach(({ id }) => {
-          onLoadDashboards(id)
+      // initial Dashboards loading by contentList Portal setting
+      contentList
+        .filter(({ contentType }) => contentType === 'portal')
+        .forEach(({ id }) => {
+          if (~portals.findIndex((portal) => portal.id === id)) {
+            onLoadDashboards(id)
+          }
         })
-      }
     },
     [portals, editingSchedule]
   )
@@ -329,6 +332,7 @@ const mapDispatchToProps = (dispatch) => ({
     dispatch(ScheduleActions.addSchedule(schedule, resolve)),
   onEditSchedule: (schedule, resolve) =>
     dispatch(ScheduleActions.editSchedule(schedule, resolve)),
+  onResetState: () => dispatch(ScheduleActions.resetScheduleState()),
   onCheckUniqueName: (data, resolve, reject) =>
     dispatch(checkNameUniqueAction('cronjob', data, resolve, reject)),
   onLoadSuggestMails: (keyword) =>

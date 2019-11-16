@@ -27,6 +27,12 @@ import React, {
 } from 'react'
 import ReactQuill, { Quill } from 'react-quill'
 import ImageResize from 'quill-image-resize-module'
+const BackgroundStyle = Quill.import('attributors/style/background')
+const ColorStyle = Quill.import('attributors/style/color')
+const SizeStyle = Quill.import('attributors/style/size')
+const FontStyle = Quill.import('attributors/style/font')
+const AlignStyle = Quill.import('attributors/style/align')
+const DirectionStyle = Quill.import('attributors/style/direction')
 import { Form, Row, Col, Input, Select, Icon, InputNumber, Spin } from 'antd'
 const FormItem = Form.Item
 const { Option } = Select
@@ -43,6 +49,14 @@ import {
 
 import 'react-quill/dist/quill.core.css'
 import 'react-quill/dist/quill.snow.css'
+
+Quill.register('modules/imageResize', ImageResize)
+Quill.register(BackgroundStyle, true)
+Quill.register(ColorStyle, true)
+Quill.register(SizeStyle, true)
+Quill.register(FontStyle, true)
+Quill.register(AlignStyle, true)
+Quill.register(DirectionStyle, true)
 
 const modules = {
   toolbar: [
@@ -88,10 +102,6 @@ export const ScheduleMailConfig: React.FC<IScheduleMailConfigProps> = (
       />
     </span>
   )
-
-  useEffect(() => {
-    Quill.register('modules/imageResize', ImageResize)
-  }, [])
 
   const resetMailList = useCallback(
     () => {
@@ -166,6 +176,7 @@ export const ScheduleMailConfig: React.FC<IScheduleMailConfigProps> = (
           initialValue: config.to
         })(
           <MailTag
+            allowCreate
             dataSource={mailList}
             onLoadDataSource={onLoadMailList}
             onBlur={resetMailList}
@@ -177,6 +188,7 @@ export const ScheduleMailConfig: React.FC<IScheduleMailConfigProps> = (
           initialValue: config.cc
         })(
           <MailTag
+            allowCreate
             dataSource={mailList}
             onLoadDataSource={onLoadMailList}
             onBlur={resetMailList}
@@ -189,6 +201,7 @@ export const ScheduleMailConfig: React.FC<IScheduleMailConfigProps> = (
             initialValue: config.bcc
           })(
             <MailTag
+              allowCreate
               dataSource={mailList}
               onLoadDataSource={onLoadMailList}
               onBlur={resetMailList}

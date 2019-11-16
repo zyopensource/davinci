@@ -22,7 +22,7 @@ import React, { useMemo, useCallback } from 'react'
 import { IDisplay } from 'containers/Display/types'
 import { IPortal } from 'containers/Portal'
 
-import { Row, Col, Card, Tree, Checkbox, Button, Popconfirm } from 'antd'
+import { Row, Col, Card, Tree, Checkbox, Button, Icon, Popconfirm } from 'antd'
 const CheckboxGroup = Checkbox.Group
 const { TreeNode } = Tree
 import { CheckboxOptionType } from 'antd/lib/checkbox'
@@ -42,6 +42,62 @@ interface IScheduleVizConfigProps {
 
 const portalNodeKeyPrefix = 'portal_'
 const dashboardNodeKeyPrefix = 'dashboard_'
+
+const getDashboardChildNodes = (
+  portalId: number,
+  mapDashboards: { [parentId: number]: IDashboard[] },
+  ancestorIds: number[] = [0]
+): [JSX.Element[], number[]] => {
+  const currentDashboardId = ancestorIds[ancestorIds.length - 1]
+  const childDashboards = mapDashboards[currentDashboardId]
+  if (!Array.isArray(childDashboards)) {
+    return [null, [currentDashboardId]]
+  }
+  let descendantIds = []
+  const descendantNodes = childDashboards.map((child) => {
+    const [childNodes, childIds] = getDashboardChildNodes(
+      portalId,
+      mapDashboards,
+      ancestorIds.concat(child.id)
+    )
+    descendantIds = descendantIds.concat(child.id).concat(childIds)
+    return (
+      <TreeNode
+        title={child.name}
+        icon={
+          <Icon type={mapDashboards[child.id] ? 'folder-open' : 'dot-chart'} />
+        }
+        key={`${dashboardNodeKeyPrefix}${child.id}`}
+        isLeaf={!childNodes}
+        dataRef={[portalId, ancestorIds, childIds]}
+      >
+        {childNodes}
+      </TreeNode>
+    )
+  })
+  return [descendantNodes, descendantIds]
+}
+
+const renderPortalDashboardsTreeNodes = (
+  portalId: number,
+  dashboards: IDashboard[]
+) => {
+  if (!dashboards) {
+    return null
+  }
+  const mapDashboards = dashboards.reduce<{ [parentId: number]: IDashboard[] }>(
+    (map, dashboard) => {
+      if (!map[dashboard.parentId]) {
+        map[dashboard.parentId] = []
+      }
+      map[dashboard.parentId].push(dashboard)
+      return map
+    },
+    {}
+  )
+  const [dashboardNodes] = getDashboardChildNodes(portalId, mapDashboards)
+  return dashboardNodes
+}
 
 const ScheduleVizConfig: React.FC<IScheduleVizConfigProps> = (props) => {
   const {
@@ -72,13 +128,14 @@ const ScheduleVizConfig: React.FC<IScheduleVizConfigProps> = (props) => {
         : value
             .filter(({ contentType }) => contentType === 'portal')
             .reduce<string[]>((acc, { id, items }) => {
+              // checked all Dashboards under this Portal
               if (!Array.isArray(items)) {
+                // check the Portal's validity
                 if (~portals.findIndex((portal) => portal.id === id)) {
                   acc.push(`${portalNodeKeyPrefix}${id}`)
-                } else {
-                  acc.push(`${dashboardNodeKeyPrefix}${id}`)
                 }
               } else {
+                // check the partial Dashboards under this Portal
                 items.map((dashboardId) => {
                   acc.push(`${dashboardNodeKeyPrefix}${dashboardId}`)
                 })
@@ -95,10 +152,12 @@ const ScheduleVizConfig: React.FC<IScheduleVizConfigProps> = (props) => {
 
   const loadPortalDashboards = useCallback(
     (portalTreeNode: AntTreeNode) => {
-      const portalId = +portalTreeNode.props.eventKey.slice(
-        portalNodeKeyPrefix.length
-      )
-      if (!portalDashboards[portalId]) {
+      const nodeKey = portalTreeNode.props.eventKey
+      const portalId = +nodeKey.slice(portalNodeKeyPrefix.length)
+      if (
+        nodeKey.includes(portalNodeKeyPrefix) &&
+        !portalDashboards[portalId]
+      ) {
         onLoadPortalDashboards(portalId)
       }
       return new Promise((resolve) => {
@@ -113,32 +172,46 @@ const ScheduleVizConfig: React.FC<IScheduleVizConfigProps> = (props) => {
       let newValue = [...value]
       const { checked, node } = e
       const { eventKey, dataRef } = node.props
+
+      // Portal Node
       if (eventKey.includes(portalNodeKeyPrefix)) {
         const portalId = +eventKey.slice(portalNodeKeyPrefix.length)
+        // remove this Portal value first
         newValue = newValue.filter(({ id }) => id !== portalId)
         if (checked) {
           newValue.push({
             contentType: 'portal',
             id: portalId,
-            items: undefined
+            items: undefined // undefined stands for dynamic check all dashboards
           })
           if (!portalDashboards[portalId]) {
             onLoadPortalDashboards(portalId)
           }
         }
-      } else if (eventKey.includes(dashboardNodeKeyPrefix)) {
+      }
+      // Dashboard Node
+      else if (eventKey.includes(dashboardNodeKeyPrefix)) {
+        const [portalId, ancestorIds, descendantIds] = dataRef
         const dashboardId = +eventKey.slice(dashboardNodeKeyPrefix.length)
         const portalIdx = newValue.findIndex(
-          ({ id, contentType }) => id === dataRef && contentType === 'portal'
+          ({ id, contentType }) => id === portalId && contentType === 'portal'
         )
         if (~portalIdx) {
           const portal = newValue[portalIdx]
+          const childDashboards = portalDashboards[portal.id]
           if (checked) {
-            portal.items = [...portal.items, dashboardId]
+            portal.items = portal.items
+              .filter((item) => !descendantIds.includes(item))
+              .concat(dashboardId)
           } else {
             portal.items = (
-              portal.items || portalDashboards[portal.id].map(({ id }) => id)
-            ).filter((id) => id !== dashboardId)
+              portal.items || childDashboards.map(({ id }) => id)
+            ).filter(
+              (id) =>
+                id !== dashboardId &&
+                !ancestorIds.includes(id) &&
+                !descendantIds.includes(id)
+            )
             if (!portal.items.length) {
               newValue.splice(portalIdx, 1)
             }
@@ -147,7 +220,7 @@ const ScheduleVizConfig: React.FC<IScheduleVizConfigProps> = (props) => {
           // new checked true
           newValue.push({
             contentType: 'portal',
-            id: dataRef,
+            id: portalId,
             items: [dashboardId]
           })
         }
@@ -173,36 +246,17 @@ const ScheduleVizConfig: React.FC<IScheduleVizConfigProps> = (props) => {
     [value, onChange]
   )
 
-  const clearSelection = useCallback(
-    (clearContentType: IScheduleVizItem['contentType']) => () => {
-      const newValue = value.filter(
-        ({ contentType }) => contentType !== clearContentType
-      )
-      onChange(newValue)
-    },
-    [value, onChange]
-  )
-
   return (
     <Row gutter={8}>
       <Col span={12}>
         <Card
           size="small"
-          title={
-            <Row type="flex" justify="space-between">
-              <span>Dashboard</span>
-              <Popconfirm
-                title="确认清除所有勾选项？"
-                onConfirm={clearSelection('portal')}
-              >
-                <Button size="small" type="link" icon="close" />
-              </Popconfirm>
-            </Row>
-          }
+          title="Dashboard"
         >
           <Tree
             checkable
             blockNode
+            showIcon
             checkedKeys={vizConfig.portalKeys}
             loadData={loadPortalDashboards}
             onCheck={checkPortalDashboards}
@@ -210,18 +264,11 @@ const ScheduleVizConfig: React.FC<IScheduleVizConfigProps> = (props) => {
             {(portals || []).map(({ id, name }) => (
               <TreeNode
                 title={name}
+                icon={<Icon type="layout" />}
                 key={`${portalNodeKeyPrefix}${id}`}
                 isLeaf={false}
               >
-                {portalDashboards[id] &&
-                  portalDashboards[id].map((dashboard) => (
-                    <TreeNode
-                      title={dashboard.name}
-                      key={`${dashboardNodeKeyPrefix}${dashboard.id}`}
-                      isLeaf={true}
-                      dataRef={id}
-                    />
-                  ))}
+                {renderPortalDashboardsTreeNodes(id, portalDashboards[id])}
               </TreeNode>
             ))}
           </Tree>
@@ -230,17 +277,7 @@ const ScheduleVizConfig: React.FC<IScheduleVizConfigProps> = (props) => {
       <Col span={12}>
         <Card
           size="small"
-          title={
-            <Row type="flex" justify="space-between">
-              <span>Display</span>
-              <Popconfirm
-                title="确认清除所有勾选项？"
-                onConfirm={clearSelection('display')}
-              >
-                <Button size="small" type="link" icon="close" />
-              </Popconfirm>
-            </Row>
-          }
+          title="Display"
         >
           {/* @TODO make it to tree select when has Display Slide feature */}
           <CheckboxGroup
