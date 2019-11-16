@@ -22,7 +22,7 @@ import { IChartProps } from '../../components/Chart'
 import {
   decodeMetricName,
   getChartTooltipLabel,
-  getAggregatorLocale
+  getAggregatorLocale, decodeMetricAliasName
 } from '../../components/util'
 import {
   getDimetionAxisOption,
@@ -208,8 +208,8 @@ export default function (chartProps: IChartProps) {
 
   return {
     xAxis: getDimetionAxisOption(xAxis, xAxisSplitLineConfig, xAxisData),
-    yAxis: getMetricAxisOption(yAxis, yAxisSplitLineConfig, metrics.map((m) => decodeMetricName(m.name)).join(` / `)),
-    series,
+    yAxis: getMetricAxisOption(yAxis, yAxisSplitLineConfig, metrics.map((m) => decodeMetricAliasName(m.field.alias,m.name)).join(` / `)),
+  series,
     tooltip,
     grid: getGridPositions({ showLegend: false }, seriesNames, '', false, yAxis, xAxis, xAxisData)
   }

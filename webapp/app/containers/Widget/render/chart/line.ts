@@ -22,6 +22,7 @@ import { IChartProps } from '../../components/Chart'
 import { DEFAULT_SPLITER } from 'app/globalConstants'
 import {
   decodeMetricName,
+  decodeMetricAliasName,
   getChartTooltipLabel,
   getAggregatorLocale
 } from '../../components/util'
@@ -139,7 +140,7 @@ export default function (chartProps: IChartProps, drillOptions?: any) {
     } else {
       const serieObj = {
         id: m.name,
-        name: decodedMetricName,
+        name: decodeMetricAliasName(m.field.alias,m.name),
         type: 'line',
         sampling: 'average',
         data: data.map((g, index) => {
@@ -197,7 +198,7 @@ export default function (chartProps: IChartProps, drillOptions?: any) {
       seriesData.push([...data])
     }
   })
-
+  // s.field.alias != null && s.field.alias.trim() != '' ? m.field.alias : decodedMetricName
   const seriesNames = series.map((s) => s.name)
 
   // dataZoomOptions = dataZoomThreshold > 0 && dataZoomThreshold < dataSource.length && {
@@ -239,7 +240,7 @@ export default function (chartProps: IChartProps, drillOptions?: any) {
     yAxis: getMetricAxisOption(
       yAxis,
       yAxisSplitLineConfig,
-      metrics.map((m) => decodeMetricName(m.name)).join(` / `)
+      metrics.map((m) => decodeMetricAliasName(m.field.alias,m.name)).join(` / `)
     ),
     series,
     tooltip: {
@@ -261,6 +262,5 @@ export default function (chartProps: IChartProps, drillOptions?: any) {
       xAxisData
     )
   }
-
   return options
 }

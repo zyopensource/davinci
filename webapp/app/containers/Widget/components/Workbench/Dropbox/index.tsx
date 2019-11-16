@@ -22,13 +22,21 @@ export type DropboxItemType = DragType | 'add'
 export type DropType = 'outside' | 'inside' | 'unmoved'
 export type AggregatorType = 'sum' | 'avg' | 'count' | 'COUNTDISTINCT' | 'max' | 'min' | 'median' | 'var' | 'dev'
 
+interface CalculateColumn {
+  symbol: string
+  expression?: string
+  isExpression?: boolean
+}
+
 interface IDataColumn {
   name: string
   from?: string
   sort?: IFieldSortConfig
-  agg?: AggregatorType
+  agg?: string
+  // agg?: AggregatorType
   field?: IFieldConfig
   format?: IFieldFormatConfig
+  calculate?: CalculateColumn
 }
 
 export interface IDataParamSource extends IDataColumn {
@@ -82,6 +90,7 @@ interface IDropboxProps {
   onItemRemove: (name: string) => (e) => void
   onItemSort: (item: IDataParamSource, sort: FieldSortTypes) => void
   onItemChangeAgg: (item: IDataParamSource, agg: AggregatorType) => void
+  onItemCalculate: (item: IDataParamSource) => void
   onItemChangeColorConfig: (item: IDataParamSource) => void
   onItemChangeFilterConfig: (item: IDataParamSource) => void
   onItemChangeFieldConfig: (item: IDataParamSource) => void
@@ -289,6 +298,7 @@ export class Dropbox extends React.PureComponent<IDropboxProps, IDropboxStates> 
       onItemChangeFilterConfig,
       onItemChangeFieldConfig,
       onItemChangeFormatConfig,
+      onItemCalculate,
       onItemChangeChart,
       onItemRemove
     } = this.props
@@ -372,6 +382,7 @@ export class Dropbox extends React.PureComponent<IDropboxProps, IDropboxStates> 
           onChangeAgg={onItemChangeAgg}
           onChangeFieldConfig={onItemChangeFieldConfig}
           onChangeFormatConfig={onItemChangeFormatConfig}
+          onCalculate={onItemCalculate}
           onChangeColorConfig={onItemChangeColorConfig}
           onChangeFilterConfig={onItemChangeFilterConfig}
           onChangeChart={onItemChangeChart}

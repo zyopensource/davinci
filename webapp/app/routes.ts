@@ -74,11 +74,11 @@ export default function createRoutes (store): IExtendedRouteProps[] {
           path: '/login',
           component: Login
         },
-        {
-          path: '/register',
-          name: 'register',
-          component: Register
-        },
+        // {
+        //   path: '/register',
+        //   name: 'register',
+        //   component: Register
+        // },
         {
           path: '/joinOrganization',
           name: 'joinOrganization',

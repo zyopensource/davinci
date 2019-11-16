@@ -96,14 +96,14 @@ public class LdapServiceImpl implements LdapService {
 
         DirContext ctx = null;
         try {
-            ctx = ldapTemplate.getContextSource().getContext(userDn, password);
+            ctx = ldapTemplate.getContextSource().getContext("cn="+username+",ou=persons,dc=pub,dc=org", password);
 
             List<LdapPerson> search = ldapTemplate.search(
-                    query().where("objectclass").is("person").and("sAMAccountName").is(username),
+                    query().where("objectclass").is("person").and("cn").is(username),
                     (AttributesMapper<LdapPerson>) attributes -> {
                         LdapPerson person = new LdapPerson();
-                        person.setName(attributes.get("cn").get().toString());
-                        person.setSAMAccountName(attributes.get("sAMAccountName").get().toString());
+                        person.setName(attributes.get("sn").get().toString());
+                        person.setSAMAccountName(attributes.get("cn").get().toString());
                         person.setEmail(userDn);
                         return person;
                     });
@@ -111,7 +111,7 @@ public class LdapServiceImpl implements LdapService {
             if (!CollectionUtils.isEmpty(search)) {
                 ldapPerson = search.get(0);
             }
-        } catch (Exception e) {
+        }  catch (Exception e) {
             e.printStackTrace();
         } finally {
             if (null != ctx) {

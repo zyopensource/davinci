@@ -27,6 +27,7 @@ interface IDropboxItemProps {
   onChangeFilterConfig: (item: IDataParamSource) => void
   onChangeChart: (item: IDataParamSource) => (chart: IChartInfo) => void
   onRemove: (e) => void
+  onCalculate: (item: IDataParamSource) => void
 }
 
 interface IDropboxItemStates {
@@ -70,6 +71,7 @@ export class DropboxItem extends React.PureComponent<IDropboxItemProps, IDropbox
       onChangeAgg,
       onChangeFieldConfig,
       onChangeFormatConfig,
+      onCalculate,
       onSort,
       onChangeColorConfig,
       onChangeFilterConfig } = this.props
@@ -94,14 +96,17 @@ export class DropboxItem extends React.PureComponent<IDropboxItemProps, IDropbox
       case 'sort':
         onSort(item as IDataParamSource, key as FieldSortTypes)
         break
+      case 'calculate':
+        onCalculate(item as IDataParamSource)
+        break
     }
   }
 
   public render () {
     const { container, item, dimetionsCount, metricsCount, onChangeChart, onRemove } = this.props
-    const { name: originalName, type, sort, agg, field } = item
+    const { name: originalName, type, sort, agg, field , calculate} = item
     const { dragging } = this.state
-
+    var calculateText = calculate == undefined ? "" : "(运算)"
     const name = type === 'value' ? decodeMetricName(originalName) : originalName
 
     let pivotChartSelector
@@ -134,8 +139,8 @@ export class DropboxItem extends React.PureComponent<IDropboxItemProps, IDropbox
     const aliasText = getFieldAlias(field, {})
     const content = (
       <p>
-        <Icon type="down" />
-        {agg ? ` [${getAggregatorLocale(agg)}] ${name} ` : ` ${name} `}
+        <Icon type="down"/>
+        {agg ? ` [${getAggregatorLocale(agg)}${calculateText}] ${name} ` : ` ${name} `}
         {aliasText && (
           <Tooltip title={desc} placement="right">
             {`[${aliasText}]`}

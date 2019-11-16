@@ -28,7 +28,7 @@ import {
 import {
   decodeMetricName,
   getChartTooltipLabel,
-  getAggregatorLocale
+  getAggregatorLocale, decodeMetricAliasName
 } from '../../components/util'
 import {
   getDimetionAxisOption,
@@ -210,7 +210,7 @@ export default function (chartProps: IChartProps, drillOptions) {
     } else {
       const serieObj = {
         id: m.name,
-        name: decodedMetricName,
+        name: decodeMetricAliasName(m.field.alias,m.name),
         type: 'bar',
         ...stackOption,
         sampling: 'average',
@@ -444,7 +444,7 @@ export default function (chartProps: IChartProps, drillOptions) {
   const metricAxisOption = getMetricAxisOption(
     yAxis,
     yAxisSplitLineConfig,
-    metrics.map((m) => decodeMetricName(m.name)).join(` / `),
+    metrics.map((m) => decodeMetricAliasName(m.field.alias,m.name)).join(` / `),
     'x',
     percentage
   )

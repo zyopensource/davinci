@@ -23,19 +23,6 @@
         <elasticsearch.version>5.1.2</elasticsearch.version>
     </properties>
 
-    <repositories>
-        <repository>
-            <id>elasticsearch-releases</id>
-            <url>https://artifacts.elastic.co/maven</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -422,12 +409,16 @@
         <!--<artifactId>kylin-jdbc</artifactId>-->
         <!--<version>2.3.0</version>-->
         <!--</dependency>-->
+        <dependency>
+            <groupId>com.cloudera</groupId>
+            <artifactId>ImpalaJDBC41</artifactId>
+            <version>2.6.3</version>
+        </dependency>
         
         <dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-aop</artifactId>
 		</dependency>
-
     </dependencies>
 
     <build>
