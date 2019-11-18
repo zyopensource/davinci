@@ -56,7 +56,7 @@ import org.springframework.util.LinkedCaseInsensitiveMap;
 import org.springframework.util.StringUtils;
 
 import edp.core.utils.SqlExtUtils;
-import edp.davinci.addons.DataProfileItem;
+import edp.davinci.addons.UserDataProfileItem;
 import edp.davinci.addons.UserDataProfileContextHolder;
 
 /**

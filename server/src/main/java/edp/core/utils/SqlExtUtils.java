@@ -18,7 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edp.core.exception.SourceException;
-import edp.davinci.addons.DataProfileItem;
+import edp.davinci.addons.UserDataProfileItem;
 import edp.davinci.addons.UserDataProfileContextHolder;
 import edp.davinci.core.enums.LogNameEnum;
 import net.sf.jsqlparser.JSQLParserException;
@@ -144,7 +144,7 @@ public class SqlExtUtils {
         	return originSql;
         }
         //
-		List<DataProfileItem> dataProfiles = UserDataProfileContextHolder.getDataProfiles();
+		List<UserDataProfileItem> dataProfiles = UserDataProfileContextHolder.getDataProfiles();
 		if(dataProfiles == null || dataProfiles.isEmpty()){
 			return originSql;
 		}
@@ -163,8 +163,8 @@ public class SqlExtUtils {
 		List<String> columnNames = SqlExtUtils.getColumnNames(dataSource, table.getName().toLowerCase());
 		
 		Expression newExpression = null;
-		Iterator<DataProfileItem> iterator = dataProfiles.iterator();
-		DataProfileItem item;
+		Iterator<UserDataProfileItem> iterator = dataProfiles.iterator();
+		UserDataProfileItem item;
 		while(iterator.hasNext()){
 			item =iterator.next();
 			if(!columnNames.contains(item.getFieldName().toLowerCase()))continue;
@@ -180,7 +180,7 @@ public class SqlExtUtils {
 			for (Join join : joins) {
 				table = (Table) join.getRightItem();
 				columnNames = SqlExtUtils.getColumnNames(dataSource, table.getName().toLowerCase());
-				for (DataProfileItem item2 : dataProfiles) {
+				for (UserDataProfileItem item2 : dataProfiles) {
 					if(!columnNames.contains(item2.getFieldName().toLowerCase()))continue;
 					newExpression = appendDataProfileCondition(table, join.getOnExpression(), item2);
 					join.setOnExpression(newExpression);
@@ -193,15 +193,11 @@ public class SqlExtUtils {
 		if(sqls.length == 2){
 			newSql = sqls[1].replace(INNER_SQL_EXPR, newSql);
 		}
-		System.out.println("-----------------ORIGIN SQL-----------------------");
-		System.out.println(originSql);
-		System.out.println("-----------------NEW SQL-----------------------");
-		System.out.println(newSql);
-		
+		optLogger.debug("rebuildDataProfile SQL \nORIGIN:{}\nNEW:{}",originSql,newSql);
 		return newSql;
 	}
 	
-	private static Expression appendDataProfileCondition(Table table,Expression orginExpression,DataProfileItem item){
+	private static Expression appendDataProfileCondition(Table table,Expression orginExpression,UserDataProfileItem item){
 		Expression newExpression = null;
 		Column column = new Column(table, item.getFieldName());
 		if (item.getFieldValues().length == 1) {

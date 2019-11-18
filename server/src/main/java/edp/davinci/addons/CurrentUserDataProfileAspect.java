@@ -10,8 +10,18 @@ import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.stereotype.Component;
 
+import edp.core.exception.ServerException;
 import edp.davinci.model.User;
 
+/**
+ * 
+ * <br>
+ * Class Name   : CurrentUserDataProfileAspect
+ *
+ * @author jiangwei
+ * @version 1.0.0
+ * @date 2019年11月18日
+ */
 @Aspect // 切面注解
 @Component
 public class CurrentUserDataProfileAspect {
@@ -31,11 +41,13 @@ public class CurrentUserDataProfileAspect {
 				break;
 			}
 		}
-		if(user == null)return;
-		//TODO 加载用户数据权限维度数据
-		List<DataProfileItem> dataProfiles = new ArrayList<DataProfileItem>();
-		dataProfiles.add(new DataProfileItem("account_id", new String[]{"2155","13233"}));
-		UserDataProfileContextHolder.set(dataProfiles);
+		if(user == null || user.getUserDataProfile() == null)return;
+		UserDataProfile userDataProfile = user.getUserDataProfile();
+		if(!userDataProfile.isAllPrivileges() 
+				&& (userDataProfile.getProfileItems() == null || userDataProfile.getProfileItems().isEmpty())){
+			throw new ServerException("not assign any data permissions");
+		}
+        UserDataProfileContextHolder.set(userDataProfile.getProfileItems());
 	}
 	
 	@After(value = "pointcut()")

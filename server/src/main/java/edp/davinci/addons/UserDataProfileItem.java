@@ -1,14 +1,23 @@
 package edp.davinci.addons;
 
-public class DataProfileItem {
+/**
+ * 
+ * <br>
+ * Class Name   : DataProfileItem
+ *
+ * @author jiangwei
+ * @version 1.0.0
+ * @date 2019年11月18日
+ */
+public class UserDataProfileItem {
 
 	String fieldName;
 	String[] fieldValues;
 	
-	public DataProfileItem() {}
+	public UserDataProfileItem() {}
 	
 	
-	public DataProfileItem(String fieldName, String[] fieldValues) {
+	public UserDataProfileItem(String fieldName, String[] fieldValues) {
 		this.fieldName = fieldName;
 		this.fieldValues = fieldValues;
 	}
