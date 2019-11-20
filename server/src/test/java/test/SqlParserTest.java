@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edp.core.utils.SqlExtUtils;
-import edp.davinci.addons.UserDataProfileItem;
 import edp.davinci.addons.UserDataProfileContextHolder;
+import edp.davinci.addons.UserDataProfileItem;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.StringValue;
@@ -21,10 +21,15 @@ public class SqlParserTest {
 	public static void main(String[] args) throws JSQLParserException {
 		
 		List<UserDataProfileItem> dataProfiles = new ArrayList<UserDataProfileItem>();
-		dataProfiles.add(new UserDataProfileItem("account_id", new String[]{"1001","10002"}));
-		dataProfiles.add(new UserDataProfileItem("app_id", new String[]{"1001"}));
-		dataProfiles.add(new UserDataProfileItem("seller_id", new String[]{"9999"}));
+		UserDataProfileItem profileItem = new UserDataProfileItem();
+		profileItem.setName("app_id");
+		profileItem.setValues(new String[]{"1001"});
+		dataProfiles.add(profileItem);
 		
+		profileItem = new UserDataProfileItem();
+		profileItem.setName("app_id");
+		dataProfiles.add(profileItem);
+
 		UserDataProfileContextHolder.set(dataProfiles);
 		
 		String sql = "SELECT  `account_id` FROM (SELECT log.* FROM balance_trade_logs log) T GROUP BY `account_id`";

@@ -167,7 +167,7 @@ public class SqlExtUtils {
 		UserDataProfileItem item;
 		while(iterator.hasNext()){
 			item =iterator.next();
-			if(!columnNames.contains(item.getFieldName().toLowerCase()))continue;
+			if(!columnNames.contains(item.getName().toLowerCase()))continue;
 			newExpression = appendDataProfileCondition(table, selectBody.getWhere(), item);
 			selectBody.setWhere(newExpression);
 			//主表已经处理的条件，join表不在处理
@@ -181,7 +181,7 @@ public class SqlExtUtils {
 				table = (Table) join.getRightItem();
 				columnNames = SqlExtUtils.getColumnNames(dataSource, table.getName().toLowerCase());
 				for (UserDataProfileItem item2 : dataProfiles) {
-					if(!columnNames.contains(item2.getFieldName().toLowerCase()))continue;
+					if(!columnNames.contains(item2.getName().toLowerCase()))continue;
 					newExpression = appendDataProfileCondition(table, join.getOnExpression(), item2);
 					join.setOnExpression(newExpression);
 				}
@@ -199,15 +199,15 @@ public class SqlExtUtils {
 	
 	private static Expression appendDataProfileCondition(Table table,Expression orginExpression,UserDataProfileItem item){
 		Expression newExpression = null;
-		Column column = new Column(table, item.getFieldName());
-		if (item.getFieldValues().length == 1) {
+		Column column = new Column(table, item.getName());
+		if (item.getValues().length == 1) {
 			EqualsTo equalsTo = new EqualsTo();
 			equalsTo.setLeftExpression(column);
-			equalsTo.setRightExpression(new StringValue(item.getFieldValues()[0]));
+			equalsTo.setRightExpression(new StringValue(item.getValues()[0]));
 			newExpression = orginExpression == null ? equalsTo : new AndExpression(orginExpression, equalsTo);
 		} else {
-			ExpressionList expressionList = new ExpressionList(new ArrayList<>(item.getFieldValues().length));
-			for (String value : item.getFieldValues()) {
+			ExpressionList expressionList = new ExpressionList(new ArrayList<>(item.getValues().length));
+			for (String value : item.getValues()) {
 				expressionList.getExpressions().add(new StringValue(value));
 			}
 			InExpression inExpression = new InExpression(column, expressionList);

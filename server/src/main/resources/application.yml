@@ -27,9 +27,7 @@ spring:
       max-request-size: 1024MB
       max-file-size: 1024MB
       enabled: true
-  
-  profiles:
-    active: dev
+
   config:
     location: classpath:/
     additional-location: file:${DAVINCI3_HOME}/config/

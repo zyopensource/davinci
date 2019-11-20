@@ -22,7 +22,9 @@ package edp;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.http.client.OkHttp3ClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
 @EnableAutoConfiguration(exclude = {org.springframework.boot.autoconfigure.gson.GsonAutoConfiguration.class})
@@ -34,5 +36,21 @@ public class DavinciServerApplication {
         SpringApplication.run(DavinciServerApplication.class, args);
     }
 
+    public RestTemplate restTemplate(){
+    	OkHttp3ClientHttpRequestFactory factory = new OkHttp3ClientHttpRequestFactory();  
+        factory.setReadTimeout(10000);//ms  
+        factory.setConnectTimeout(1000);//ms 
+        
+        RestTemplate restTemplate = new RestTemplate(factory);
+//        restTemplate.getInterceptors().add(new ClientHttpRequestInterceptor() {
+//			@Override
+//			public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
+//					throws IOException {
+//				request.getHeaders().add(headerName, headerValue);
+//				return execution.execute(request, body);
+//			}
+//		});
+		return restTemplate;
+    }
 }
 

@@ -19,11 +19,10 @@
 
 package edp.davinci.model;
 
-import java.util.Date;
-
 import edp.core.model.TokenDetail;
-import edp.davinci.addons.UserDataProfile;
 import lombok.Data;
+
+import java.util.Date;
 
 @Data
 public class User extends TokenDetail {
@@ -50,8 +49,6 @@ public class User extends TokenDetail {
     private Date updateTime;
 
     private Long updateBy;
-    
-    private UserDataProfile userDataProfile;
 
     public User() {
     }

@@ -137,3 +137,6 @@ statistic:
   # You can use external elasticsearch storage [127.0.0.1:9300], default davinci datasouce
   elastic_urls:
   elastic_index_prefix:
+  
+external:
+  data-profile-service-baseurl: http://127.0.0.1:8086

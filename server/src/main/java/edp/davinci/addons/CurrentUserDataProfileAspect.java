@@ -1,6 +1,5 @@
 package edp.davinci.addons;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.aspectj.lang.JoinPoint;
@@ -8,10 +7,12 @@ import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import edp.core.exception.ServerException;
 import edp.davinci.model.User;
+import edp.davinci.service.ExternalService;
 
 /**
  * 
@@ -25,6 +26,9 @@ import edp.davinci.model.User;
 @Aspect // 切面注解
 @Component
 public class CurrentUserDataProfileAspect {
+	
+	@Autowired
+    private ExternalService externalService;
 
 	@Pointcut("execution(* edp.davinci.service.impl.ViewServiceImpl.getData(..)) || execution(* edp.davinci.service.impl.ViewServiceImpl.executeSql(..))")
 	public void pointcut() {
@@ -41,13 +45,14 @@ public class CurrentUserDataProfileAspect {
 				break;
 			}
 		}
-		if(user == null || user.getUserDataProfile() == null)return;
-		UserDataProfile userDataProfile = user.getUserDataProfile();
-		if(!userDataProfile.isAllPrivileges() 
-				&& (userDataProfile.getProfileItems() == null || userDataProfile.getProfileItems().isEmpty())){
+		if(user == null)return;
+		
+		//获取外部权限数据
+        List<UserDataProfileItem> userDataProfiles = externalService.queryUserDataProfiles(user.getEmail());
+        if(userDataProfiles == null || userDataProfiles.isEmpty()){
 			throw new ServerException("not assign any data permissions");
 		}
-        UserDataProfileContextHolder.set(userDataProfile.getProfileItems());
+        UserDataProfileContextHolder.set(userDataProfiles);
 	}
 	
 	@After(value = "pointcut()")
