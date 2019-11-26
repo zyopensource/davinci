@@ -138,5 +138,9 @@ statistic:
   elastic_urls:
   elastic_index_prefix:
   
-external:
-  data-profile-service-baseurl: http://127.0.0.1:8086
+data-profile:
+  service-baseurl: http://127.0.0.1:8086
+  field-column-mappings: department=department_id;region=region_id
+  
+  
+  

@@ -3,12 +3,17 @@
  */
 package edp.davinci.service.impl;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.EnvironmentAware;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -26,13 +31,15 @@ import edp.davinci.service.ExternalService;
  * @date 2019年11月18日
  */
 @Service
-public class ExternalServiceImpl implements ExternalService{
+public class ExternalServiceImpl implements ExternalService,EnvironmentAware{
 
 	@Autowired
 	private RestTemplate restTemplate;
 
-	@Value("${external.data-profile-service-baseurl}/user/profiles?u=")
+	@Value("${data-profile.service-baseurl}/user/profiles?u=")
 	private String queryUserDataProfileUrl;
+	//后续考虑映射多个字段
+	private Map<String, String> dataProfileColumnMappings = new HashMap<>();
 
 	@Override
 	public List<UserDataProfileItem> queryUserDataProfiles(String email) {
@@ -45,7 +52,23 @@ public class ExternalServiceImpl implements ExternalService{
 		
 		if(lists != null && !lists.isEmpty()){
 			lists = lists.stream().filter(e -> e.isAllPrivileges() || e.getValues().length > 0).collect(Collectors.toList());
+			for (UserDataProfileItem item : lists) {
+				if(item.getName() != null && dataProfileColumnMappings.containsKey(item.getName())){
+					item.setName(dataProfileColumnMappings.get(item.getName()));
+				}
+			}
 		}
 		return lists;
+	}
+
+
+	@Override
+	public void setEnvironment(Environment env) {
+		String property = env.getProperty("data-profile.field-column-mappings");
+		String[] level1s = StringUtils.splitByWholeSeparator(property, ";");
+		for (String str : level1s) {
+			String[] level2s = StringUtils.splitByWholeSeparator(str, "=");
+			dataProfileColumnMappings.put(level2s[0].trim(), level2s[1].trim());
+		}
 	}
 }
