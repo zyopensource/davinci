@@ -692,6 +692,7 @@ public class ProjectServiceImpl implements ProjectService {
      * @param user
      * @return
      */
+    @Override
     public ProjectPermission getProjectPermission(ProjectDetail projectDetail, User user) {
         if (isMaintainer(projectDetail, user)) {
             return ProjectPermission.adminPermission();

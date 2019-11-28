@@ -31,9 +31,11 @@ import edp.davinci.core.enums.VizEnum;
 import edp.davinci.dao.*;
 import edp.davinci.dto.dashboardDto.*;
 import edp.davinci.dto.projectDto.ProjectDetail;
+import edp.davinci.dto.projectDto.ProjectInfo;
 import edp.davinci.dto.projectDto.ProjectPermission;
 import edp.davinci.dto.roleDto.VizVisibility;
 import edp.davinci.model.*;
+import edp.davinci.service.DashboardPortalService;
 import edp.davinci.service.DashboardService;
 import edp.davinci.service.ProjectService;
 import edp.davinci.service.ShareService;
@@ -62,6 +64,9 @@ public class DashboardServiceImpl extends VizCommonService implements DashboardS
     private DashboardPortalMapper dashboardPortalMapper;
 
     @Autowired
+    private DashboardPortalService dashboardPortalService;
+
+    @Autowired
     private RelRoleDashboardWidgetMapper relRoleDashboardWidgetMapper;
 
     @Autowired
@@ -84,6 +89,62 @@ public class DashboardServiceImpl extends VizCommonService implements DashboardS
             return !id.equals(dashboardId);
         }
         return null != dashboardId && dashboardId.longValue() > 0L;
+    }
+
+    /**
+     * 获取当前项目所有dashboard列表
+     *
+     * @param project
+     * @param user
+     * @return
+     */
+    private List<GlobalDashboard> getAllDashboardsByProject(Project project, User user) throws NotFoundException, UnAuthorizedExecption, ServerException {
+        List<GlobalDashboard> globalDashboards = new ArrayList<>();
+        List<DashboardPortal> dashboardPortals = dashboardPortalService.getDashboardPortals(project.getId(), user);
+        if(dashboardPortals == null){
+            return globalDashboards;
+        }
+        for (DashboardPortal dashboardPortal : dashboardPortals) {
+            List<Dashboard> dashboardList = getDashboards(dashboardPortal.getId(), user);
+            if (dashboardList != null && dashboardList.size() > 0) {
+                for(Dashboard dashboard :dashboardList){
+                    GlobalDashboard globalDashboard = new GlobalDashboard();
+                    globalDashboard.setId(dashboard.getId());
+                    globalDashboard.setName(dashboard.getName());
+                    globalDashboard.setType(dashboard.getType());
+                    globalDashboard.setDashboardPortalId(dashboardPortal.getId());
+                    globalDashboard.setDashboardPortalName(dashboardPortal.getName());
+                    globalDashboard.setDashboardPortalUrlId(dashboardPortal.getAvatar());
+                    globalDashboard.setProjectId(project.getId());
+                    globalDashboard.setProjectName(project.getName());
+                    globalDashboard.setProjectUrlId(project.getPic());
+                    globalDashboards.add(globalDashboard);
+                    globalDashboard.setWidgets(widgetMapper.getByDashboard(dashboard.getId()));
+                }
+            }
+        }
+        return globalDashboards;
+    }
+
+    /**
+     * 获取权限内所有dashboard列表
+     *
+     * @param user
+     * @return
+     */
+    @Override
+    public List<GlobalDashboard> getGlobalDashboards(User user) throws NotFoundException, UnAuthorizedExecption, ServerException {
+
+        List<ProjectInfo> projects = projectService.getProjects(user);
+
+        List<GlobalDashboard> globalDashboards = new ArrayList<>();
+        for (ProjectInfo projectInfo : projects) {
+            List<GlobalDashboard> globalDashboardList = getAllDashboardsByProject(projectInfo, user);
+            if (globalDashboardList != null && globalDashboardList.size() > 0) {
+                globalDashboards.addAll(globalDashboardList);
+            }
+        }
+        return globalDashboards;
     }
 
     /**

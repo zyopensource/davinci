@@ -37,6 +37,7 @@ import {
 
 import { Dropdown, Menu, Icon } from 'antd'
 import { IDownloadRecord } from 'app/containers/App/types'
+import GlobalDashboardFind from "containers/GlobalDashboardFind";
 
 const styles = require('./Navigator.less')
 
@@ -96,6 +97,8 @@ export function Navigator (props: INavigatorProps) {
           </Link>
         </div>
       </div>
+      <div className={styles.headRight}>
+      <GlobalDashboardFind/>
       <ul className={styles.tools}>
         <li>
           <DownloadList
@@ -105,17 +108,12 @@ export function Navigator (props: INavigatorProps) {
           />
         </li>
         <li>
-          <Icon type="file-text" onClick={goDoc} />
-        </li>
-        <li>
-          <Icon type="github" onClick={goGithub}/>
-        </li>
-        <li>
           <Dropdown overlay={menu} trigger={['click']} placement="bottomCenter">
             <Icon type="user" />
           </Dropdown>
         </li>
       </ul>
+      </div>
     </nav>
   )
 }
