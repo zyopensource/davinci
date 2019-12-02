@@ -1,0 +1,5 @@
+
+export const LOAD_GLOBAL_DASHBOARDS = 'davinci/GlobalDashboardFind/LOAD_GLOBAL_DASHBOARDS'
+export const LOAD_GLOBAL_DASHBOARDS_SUCCESS = 'davinci/GlobalDashboardFind/LOAD_GLOBAL_DASHBOARDS_SUCCESS'
+export const LOAD_GLOBAL_DASHBOARDS_FAILURE = 'davinci/GlobalDashboardFind/LOAD_GLOBAL_DASHBOARDS_FAILURE'
+

@@ -25,10 +25,7 @@ import edp.davinci.common.controller.BaseController;
 import edp.davinci.core.common.Constants;
 import edp.davinci.core.common.ResultMap;
 import edp.davinci.dto.dashboardDto.*;
-import edp.davinci.model.Dashboard;
-import edp.davinci.model.DashboardPortal;
-import edp.davinci.model.MemDashboardWidget;
-import edp.davinci.model.User;
+import edp.davinci.model.*;
 import edp.davinci.service.DashboardPortalService;
 import edp.davinci.service.DashboardService;
 import io.swagger.annotations.Api;
@@ -59,6 +56,20 @@ public class DashboardController extends BaseController {
 
     @Autowired
     private DashboardService dashboardService;
+    /**
+     * 获取权限内所有dashboardPortal列表
+     *
+     * @param user
+     * @param request
+     * @return
+     */
+    @ApiOperation(value = "get global dashboards")
+    @GetMapping("/global/dashboards")
+    public ResponseEntity getAllDashboards(@ApiIgnore @CurrentUser User user,
+                                           HttpServletRequest request)  {
+        List<GlobalDashboard> dashboards = dashboardService.getGlobalDashboards(user);
+        return ResponseEntity.ok(new ResultMap(tokenUtils).successAndRefreshToken(request).payloads(dashboards));
+    }
 
     /**
      * 获取dashboardPortal列表

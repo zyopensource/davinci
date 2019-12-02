@@ -31,6 +31,7 @@ import DisplayList, { IDisplay } from '../Display/components/DisplayList'
 import { makeSelectCurrentProject } from '../Projects/selectors'
 import { IProject } from '../Projects'
 import { excludeRoles } from '../Projects/actions'
+import AutoCompleteData from 'components/AutoCompleteData'
 
 interface IParams {
   pid: number
@@ -53,7 +54,9 @@ interface IVizProps extends RouteComponentProps<{}, IParams> {
 }
 
 interface IVizStates {
-  collapse: {dashboard: boolean, display: boolean}
+  collapse: {dashboard: boolean, display: boolean},
+  portalDatas: any[],
+  displayDatas: any[]
 }
 
 export class Viz extends React.Component<IVizProps, IVizStates> {
@@ -65,6 +68,9 @@ export class Viz extends React.Component<IVizProps, IVizStates> {
         dashboard: true,
         display: true
       }
+      ,
+      portalDatas: null,
+      displayDatas: null
     }
   }
 
@@ -74,6 +80,7 @@ export class Viz extends React.Component<IVizProps, IVizStates> {
     onLoadDisplays(projectId)
     onLoadPortals(projectId)
   }
+
 
   private goToDashboard = (portal?: any) => () => {
     const { params } = this.props
@@ -101,7 +108,45 @@ export class Viz extends React.Component<IVizProps, IVizStates> {
       }
     })
   }
-
+  // 面板过滤
+  private onSelect = (data) => {
+    const {portals, displays} = this.props
+    if(data == null){
+      this.setState({portalDatas: portals, displayDatas: displays})
+      return
+    }
+    let portalDatas = []
+    let displayDatas = []
+    for (let i in portals) {
+      if (data.indexOf(portals[i].name) != -1) {
+        portalDatas.push(portals[i])
+      }
+    }
+    for (let i in displays) {
+      if (data.indexOf(displays[i].name) != -1) {
+        displayDatas.push(displays[i])
+      }
+    }
+    this.setState({portalDatas: portalDatas, displayDatas: displayDatas})
+  }
+  //获取搜索下拉数据源
+ private getInputDataSource = ()=>{
+   const {displays, portals} = this.props
+   let dataSource =[]
+   if(portals != undefined){
+     for(let i in portals){
+       dataSource.push(portals[i].name)
+     }
+   }
+   if(displays.length != undefined){
+     for(let i in displays){
+       if(displays[i].name != undefined){
+         dataSource.push(displays[i].name)
+       }
+     }
+   }
+   return  Array.from(new Set(dataSource))
+ }
   public render () {
     const {
       displays, params, onAddDisplay, onEditDisplay, onDeleteDisplay,
@@ -116,6 +161,10 @@ export class Viz extends React.Component<IVizProps, IVizStates> {
       [styles.listPadding]: true,
       [utilStyles.hide]: !this.state.collapse.display
     })
+    let dataSource =this.getInputDataSource()
+    let {portalDatas,displayDatas} = this.state
+    if(portalDatas == null){portalDatas = portals}
+    if(displayDatas == null){displayDatas = displays}
     return (
       <Container>
         <Helmet title="Viz" />
@@ -131,6 +180,12 @@ export class Viz extends React.Component<IVizProps, IVizStates> {
           </Row>
         </Container.Title>
         <Container.Body>
+          <AutoCompleteData
+            style={{width: '25%',marginBottom:'20px'}}
+            placeholder="Search the Dashboar/Display"
+            dataSource={dataSource}
+            onSelect={this.onSelect}
+          />
           <Box>
             <Box.Header>
               <Box.Title>
@@ -145,7 +200,7 @@ export class Viz extends React.Component<IVizProps, IVizStates> {
               <PortalList
                 currentProject={currentProject}
                 projectId={projectId}
-                portals={portals}
+                portals={portalDatas}
                 onPortalClick={this.goToDashboard}
                 onAdd={onAddPortal}
                 onEdit={onEditPortal}
@@ -170,7 +225,7 @@ export class Viz extends React.Component<IVizProps, IVizStates> {
               <DisplayList
                 currentProject={currentProject}
                 projectId={projectId}
-                displays={displays}
+                displays={displayDatas}
                 onDisplayClick={this.goToDisplay}
                 onAdd={onAddDisplay}
                 onEdit={onEditDisplay}

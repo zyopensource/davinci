@@ -25,16 +25,15 @@ import edp.core.exception.UnAuthorizedExecption;
 import edp.davinci.core.service.CheckEntityService;
 import edp.davinci.dto.dashboardDto.*;
 import edp.davinci.dto.roleDto.VizVisibility;
-import edp.davinci.model.Dashboard;
-import edp.davinci.model.MemDashboardWidget;
-import edp.davinci.model.Role;
-import edp.davinci.model.User;
+import edp.davinci.model.*;
 
 import java.util.List;
 
 public interface DashboardService extends CheckEntityService {
 
     List<Dashboard> getDashboards(Long portalId, User user) throws NotFoundException, UnAuthorizedExecption, ServerException;
+
+    List<GlobalDashboard> getGlobalDashboards(User user) throws NotFoundException, UnAuthorizedExecption, ServerException;
 
     DashboardWithMem getDashboardMemWidgets(Long portalId, Long dashboardId, User user) throws NotFoundException, UnAuthorizedExecption, ServerException;
 
