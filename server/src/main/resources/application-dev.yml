@@ -139,7 +139,7 @@ statistic:
   elastic_index_prefix:
   
 data-profile:
-  service-baseurl: http://127.0.0.1:8086
+  service-baseurl: http://api-dev.zytest.net/api/dataperms
   field-column-mappings: department=department_id;region=region_id
   
   

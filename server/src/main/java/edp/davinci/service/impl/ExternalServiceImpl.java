@@ -3,6 +3,7 @@
  */
 package edp.davinci.service.impl;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +15,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -43,11 +47,19 @@ public class ExternalServiceImpl implements ExternalService,EnvironmentAware{
 
 	@Override
 	public List<UserDataProfileItem> queryUserDataProfiles(String email) {
+		
+		//TODO from cache
 		String url = queryUserDataProfileUrl + email;
 		ParameterizedTypeReference<List<UserDataProfileItem>> arearesponseType = new ParameterizedTypeReference<List<UserDataProfileItem>>() {
 		};
+		
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("x-invoker-appid", "davinci");
+		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+		HttpEntity<String> entity = new HttpEntity<String>(null, headers);
+		
 		List<UserDataProfileItem> lists = restTemplate
-				.exchange(url, HttpMethod.GET, null, arearesponseType)
+				.exchange(url, HttpMethod.GET, entity, arearesponseType)
 				.getBody();
 		
 		if(lists != null && !lists.isEmpty()){
@@ -71,4 +83,5 @@ public class ExternalServiceImpl implements ExternalService,EnvironmentAware{
 			dataProfileColumnMappings.put(level2s[0].trim(), level2s[1].trim());
 		}
 	}
+
 }
