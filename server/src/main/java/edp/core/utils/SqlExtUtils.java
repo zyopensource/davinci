@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +47,8 @@ public class SqlExtUtils {
 
 	private static final Logger optLogger = LoggerFactory.getLogger(LogNameEnum.BUSINESS_OPERATION.getName());
 	
+	private static final String[] SQL_FORMAT_SEARCH_LIST = new String[]{"\n"};
+	private static final String[] SQL_FORMAT_REPLACE_LIST = new String[]{""};
 	private static final String SELECT_PREFIX = "SELECT";
 	private static final String LEFT_PARENTHESE = "(";
 	private static final String RIGHT_PARENTHESE = ")";
@@ -53,16 +56,16 @@ public class SqlExtUtils {
 	private static final String REGEX_BLANK = "\\s+";
 	private static Pattern sqlJoinPattern = Pattern.compile("\\W+JOIN\\W+");
 	//
-	private static Pattern wrapperSqlPattern = Pattern.compile("\\W+FROM\\W+\\((SELECT|select).*\\)\\s+T\\s+");
+	private static Pattern wrapperSqlPattern = Pattern.compile("FROM.*\\(.*(SELECT|select).*\\)\\s+T\\s+");
 
 	private static Map<String, List<String>> tableColumns = new HashMap<>();
 	
 	private static List<String> filterColumns = new ArrayList<>();
 	
-//	static{
-//		tableColumns.put("t_user", Arrays.asList("id","name"));
-//		tableColumns.put("balance_trade_logs", Arrays.asList("account_id","seller_id","app_id"));
-//	}
+	static{
+		tableColumns.put("mid_netschool_course_feedback_info", java.util.Arrays.asList("city_name","student_score_num"));
+		tableColumns.put("balance_trade_logs", java.util.Arrays.asList("account_id","seller_id","app_id"));
+	}
 
 	public static List<String> getColumnNames(DataSource dataSource, String tableName) {
 		tableName = tableName.toLowerCase();
@@ -134,6 +137,7 @@ public class SqlExtUtils {
 	}
 	
 	public static String[] resolveWrappersql(String sql){
+		sql = StringUtils.replaceEach(sql, SQL_FORMAT_SEARCH_LIST, SQL_FORMAT_REPLACE_LIST);
 		Matcher matcher = wrapperSqlPattern.matcher(sql);
 		if(matcher.find()){
 			String innerSql = matcher.group().trim();
@@ -166,12 +170,19 @@ public class SqlExtUtils {
 		Table table = (Table) selectBody.getFromItem();
 		List<String> columnNames = SqlExtUtils.getColumnNames(dataSource, table.getName().toLowerCase());
 		//判断是否包含权限
+		boolean containFilterColumn = false;
+		boolean matchAny = false;
 		for (String filterColumn : filterColumns) {
-			if(columnNames.contains(filterColumn) && !dataProfiles.containsKey(filterColumn)){
+			containFilterColumn = columnNames.contains(filterColumn);
+			if(!matchAny && containFilterColumn){
+				matchAny = true;
+			}
+			if(containFilterColumn && !dataProfiles.containsKey(filterColumn)){
 				throw new ServerException(String.format("未分配字段[%s]权限", filterColumn));
 			}
 		}
-		
+		//如果不包含需要过滤的列，直接返回
+		if(!matchAny)return originSql;
 		
 		Expression newExpression = null;
 		Iterator<UserDataProfileItem> iterator = dataProfiles.values().iterator();
