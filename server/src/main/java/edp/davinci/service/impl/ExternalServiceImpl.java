@@ -3,10 +3,12 @@
  */
 package edp.davinci.service.impl;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
@@ -21,6 +23,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import edp.core.utils.SqlExtUtils;
 import edp.davinci.addons.UserDataProfileItem;
@@ -38,6 +43,12 @@ import edp.davinci.service.ExternalService;
 @Service
 public class ExternalServiceImpl implements ExternalService,EnvironmentAware{
 
+	static Cache<String, Object> cache = CacheBuilder
+			.newBuilder()
+			.maximumSize(1000)
+			.expireAfterWrite(300, TimeUnit.SECONDS)
+			.build();
+	
 	@Autowired
 	private RestTemplate restTemplate;
 
@@ -48,8 +59,13 @@ public class ExternalServiceImpl implements ExternalService,EnvironmentAware{
 
 	@Override
 	public List<UserDataProfileItem> queryUserDataProfiles(String email) {
+		//from cache
+		String key = email;
+		List<UserDataProfileItem> lists = (List<UserDataProfileItem>) cache.getIfPresent(key);
+		if(lists != null){
+			return lists;
+		}
 		
-		//TODO from cache
 		String url = queryUserDataProfileUrl + email;
 		ParameterizedTypeReference<List<UserDataProfileItem>> arearesponseType = new ParameterizedTypeReference<List<UserDataProfileItem>>() {
 		};
@@ -59,7 +75,7 @@ public class ExternalServiceImpl implements ExternalService,EnvironmentAware{
 		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 		HttpEntity<String> entity = new HttpEntity<String>(null, headers);
 		
-		List<UserDataProfileItem> lists = restTemplate
+		lists = restTemplate
 				.exchange(url, HttpMethod.GET, entity, arearesponseType)
 				.getBody();
 		
@@ -71,6 +87,10 @@ public class ExternalServiceImpl implements ExternalService,EnvironmentAware{
 				}
 			}
 		}
+		
+		if(lists == null)lists = new ArrayList<>(0);
+		cache.put(key, lists);
+		
 		return lists;
 	}
 

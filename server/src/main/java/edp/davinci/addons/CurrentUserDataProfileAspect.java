@@ -33,7 +33,9 @@ public class CurrentUserDataProfileAspect {
 	@Autowired
     private ExternalService externalService;
 
-	@Pointcut("execution(* edp.davinci.service.impl.ViewServiceImpl.getData(..)) || execution(* edp.davinci.service.impl.ViewServiceImpl.executeSql(..))")
+	@Pointcut("execution(* edp.davinci.service.impl.ViewServiceImpl.getData(..)) "
+			+ "|| execution(* edp.davinci.service.impl.ViewServiceImpl.executeSql(..)) "
+			+ "|| execution(* edp.davinci.service.impl.ViewServiceImpl.getDistinctValue(..))")
 	public void pointcut() {
 		
 	}
@@ -53,7 +55,7 @@ public class CurrentUserDataProfileAspect {
 		//获取外部权限数据
         List<UserDataProfileItem> userDataProfiles = externalService.queryUserDataProfiles(user.getEmail());
         Map<String, UserDataProfileItem> map = new HashMap<String, UserDataProfileItem>(userDataProfiles == null ? 0 : userDataProfiles.size());
-        if(userDataProfiles != null){
+        if(!userDataProfiles.isEmpty()){
 			for (UserDataProfileItem item : userDataProfiles) {
 				map.put(item.getName(), item);
 			}
