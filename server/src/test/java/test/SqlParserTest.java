@@ -1,7 +1,7 @@
 package test;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import edp.core.utils.SqlExtUtils;
 import edp.davinci.addons.UserDataProfileContextHolder;
@@ -20,15 +20,20 @@ public class SqlParserTest {
 
 	public static void main(String[] args) throws JSQLParserException {
 		
-		List<UserDataProfileItem> dataProfiles = new ArrayList<UserDataProfileItem>();
+		Map<String, UserDataProfileItem> dataProfiles = new HashMap<String, UserDataProfileItem>();
+		
 		UserDataProfileItem profileItem = new UserDataProfileItem();
 		profileItem.setName("app_id");
 		profileItem.setValues(new String[]{"1001"});
-		dataProfiles.add(profileItem);
+		dataProfiles.put("app_id",profileItem);
 		
 		profileItem = new UserDataProfileItem();
-		profileItem.setName("app_id");
-		dataProfiles.add(profileItem);
+		profileItem.setName("account_id");
+		profileItem.setValues(new String[]{"1002","1003"});
+		dataProfiles.put("account_id",profileItem);
+		
+		SqlExtUtils.addFilterColumn("app_id");
+		SqlExtUtils.addFilterColumn("account_id");
 
 		UserDataProfileContextHolder.set(dataProfiles);
 		

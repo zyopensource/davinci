@@ -1,6 +1,6 @@
 package edp.davinci.addons;
 
-import java.util.List;
+import java.util.Map;
 
 /**
  * 
@@ -14,17 +14,17 @@ import java.util.List;
  */
 public class UserDataProfileContextHolder {
 
-	private static ThreadLocal<List<UserDataProfileItem>> contextHolder = new ThreadLocal<>();
+	private static ThreadLocal<Map<String, UserDataProfileItem>> contextHolder = new ThreadLocal<>();
 	
-	public static void set(List<UserDataProfileItem> items){
-		contextHolder.set(items);
+	public static void set(Map<String, UserDataProfileItem> map){
+		contextHolder.set(map);
 	}
 	
 	public static void unset(){
 		contextHolder.remove();
 	}
 	
-	public static List<UserDataProfileItem> getDataProfiles(){
+	public static Map<String, UserDataProfileItem> getDataProfiles(){
 		return contextHolder.get() == null ? null : contextHolder.get();
 	}
 }

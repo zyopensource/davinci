@@ -22,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import edp.core.utils.SqlExtUtils;
 import edp.davinci.addons.UserDataProfileItem;
 import edp.davinci.service.ExternalService;
 
@@ -81,6 +82,8 @@ public class ExternalServiceImpl implements ExternalService,EnvironmentAware{
 		for (String str : level1s) {
 			String[] level2s = StringUtils.splitByWholeSeparator(str, "=");
 			dataProfileColumnMappings.put(level2s[0].trim(), level2s[1].trim());
+			//
+			SqlExtUtils.addFilterColumn(level2s[1].trim());
 		}
 	}
 

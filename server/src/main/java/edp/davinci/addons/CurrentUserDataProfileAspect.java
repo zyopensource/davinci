@@ -1,6 +1,9 @@
 package edp.davinci.addons;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.After;
@@ -49,10 +52,13 @@ public class CurrentUserDataProfileAspect {
 		
 		//获取外部权限数据
         List<UserDataProfileItem> userDataProfiles = externalService.queryUserDataProfiles(user.getEmail());
-        if(userDataProfiles == null || userDataProfiles.isEmpty()){
-			throw new ServerException("not assign any data permissions");
+        Map<String, UserDataProfileItem> map = new HashMap<String, UserDataProfileItem>(userDataProfiles == null ? 0 : userDataProfiles.size());
+        if(userDataProfiles != null){
+			for (UserDataProfileItem item : userDataProfiles) {
+				map.put(item.getName(), item);
+			}
 		}
-        UserDataProfileContextHolder.set(userDataProfiles);
+        UserDataProfileContextHolder.set(map);
 	}
 	
 	@After(value = "pointcut()")

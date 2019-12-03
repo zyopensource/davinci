@@ -17,9 +17,10 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edp.core.exception.ServerException;
 import edp.core.exception.SourceException;
-import edp.davinci.addons.UserDataProfileItem;
 import edp.davinci.addons.UserDataProfileContextHolder;
+import edp.davinci.addons.UserDataProfileItem;
 import edp.davinci.core.enums.LogNameEnum;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Expression;
@@ -42,8 +43,10 @@ import net.sf.jsqlparser.statement.select.Select;
  */
 public class SqlExtUtils {
 
+
 	private static final Logger optLogger = LoggerFactory.getLogger(LogNameEnum.BUSINESS_OPERATION.getName());
 	
+	private static final String SELECT_PREFIX = "SELECT";
 	private static final String LEFT_PARENTHESE = "(";
 	private static final String RIGHT_PARENTHESE = ")";
 	private static final String INNER_SQL_EXPR = "{innerSQL}";
@@ -54,9 +57,11 @@ public class SqlExtUtils {
 
 	private static Map<String, List<String>> tableColumns = new HashMap<>();
 	
+	private static List<String> filterColumns = new ArrayList<>();
+	
 //	static{
-//		tableColumns.put("t_user", Arrays.asList("account_id","app_id"));
-//		tableColumns.put("t_account", Arrays.asList("account_id","seller_id"));
+//		tableColumns.put("t_user", Arrays.asList("id","name"));
+//		tableColumns.put("balance_trade_logs", Arrays.asList("account_id","seller_id","app_id"));
 //	}
 
 	public static List<String> getColumnNames(DataSource dataSource, String tableName) {
@@ -140,15 +145,14 @@ public class SqlExtUtils {
 	}
 	
 	public static String rebuildSqlWithUserDataProfile(DataSource dataSource, String originSql){
-        if(!originSql.toUpperCase().trim().startsWith("SELECT")){
-        	return originSql;
-        }
         //
-		List<UserDataProfileItem> dataProfiles = UserDataProfileContextHolder.getDataProfiles();
-		if(dataProfiles == null || dataProfiles.isEmpty()){
+		Map<String, UserDataProfileItem> dataProfiles = UserDataProfileContextHolder.getDataProfiles();
+		if(dataProfiles == null){
 			return originSql;
 		}
-		
+		if(!originSql.toUpperCase().trim().startsWith(SELECT_PREFIX)){
+        	return originSql;
+        }
 		//
 		String[] sqls = SqlExtUtils.resolveWrappersql(originSql);
 		Select select = null;
@@ -161,9 +165,16 @@ public class SqlExtUtils {
 		PlainSelect selectBody = (PlainSelect) select.getSelectBody();
 		Table table = (Table) selectBody.getFromItem();
 		List<String> columnNames = SqlExtUtils.getColumnNames(dataSource, table.getName().toLowerCase());
+		//判断是否包含权限
+		for (String filterColumn : filterColumns) {
+			if(columnNames.contains(filterColumn) && !dataProfiles.containsKey(filterColumn)){
+				throw new ServerException(String.format("未分配字段[%s]权限", filterColumn));
+			}
+		}
+		
 		
 		Expression newExpression = null;
-		Iterator<UserDataProfileItem> iterator = dataProfiles.iterator();
+		Iterator<UserDataProfileItem> iterator = dataProfiles.values().iterator();
 		UserDataProfileItem item;
 		while(iterator.hasNext()){
 			item =iterator.next();
@@ -180,7 +191,7 @@ public class SqlExtUtils {
 			for (Join join : joins) {
 				table = (Table) join.getRightItem();
 				columnNames = SqlExtUtils.getColumnNames(dataSource, table.getName().toLowerCase());
-				for (UserDataProfileItem item2 : dataProfiles) {
+				for (UserDataProfileItem item2 : dataProfiles.values()) {
 					if(!columnNames.contains(item2.getName().toLowerCase()))continue;
 					newExpression = appendDataProfileCondition(table, join.getOnExpression(), item2);
 					join.setOnExpression(newExpression);
@@ -215,6 +226,10 @@ public class SqlExtUtils {
 		}
 		
 		return newExpression;
+	}
+	
+	public static void addFilterColumn(String column){
+		filterColumns.add(column);
 	}
 
 }
