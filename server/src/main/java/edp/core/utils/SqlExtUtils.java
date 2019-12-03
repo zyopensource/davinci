@@ -63,13 +63,13 @@ public class SqlExtUtils {
 	private static List<String> filterColumns = new ArrayList<>();
 	
 	static{
-		tableColumns.put("mid_netschool_course_feedback_info", java.util.Arrays.asList("city_name","student_score_num"));
-		tableColumns.put("balance_trade_logs", java.util.Arrays.asList("account_id","seller_id","app_id"));
+		//tableColumns.put("mid_netschool_course_feedback_info", java.util.Arrays.asList("city_name","student_score_num"));
+		//tableColumns.put("balance_trade_logs", java.util.Arrays.asList("account_id","seller_id","app_id"));
 	}
 
 	public static List<String> getColumnNames(DataSource dataSource, String tableName) {
 		tableName = tableName.toLowerCase();
-		List<String> columns = tableColumns.get(tableName.toLowerCase());
+		List<String> columns = tableColumns.get(tableName);
 		if (columns == null) {
 			columns = parseAndCacheColumnNames(dataSource, tableName);
 		}
