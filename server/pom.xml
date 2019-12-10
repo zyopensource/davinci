@@ -427,7 +427,12 @@
             <scope>system</scope>
             <systemPath>/Library/Java/JavaVirtualMachines/jdk1.8.0_121.jdk/Contents/Home/lib/tools.jar</systemPath>
         </dependency> -->
-        
+        <!--企业微信接入-->
+        <dependency>
+            <groupId>com.zy.framework.spring</groupId>
+            <artifactId>spring-base-core-wx</artifactId>
+            <version>1.0.0</version>
+        </dependency>
     </dependencies>
     
     <repositories>
