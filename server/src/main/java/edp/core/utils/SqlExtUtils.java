@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.sql.DataSource;
@@ -50,21 +49,19 @@ public class SqlExtUtils {
 	private static final String[] SQL_FORMAT_SEARCH_LIST = new String[]{"\n"};
 	private static final String[] SQL_FORMAT_REPLACE_LIST = new String[]{""};
 	private static final String SELECT_PREFIX = "SELECT";
-	private static final String LEFT_PARENTHESE = "(";
-	private static final String RIGHT_PARENTHESE = ")";
 	private static final String INNER_SQL_EXPR = "{innerSQL}";
 	private static final String REGEX_BLANK = "\\s+";
+	private static final String INNER_SQL_RIGHT_PARENTHESE = ") T";
 	private static Pattern sqlJoinPattern = Pattern.compile("\\W+JOIN\\W+");
 	//
-	private static Pattern wrapperSqlPattern = Pattern.compile("FROM.*\\(.*(SELECT|select).*\\)\\s+T\\s+");
-
+	private static Pattern selectSpliterPattern = Pattern.compile("\\(\\s*SELECT",Pattern.CASE_INSENSITIVE);
+	
 	private static Map<String, List<String>> tableColumns = new HashMap<>();
 	
 	private static List<String> filterColumns = new ArrayList<>();
 	
 	static{
 		//tableColumns.put("mid_netschool_course_feedback_info", java.util.Arrays.asList("city_name","student_score_num"));
-		//tableColumns.put("balance_trade_logs", java.util.Arrays.asList("account_id","seller_id","app_id"));
 	}
 
 	public static List<String> getColumnNames(DataSource dataSource, String tableName) {
@@ -138,11 +135,17 @@ public class SqlExtUtils {
 	
 	public static String[] resolveWrappersql(String sql){
 		sql = StringUtils.replaceEach(sql, SQL_FORMAT_SEARCH_LIST, SQL_FORMAT_REPLACE_LIST);
-		Matcher matcher = wrapperSqlPattern.matcher(sql);
-		if(matcher.find()){
-			String innerSql = matcher.group().trim();
-			innerSql = innerSql.substring(innerSql.indexOf(LEFT_PARENTHESE) + 1);
-			innerSql = innerSql.substring(0,innerSql.lastIndexOf(RIGHT_PARENTHESE));
+		String[] sqlParts = selectSpliterPattern.split(sql);
+		
+		String innerSql = null;
+		for (String sqlPart : sqlParts) {
+			if(sqlPart.contains(INNER_SQL_RIGHT_PARENTHESE)){
+				sqlParts = StringUtils.splitByWholeSeparator(sqlPart, ") T");
+				innerSql = SELECT_PREFIX + sqlParts[0];
+				break;
+			}
+		}
+		if(innerSql != null){
 			return new String[]{innerSql,sql.replace(innerSql, INNER_SQL_EXPR)};
 		}
 		return new String[]{sql};

@@ -7,6 +7,10 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.commons.lang.StringUtils;
 
 import edp.core.utils.SqlExtUtils;
 import edp.davinci.addons.UserDataProfileContextHolder;
@@ -42,15 +46,11 @@ public class SqlParserTest {
 
 		UserDataProfileContextHolder.set(dataProfiles);
 		
-		String sql = "SELECT  `account_id` FROM (SELECT log.* FROM balance_trade_logs log) T GROUP BY `account_id`";
+		String sql = "SELECT  `student_score_num` FROM (SELECT log.* FROM mid_netschool_course_feedback_info log) T GROUP BY `student_score_num`";
 		
 		sql = "SELECT city_name, sum( student_score_num) / sum( attendance ) AS 'sum@calculate@/sum(attendance)(student_score_num)', sum( student_follow_count ) / sum( student_num ) AS 'sum@calculate@/sum(student_num)(student_follow_count)', sum( report_view_count ) / sum( student_num ) AS 'sum@calculate@/sum(student_num)(report_view_count)', sum( report_view_count ) / sum( student_score_num ) AS 'sum@calculate@/sum(student_score_num)(report_view_count)' FROM( SELECT *, CASE WHEN class_average IS NULL THEN 0 ELSE class_average END 'class_average_int', cast( comeback_count_1 AS INT ) AS comeback_count_1_int, cast( comeback_count_2 AS INT ) AS comeback_count_2_int, CASE WHEN course_name LIKE \"%乐学%\" THEN '乐学' WHEN course_name LIKE \"%乐学A%\" THEN '乐学A' WHEN course_name LIKE \"%励学%\" THEN '励学' WHEN course_name LIKE \"%励学A%\" THEN '励学A' WHEN course_name LIKE \"%博学%\" THEN '博学' WHEN course_name LIKE \"%博学A%\" THEN '博学A' WHEN course_name LIKE \"%3A%\" THEN '3A' WHEN course_name LIKE \"%励学思维%\" THEN '励学思维' WHEN course_name LIKE \"%博学思维%\" THEN '博学思维' ELSE 'null' END 班型 FROM mid_netschool_course_feedback_info ) T GROUP BY city_name";
-		//sql = readToString("/Users/jiangwei/Desktop/1.sql");
-		String profileSql = SqlExtUtils.rebuildSqlWithUserDataProfile(null,sql);
-		System.out.println(profileSql);
-		
-		
-		
+		sql = readToString("/Users/jiangwei/Desktop/1.sql");
+		SqlExtUtils.rebuildSqlWithUserDataProfile(null,sql);
 	}
 
 	private static void test0() throws JSQLParserException {
