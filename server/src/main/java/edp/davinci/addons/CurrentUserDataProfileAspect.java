@@ -1,6 +1,5 @@
 package edp.davinci.addons;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +12,6 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import edp.core.exception.ServerException;
 import edp.davinci.model.User;
 import edp.davinci.service.ExternalService;
 
@@ -30,6 +28,7 @@ import edp.davinci.service.ExternalService;
 @Component
 public class CurrentUserDataProfileAspect {
 	
+	private static final String _ALL = "_ALL";
 	@Autowired
     private ExternalService externalService;
 
@@ -57,6 +56,9 @@ public class CurrentUserDataProfileAspect {
         Map<String, UserDataProfileItem> map = new HashMap<String, UserDataProfileItem>(userDataProfiles == null ? 0 : userDataProfiles.size());
         if(!userDataProfiles.isEmpty()){
 			for (UserDataProfileItem item : userDataProfiles) {
+				if(_ALL.equals(item.getName())){
+					return;
+				}
 				map.put(item.getName(), item);
 			}
 		}
