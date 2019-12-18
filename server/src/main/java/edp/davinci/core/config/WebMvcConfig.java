@@ -55,7 +55,7 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
     @Value("${file.web_resources}")
     private String webResources;
 
-    /**
+     /**
      * 登录校验拦截器
      *
      * @return
