@@ -1,5 +1,6 @@
 package edp.davinci.addons;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -25,6 +26,7 @@ public class UserDataProfileContextHolder {
 	}
 	
 	public static Map<String, UserDataProfileItem> getDataProfiles(){
-		return contextHolder.get() == null ? null : contextHolder.get();
+		if(contextHolder.get() == null || contextHolder.get().isEmpty())return contextHolder.get();
+		return new HashMap<String, UserDataProfileItem>(contextHolder.get());
 	}
 }
