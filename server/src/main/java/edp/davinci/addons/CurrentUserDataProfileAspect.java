@@ -10,6 +10,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import edp.davinci.model.User;
@@ -31,6 +32,9 @@ public class CurrentUserDataProfileAspect {
 	private static final String _ALL = "_ALL";
 	@Autowired
     private ExternalService externalService;
+	
+	@Value("${data-profile.none-config-ignore:false}")
+	private boolean noneConfigIgnore;
 
 	@Pointcut("execution(* edp.davinci.service.impl.ViewServiceImpl.getData(..)) "
 			+ "|| execution(* edp.davinci.service.impl.ViewServiceImpl.executeSql(..)) "
@@ -53,6 +57,11 @@ public class CurrentUserDataProfileAspect {
 		
 		//获取外部权限数据
         List<UserDataProfileItem> userDataProfiles = externalService.queryUserDataProfiles(user.getEmail());
+        
+        if(noneConfigIgnore && (userDataProfiles == null || userDataProfiles.isEmpty())){
+        	return;
+        }
+        
         Map<String, UserDataProfileItem> map = new HashMap<String, UserDataProfileItem>(userDataProfiles == null ? 0 : userDataProfiles.size());
         if(!userDataProfiles.isEmpty()){
 			for (UserDataProfileItem item : userDataProfiles) {

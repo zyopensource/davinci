@@ -141,6 +141,8 @@ statistic:
 data-profile:
   service-baseurl: http://api-dev.zytest.net/api/dataperms
   field-column-mappings: department=department_id;region=region_id;cityName=city_name
+  none-config-ignore: true
+  
   
   
   
