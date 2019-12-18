@@ -1,6 +1,6 @@
 package edp.davinci.model;
 
-import edp.davinci.dto.widgetDto.WidgetWithRelationDashboardId;
+import edp.davinci.dto.widgetDto.WidgetWithViewModel;
 import lombok.Data;
 
 import javax.validation.constraints.Max;
@@ -26,7 +26,7 @@ public class GlobalDashboard {
     private String name;
     @Min(value = (short) 0, message = "Invalid dashboard type")
     @Max(value = (short) 2, message = "Invalid dashboard type")
-    private Short type;
+    private short type;
 
     @Min(value = 1L, message = "Invalid project id")
     private Long projectId;
@@ -38,6 +38,6 @@ public class GlobalDashboard {
     private String dashboardPortalName;
     private String dashboardPortalUrlId;
 
-    private Set<WidgetWithRelationDashboardId> Widgets;
+    private List<WidgetWithViewModel> widgets;
 
 }

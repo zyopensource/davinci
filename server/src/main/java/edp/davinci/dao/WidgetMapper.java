@@ -21,6 +21,7 @@ package edp.davinci.dao;
 
 import edp.davinci.dto.shareDto.ShareWidget;
 import edp.davinci.dto.widgetDto.WidgetWithRelationDashboardId;
+import edp.davinci.dto.widgetDto.WidgetWithViewModel;
 import edp.davinci.model.Widget;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Param;
@@ -109,4 +110,7 @@ public interface WidgetMapper {
 
 
     int updateConfigBatch(@Param("list") List<Widget> list);
+
+    @Select({"SELECT w.*,v.model FROM mem_dashboard_widget m LEFT JOIN widget w ON w.id = m.widget_Id LEFT JOIN view v ON w.view_id = v.id WHERE m.dashboard_id = #{dashboardId}"})
+    List<WidgetWithViewModel> getByDashboardModel(@Param("dashboardId") Long dashboardId);
 }

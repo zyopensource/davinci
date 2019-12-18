@@ -34,11 +34,10 @@ import edp.davinci.dto.projectDto.ProjectDetail;
 import edp.davinci.dto.projectDto.ProjectInfo;
 import edp.davinci.dto.projectDto.ProjectPermission;
 import edp.davinci.dto.roleDto.VizVisibility;
+import edp.davinci.dto.widgetDto.WidgetWithViewModel;
 import edp.davinci.model.*;
-import edp.davinci.service.DashboardPortalService;
-import edp.davinci.service.DashboardService;
-import edp.davinci.service.ProjectService;
-import edp.davinci.service.ShareService;
+import edp.davinci.model.h5.H5Panel;
+import edp.davinci.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +46,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.validation.constraints.Min;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -120,7 +118,7 @@ public class DashboardServiceImpl extends VizCommonService implements DashboardS
                     globalDashboard.setProjectName(project.getName());
                     globalDashboard.setProjectUrlId(project.getPic());
                     globalDashboards.add(globalDashboard);
-                    globalDashboard.setWidgets(widgetMapper.getByDashboard(dashboard.getId()));
+                    globalDashboard.setWidgets(widgetMapper.getByDashboardModel(dashboard.getId()));
                 }
             }
         }

@@ -1,4 +1,4 @@
-package edp.davinci.model;
+package edp.davinci.model.h5;
 
 import lombok.Data;
 
@@ -15,5 +15,7 @@ public class H5Widget {
     private String text;
 
     private String shareToken;
+
+    private String model;
 
 }
