@@ -36,6 +36,8 @@ public class MemDashboardWidget extends RecordInfo<MemDashboardWidget> {
     @Min(value = 1L, message = "Invalid widget id")
     private Long widgetId;
 
+    private String widgetName;
+
     private Integer x;
 
     private Integer y;

@@ -1,5 +1,6 @@
 package edp.davinci.controller;
 
+import com.alibaba.fastjson.JSON;
 import edp.core.annotation.AuthIgnore;
 import edp.core.annotation.CurrentUser;
 import edp.core.enums.HttpCodeEnum;
@@ -90,31 +91,41 @@ public class H5Controller extends BaseController {
     @GetMapping("/widgets")
     public ResponseEntity getAllDashboards(@ApiIgnore @CurrentUser User user,
                                            HttpServletRequest request) {
-        List<GlobalDashboard> dashboards = dashboardService.getGlobalDashboards(user);
-        List<WidgetWithViewModel> widgets = new ArrayList<>();
-        for (GlobalDashboard globalDashboard : dashboards) {
-            List<WidgetWithViewModel> widgetWithViewModels = globalDashboard.getWidgets();
-            widgets.addAll(widgetWithViewModels);
-        }
-        //用来临时存储person的id
-        List<Long> ids = new ArrayList<>();
-        // 过滤去重
-        widgets = widgets.stream().filter(
-                v -> {
-                    boolean flag = !ids.contains(v.getId());
-                    ids.add(v.getId());
-                    return flag;
-                }
-        ).collect(Collectors.toList());
-        List<H5Widget> h5Widgets = new ArrayList<>();
-        for (WidgetWithViewModel widget : widgets) {
-            H5Widget h5Widget = new H5Widget();
-            Long id = widget.getId();
-            h5Widget.setId(id);
-            h5Widget.setText(widget.getName());
-            h5Widget.setShareToken(widgetService.shareWidget(id, user, ""));
-            h5Widget.setModel(widget.getModel());
-            h5Widgets.add(h5Widget);
+        List<H5Widget> h5Widgets = null;
+        try {
+            List<GlobalDashboard> dashboards = dashboardService.getGlobalDashboards(user);
+            List<WidgetWithViewModel> widgets = new ArrayList<>();
+            for (GlobalDashboard globalDashboard : dashboards) {
+                List<WidgetWithViewModel> widgetWithViewModels = globalDashboard.getWidgets();
+                widgets.addAll(widgetWithViewModels);
+            }
+            //用来临时存储person的id
+            List<Long> ids = new ArrayList<>();
+            // 过滤去重
+            widgets = widgets.stream().filter(
+                    v -> {
+                        boolean flag = !ids.contains(v.getId());
+                        ids.add(v.getId());
+                        return flag;
+                    }
+            ).collect(Collectors.toList());
+            h5Widgets = new ArrayList<>();
+            for (WidgetWithViewModel widget : widgets) {
+                H5Widget h5Widget = new H5Widget();
+                Long id = widget.getId();
+                h5Widget.setId(id);
+                h5Widget.setText(widget.getName());
+                h5Widget.setShareToken(widgetService.shareWidget(id, user, ""));
+                h5Widget.setModel(JSON.parseObject(widget.getModel()));
+                h5Widget.setConfig(JSON.parseObject(widget.getConfig()));
+                h5Widgets.add(h5Widget);
+            }
+        } catch (NotFoundException e) {
+            e.printStackTrace();
+        } catch (UnAuthorizedExecption unAuthorizedExecption) {
+            unAuthorizedExecption.printStackTrace();
+        } catch (ServerException e) {
+            e.printStackTrace();
         }
         return ResponseEntity.ok(new ResultMap(tokenUtils).successAndRefreshToken(request).payloads(h5Widgets));
     }
@@ -143,7 +154,10 @@ public class H5Controller extends BaseController {
             List<H5Widget> h5Widgets = new ArrayList<>();
             for (GlobalDashboard globalDashboard : dashboards) {
                 if (globalDashboard.getId().equals(dashboardId)) {
+                    h5Panel.setDashboardId(dashboardId);
                     h5Panel.setDashboardName(globalDashboard.getName());
+                    h5Panel.setDashboardPortalId(globalDashboard.getDashboardPortalId());
+                    h5Panel.setDashboardPortalName(globalDashboard.getDashboardPortalName());
                     List<WidgetWithViewModel> widgetWithViewModels = globalDashboard.getWidgets();
                     for (WidgetWithViewModel widget : widgetWithViewModels) {
                         H5Widget h5Widget = new H5Widget();
@@ -151,7 +165,8 @@ public class H5Controller extends BaseController {
                         h5Widget.setId(id);
                         h5Widget.setText(widget.getName());
                         h5Widget.setShareToken(widgetService.shareWidget(id, user, ""));
-                        h5Widget.setModel(widget.getModel());
+                        h5Widget.setModel(JSON.parseObject(widget.getModel()));
+                        h5Widget.setConfig(JSON.parseObject(widget.getConfig()));
                         h5Widgets.add(h5Widget);
                     }
                 }

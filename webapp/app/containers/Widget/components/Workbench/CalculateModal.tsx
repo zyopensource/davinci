@@ -16,36 +16,35 @@ interface ICalculateConfigFormProps {
 
 
 export class CalculateForm extends React.PureComponent<ICalculateConfigFormProps & FormComponentProps> {
-  state = {isExpression: false}
+  public state = {isExpression: false}
 
-  componentWillMount() {
-    var {calculate} = this.props
-    if (calculate != undefined && calculate.isExpression != undefined && calculate.isExpression != null) {
+  public componentWillMount () {
+    const {calculate} = this.props
+    if (calculate !== undefined && calculate.isExpression !== undefined && calculate.isExpression != null) {
       this.setState({isExpression: calculate.isExpression})
     }
   }
 
   private save = () => {
     const {form} = this.props
-    var calculate: CalculateColumn
+    let calculate: CalculateColumn
     form.validateFieldsAndScroll((err, fieldsValues) => {
       if (err) {
         return
       }
       const {isExpression} = this.state
       console.log(fieldsValues)
-      var expression
+      let expression
       if (isExpression) {
         expression = fieldsValues.expression
+      } else {
+        expression = fieldsValues.agg + '(' + fieldsValues.field + ')'
       }
-      else {
-        expression = fieldsValues.agg + "(" + fieldsValues.field + ")"
-      }
-      var value = {
+      const value = {
         ...calculate,
         symbol: fieldsValues.symbol,
-        expression: expression,
-        isExpression: isExpression
+        expression,
+        isExpression
       }
       this.props.onSave(value)
     })
@@ -62,7 +61,7 @@ export class CalculateForm extends React.PureComponent<ICalculateConfigFormProps
     <Button
       key="clear"
       size="large"
-      type='danger'
+      type="danger"
       style={{float: 'left'}}
       onClick={this.clear}
     >
@@ -87,34 +86,34 @@ export class CalculateForm extends React.PureComponent<ICalculateConfigFormProps
     </Button>
   )]
 
-  private handleChange = e => {
-    this.setState({isExpression: e.target.checked});
-  };
+  private handleChange = (e) => {
+    this.setState({isExpression: e.target.checked})
+  }
 
-  public render() {
-    var {visible, form, calculate, fields} = this.props
-    var {isExpression} = this.state
-    var c: CalculateColumn = {symbol: "", expression: "", isExpression: false}
+  public render () {
+    let {visible, form, calculate, fields} = this.props
+    let {isExpression} = this.state
+    let c: CalculateColumn = {symbol: '', expression: '', isExpression: false}
     if (calculate == undefined) {
       calculate = c
     }
-    const aggs = ['sum', 'avg', 'count', 'max', 'min',]
+    const aggs = ['sum', 'avg', 'count', 'max', 'min']
     const aggregators = []
-    for (var i in aggs) {
-      var aggregator = {name: "", value: ""}
+    for (let i in aggs) {
+      let aggregator = {name: '', value: ''}
       aggregator.value = aggs[i]
       aggregator.name = getAggregatorLocale(aggs[i])
       aggregators.push(aggregator)
     }
-    var {symbol, expression} = calculate
-    var agg = ""
-    var field = ""
-    if (!calculate.isExpression && expression != "") {
-      var expressions = expression.split(")")[0].split("(")
+    let {symbol, expression} = calculate
+    let agg = ''
+    let field = ''
+    if (!calculate.isExpression && expression != '') {
+      let expressions = expression.split(')')[0].split('(')
       agg = expressions[0]
       field = expressions[1]
     }
-    const {getFieldDecorator} = form;
+    const {getFieldDecorator} = form
     const formLayout = 'horizontal'
     return (
       <Modal
@@ -137,15 +136,14 @@ export class CalculateForm extends React.PureComponent<ICalculateConfigFormProps
                 <Select.Option value="*">*</Select.Option>
                 <Select.Option value="/">/</Select.Option>
                 <Select.Option value="%">%</Select.Option>
-              </Select>,
+              </Select>
             )}
           </Form.Item>
           <Form.Item>
             {getFieldDecorator('isExpression', {})(
               <Checkbox onChange={this.handleChange} checked={isExpression}>
                 表达式
-              </Checkbox>)
-            }
+              </Checkbox>)}
           </Form.Item>
           {!isExpression ?
             <Form.Item label="规则函数">
@@ -182,8 +180,8 @@ export class CalculateForm extends React.PureComponent<ICalculateConfigFormProps
                 rules: [
                   {
                     required: true,
-                    message: '不能为空',
-                  },
+                    message: '不能为空'
+                  }
                 ],
                 initialValue: expression
               })(<Input placeholder=""/>)}

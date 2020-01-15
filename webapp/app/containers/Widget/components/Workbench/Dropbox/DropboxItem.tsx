@@ -28,6 +28,7 @@ interface IDropboxItemProps {
   onChangeChart: (item: IDataParamSource) => (chart: IChartInfo) => void
   onRemove: (e) => void
   onCalculate: (item: IDataParamSource) => void
+  onCustomFiltersConfig: (item: IDataParamSource) => void
 }
 
 interface IDropboxItemStates {
@@ -72,6 +73,7 @@ export class DropboxItem extends React.PureComponent<IDropboxItemProps, IDropbox
       onChangeFieldConfig,
       onChangeFormatConfig,
       onCalculate,
+      onCustomFiltersConfig,
       onSort,
       onChangeColorConfig,
       onChangeFilterConfig } = this.props
@@ -99,6 +101,9 @@ export class DropboxItem extends React.PureComponent<IDropboxItemProps, IDropbox
       case 'calculate':
         onCalculate(item as IDataParamSource)
         break
+      case 'customFilters':
+        onCustomFiltersConfig(item as IDataParamSource)
+        break
     }
   }
 
@@ -106,7 +111,7 @@ export class DropboxItem extends React.PureComponent<IDropboxItemProps, IDropbox
     const { container, item, dimetionsCount, metricsCount, onChangeChart, onRemove } = this.props
     const { name: originalName, type, sort, agg, field , calculate} = item
     const { dragging } = this.state
-    var calculateText = calculate == undefined ? "" : "(运算)"
+    const calculateText = calculate === undefined ? '' : '(运算)'
     const name = type === 'value' ? decodeMetricName(originalName) : originalName
 
     let pivotChartSelector

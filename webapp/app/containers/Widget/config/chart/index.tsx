@@ -18,7 +18,7 @@
  * >>
  */
 
-import { IChartInfo } from 'containers/Widget/components/Widget'
+import {IChartInfo} from 'containers/Widget/components/Widget'
 
 import table from './table'
 import line from './line'
@@ -37,6 +37,19 @@ import gauge from './gauge'
 import iframe from './iframe'
 import richText from './richText'
 import doubleYAxis from './doubleYAxis'
+
+const h5Data = {
+  data: {
+    customFilters: {
+      title: '可筛选维度',
+      type: 'category'
+    },
+    drills: {
+      title: '下钻维度',
+      type: 'category'
+    }
+  }
+}
 
 const widgetlibs: IChartInfo[] = [
   table,
@@ -57,5 +70,8 @@ const widgetlibs: IChartInfo[] = [
   doubleYAxis,
   gauge
 ]
-
-export default widgetlibs
+export default widgetlibs.map(function (w) {
+  const data = {...w.data, ...h5Data.data}
+  w.data = data
+  return w
+})

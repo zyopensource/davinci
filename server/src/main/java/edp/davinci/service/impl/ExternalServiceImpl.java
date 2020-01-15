@@ -22,6 +22,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import com.google.common.cache.Cache;
@@ -74,11 +75,15 @@ public class ExternalServiceImpl implements ExternalService,EnvironmentAware{
 		headers.add("x-invoker-appid", "davinci");
 		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 		HttpEntity<String> entity = new HttpEntity<String>(null, headers);
-		
-		lists = restTemplate
-				.exchange(url, HttpMethod.GET, entity, arearesponseType)
-				.getBody();
-		
+
+		try {
+			lists = restTemplate
+					.exchange(url, HttpMethod.GET, entity, arearesponseType)
+					.getBody();
+		} catch (RestClientException e) {
+			e.printStackTrace();
+		}
+
 		if(lists != null && !lists.isEmpty()){
 			lists = lists.stream().filter(e -> e.isAllPrivileges() || e.getValues().length > 0).collect(Collectors.toList());
 			for (UserDataProfileItem item : lists) {

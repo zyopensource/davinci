@@ -57,7 +57,7 @@ public interface MemDashboardWidgetMapper {
     })
     int update(MemDashboardWidget memDashboardWidget);
 
-    @Select({"select * from mem_dashboard_widget where dashboard_id = #{dashboardId}"})
+    @Select({"select a.*,b.name as widgetName from mem_dashboard_widget a left join widget b on a.widget_id = b.id where a.dashboard_id = #{dashboardId}"})
     List<MemDashboardWidget> getByDashboardId(@Param("dashboardId") Long dashboardId);
 
     @Delete({

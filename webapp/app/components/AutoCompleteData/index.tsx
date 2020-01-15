@@ -1,52 +1,55 @@
-import React, {Component} from 'react';
-import {AutoComplete, Input, Icon} from 'antd';
+import React, {Component} from 'react'
+import {AutoComplete, Input, Icon} from 'antd'
 
 interface IContainerProps {
   dataSource?: any[]
   rowKey?: string
   placeholder?: string
   style: object
-  onSelect: (data: Object) => void
-  handleSearch?: (datas: Object) => void
+  onSelect: (data: any) => void
+  handleSearch?: (datas: any) => void
 }
 
 export default class AutoCompleteData extends Component<IContainerProps, {}> {
-  state = {
+  public state = {
     dataSource: []
   }
 
-  onSelect = value => {
-    const {onSelect} = this.props;
+  public onSelect = (value) => {
+    const {onSelect} = this.props
     onSelect(value)
   }
-  handleSearch = value => {
-    const {dataSource,onSelect,handleSearch} = this.props;
+  public handleSearch = (value) => {
+    const {dataSource, onSelect, handleSearch} = this.props
 
-    var dataList = []
+    const dataList = []
     if (value) {
-      for (var i in dataSource) {
-        if (dataSource[i].indexOf(value) != -1) {
+      for (const i in dataSource) {
+        if (dataSource[i].indexOf(value) !== -1) {
           dataList.push(dataSource[i])
         }
       }
     } else {
       onSelect(null)
-      for (var i in dataSource) {
+      // tslint:disable-next-line:forin
+      for (const i in dataSource) {
         dataList.push(dataSource[i])
       }
     }
     this.setState({
       dataSource: dataList
-    });
-    if(handleSearch != undefined){
+    })
+    if (handleSearch !== undefined) {
       handleSearch(value)
     }
-  };
+  }
 
-  render() {
+  public render () {
     const {style, placeholder} = this.props
     let {dataSource} = this.state
-    if(dataSource.length == 0 ){dataSource = this.props.dataSource}
+    if (dataSource.length === 0) {
+      dataSource = this.props.dataSource
+    }
     return (
       <AutoComplete
         dataSource={dataSource}

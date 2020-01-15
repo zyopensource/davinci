@@ -4,7 +4,7 @@ const Field: ISettingItem = {
   key: 'field',
   name: '字段设置',
   constrants: [{
-    settingType: SettingTypes.Dimension | SettingTypes.Indicator | SettingTypes.Color | SettingTypes.Tip,
+    settingType: SettingTypes.Dimension | SettingTypes.Indicator | SettingTypes.Color | SettingTypes.Tip | SettingTypes.Drills | SettingTypes.CustomFilters,
     itemType: ItemTypes.Category | ItemTypes.Value,
     itemValueType: null
   }],

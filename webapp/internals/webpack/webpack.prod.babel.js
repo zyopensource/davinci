@@ -156,10 +156,10 @@ module.exports = require('./webpack.base.babel')({
 
   htmlWebpackPlugin: {
     files: {
-      js: ['app.js', 'share.js'],
+      js: ['app.ts', 'share.js'],
       chunks: {
         app: {
-          entry: 'app.js'
+          entry: 'app.ts'
         },
         share: {
           entry: 'share.js'

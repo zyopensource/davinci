@@ -140,6 +140,8 @@ export interface IWidgetProps {
   xAxis?: IDataParamProperty
   tip?: IDataParamProperty
   yAxis?: IDataParamProperty
+  customFilters: IWidgetDimension[]
+  drills: IWidgetDimension[]
   dimetionAxis?: DimetionType
   renderType?: RenderType
   orders: Array<{ column: string, direction: string }>

@@ -170,5 +170,4 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
         converters.add(fastConverter);
     }
 
-
 }

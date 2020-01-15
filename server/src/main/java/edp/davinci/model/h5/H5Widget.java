@@ -1,5 +1,6 @@
 package edp.davinci.model.h5;
 
+import com.alibaba.fastjson.JSONObject;
 import lombok.Data;
 
 /**
@@ -16,6 +17,8 @@ public class H5Widget {
 
     private String shareToken;
 
-    private String model;
+    private JSONObject model;
+
+    private JSONObject config;
 
 }

@@ -35,6 +35,14 @@ const pivot: IChartInfo = {
     color: {
       title: '颜色',
       type: 'category'
+    },
+    customFilters: {
+      title: '自定义筛选',
+      type: 'all'
+    },
+    drills: {
+      title: '下钻维度',
+      type: 'category'
     }
   },
   style: {

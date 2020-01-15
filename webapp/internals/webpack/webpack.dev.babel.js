@@ -16,7 +16,7 @@ module.exports = require('./webpack.base.babel')({
     app: [
       require.resolve('react-app-polyfill/ie11'),
       'webpack-hot-middleware/client?reload=true',
-      path.join(process.cwd(), 'app/app.tsx') // Start with js/app.js
+      path.join(process.cwd(), 'app/app.tsx') // Start with js/app.ts
     ],
     share: [
       require.resolve('react-app-polyfill/ie11'),
@@ -84,10 +84,10 @@ module.exports = require('./webpack.base.babel')({
 
   htmlWebpackPlugin: {
     files: {
-      js: ['app.js', 'share.js'],
+      js: ['app.ts', 'share.js'],
       chunks: {
         app: {
-          entry: 'app.js'
+          entry: 'app.ts'
         },
         share: {
           entry: 'share.js'

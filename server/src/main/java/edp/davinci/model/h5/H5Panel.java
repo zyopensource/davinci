@@ -12,7 +12,10 @@ import java.util.List;
  */
 @Data
 public class H5Panel {
+    private Long dashboardId;
     private String dashboardName;
+    private Long dashboardPortalId;
+    private String dashboardPortalName;
     private String shareToken;
     private List<H5Widget> h5Widgets;
 }

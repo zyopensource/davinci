@@ -433,6 +433,16 @@
             <artifactId>spring-base-core-wx</artifactId>
             <version>1.0.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.zy.framework</groupId>
+            <artifactId>zy-framework-core</artifactId>
+            <version>1.0.7-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-client</artifactId>
+            <version>4.5.1</version>
+        </dependency>
     </dependencies>
     
     <repositories>

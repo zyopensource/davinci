@@ -22,21 +22,26 @@ export type DropboxItemType = DragType | 'add'
 export type DropType = 'outside' | 'inside' | 'unmoved'
 export type AggregatorType = 'sum' | 'avg' | 'count' | 'COUNTDISTINCT' | 'max' | 'min' | 'median' | 'var' | 'dev'
 
-interface CalculateColumn {
+
+export interface ICalculateColumn {
   symbol: string
   expression?: string
   isExpression?: boolean
+}
+
+export interface ICustomFiltersColumn {
+  formType: string
 }
 
 interface IDataColumn {
   name: string
   from?: string
   sort?: IFieldSortConfig
-  agg?: string
-  // agg?: AggregatorType
+  agg?: AggregatorType | string
   field?: IFieldConfig
   format?: IFieldFormatConfig
-  calculate?: CalculateColumn
+  calculate?: ICalculateColumn
+  costomFilters?: ICustomFiltersColumn
 }
 
 export interface IDataParamSource extends IDataColumn {
@@ -91,6 +96,7 @@ interface IDropboxProps {
   onItemSort: (item: IDataParamSource, sort: FieldSortTypes) => void
   onItemChangeAgg: (item: IDataParamSource, agg: AggregatorType) => void
   onItemCalculate: (item: IDataParamSource) => void
+  onItemCustomFiltersConfig: (item: IDataParamSource) => void
   onItemChangeColorConfig: (item: IDataParamSource) => void
   onItemChangeFilterConfig: (item: IDataParamSource) => void
   onItemChangeFieldConfig: (item: IDataParamSource) => void
@@ -299,6 +305,7 @@ export class Dropbox extends React.PureComponent<IDropboxProps, IDropboxStates> 
       onItemChangeFieldConfig,
       onItemChangeFormatConfig,
       onItemCalculate,
+      onItemCustomFiltersConfig,
       onItemChangeChart,
       onItemRemove
     } = this.props
@@ -383,6 +390,7 @@ export class Dropbox extends React.PureComponent<IDropboxProps, IDropboxStates> 
           onChangeFieldConfig={onItemChangeFieldConfig}
           onChangeFormatConfig={onItemChangeFormatConfig}
           onCalculate={onItemCalculate}
+          onCustomFiltersConfig={onItemCustomFiltersConfig}
           onChangeColorConfig={onItemChangeColorConfig}
           onChangeFilterConfig={onItemChangeFilterConfig}
           onChangeChart={onItemChangeChart}
