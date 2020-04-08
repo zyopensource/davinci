@@ -23,6 +23,7 @@ import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.alibaba.fastjson.serializer.ValueFilter;
 import com.alibaba.fastjson.support.config.FastJsonConfig;
 import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
+import com.zyframework.core.mq.MQInstanceSpringDelegate;
 import edp.core.inteceptor.RequestJsonHandlerArgumentResolver;
 import edp.davinci.core.common.Constants;
 import edp.davinci.core.inteceptor.AuthenticationInterceptor;
@@ -38,7 +39,6 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
-
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +54,15 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
 
     @Value("${file.web_resources}")
     private String webResources;
-
+    /**
+     * 中台MQ消息服务
+     *
+     * @return
+     */
+    @Bean
+    public MQInstanceSpringDelegate mQInstanceSpringDelegate() {
+        return new MQInstanceSpringDelegate();
+    }
      /**
      * 登录校验拦截器
      *
@@ -169,5 +177,6 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
         fastConverter.setFastJsonConfig(fastJsonConfig);
         converters.add(fastConverter);
     }
+
 
 }

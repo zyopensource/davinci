@@ -43,6 +43,9 @@ public interface OrganizationMapper {
     @Select({"select id from organization where name = #{name}"})
     Long getIdByName(@Param("name") String name);
 
+    @Select({"select * from organization where user_id = #{userId}"})
+    Organization getByUserId(@Param("userId") Long userId);
+
 
     /**
      * 获取组织列表

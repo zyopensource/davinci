@@ -100,13 +100,13 @@ public class DashboardServiceImpl extends VizCommonService implements DashboardS
     private List<GlobalDashboard> getAllDashboardsByProject(Project project, User user) throws NotFoundException, UnAuthorizedExecption, ServerException {
         List<GlobalDashboard> globalDashboards = new ArrayList<>();
         List<DashboardPortal> dashboardPortals = dashboardPortalService.getDashboardPortals(project.getId(), user);
-        if(dashboardPortals == null){
+        if (dashboardPortals == null) {
             return globalDashboards;
         }
         for (DashboardPortal dashboardPortal : dashboardPortals) {
             List<Dashboard> dashboardList = getDashboards(dashboardPortal.getId(), user);
             if (dashboardList != null && dashboardList.size() > 0) {
-                for(Dashboard dashboard :dashboardList){
+                for (Dashboard dashboard : dashboardList) {
                     GlobalDashboard globalDashboard = new GlobalDashboard();
                     globalDashboard.setId(dashboard.getId());
                     globalDashboard.setName(dashboard.getName());
@@ -137,10 +137,12 @@ public class DashboardServiceImpl extends VizCommonService implements DashboardS
         List<ProjectInfo> projects = projectService.getProjects(user);
 
         List<GlobalDashboard> globalDashboards = new ArrayList<>();
-        for (ProjectInfo projectInfo : projects) {
-            List<GlobalDashboard> globalDashboardList = getAllDashboardsByProject(projectInfo, user);
-            if (globalDashboardList != null && globalDashboardList.size() > 0) {
-                globalDashboards.addAll(globalDashboardList);
+        if (projects != null) {
+            for (ProjectInfo projectInfo : projects) {
+                List<GlobalDashboard> globalDashboardList = getAllDashboardsByProject(projectInfo, user);
+                if (globalDashboardList != null && globalDashboardList.size() > 0) {
+                    globalDashboards.addAll(globalDashboardList);
+                }
             }
         }
         return globalDashboards;

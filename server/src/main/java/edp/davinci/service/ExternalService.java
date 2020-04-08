@@ -5,6 +5,7 @@ package edp.davinci.service;
 
 import java.util.List;
 
+import com.alibaba.fastjson.JSONObject;
 import edp.davinci.addons.UserDataProfileItem;
 
 /**
@@ -19,4 +20,6 @@ import edp.davinci.addons.UserDataProfileItem;
 public interface ExternalService {
 	
 	List<UserDataProfileItem> queryUserDataProfiles(String email);
+
+	JSONObject queryQywxUserInfo(String code);
 }

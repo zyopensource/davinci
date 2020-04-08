@@ -151,6 +151,8 @@ public class Constants extends Consts {
 
     public static final String DAVINCI_TOPIC_CHANNEL = "DAVINCI_TOPIC_CHANNEL";
 
+    public static final String UCIN_APPID = "datav";
+
 
     public static char getSqlTempDelimiter(String sqlTempDelimiter) {
         return sqlTempDelimiter.charAt(sqlTempDelimiter.length() - 1);

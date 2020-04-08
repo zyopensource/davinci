@@ -1,37 +1,46 @@
 package edp.davinci.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import edp.core.annotation.AuthIgnore;
 import edp.core.annotation.CurrentUser;
 import edp.core.enums.HttpCodeEnum;
 import edp.core.exception.NotFoundException;
 import edp.core.exception.ServerException;
 import edp.core.exception.UnAuthorizedExecption;
+import edp.core.utils.RedisUtils;
+import edp.core.utils.TokenUtils;
 import edp.davinci.common.controller.BaseController;
 import edp.davinci.core.common.Constants;
 import edp.davinci.core.common.ResultMap;
+import edp.davinci.dao.WidgetMapper;
+import edp.davinci.dto.projectDto.ProjectDetail;
+import edp.davinci.dto.viewDto.Param;
 import edp.davinci.dto.widgetDto.WidgetWithViewModel;
 import edp.davinci.model.*;
 import edp.davinci.model.h5.H5Panel;
 import edp.davinci.model.h5.H5Widget;
 import edp.davinci.service.DashboardService;
+import edp.davinci.service.ExternalService;
+import edp.davinci.service.ProjectService;
 import edp.davinci.service.WidgetService;
 import edp.davinci.service.impl.UserServiceImpl;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.stringtemplate.v4.ST;
 import springfox.documentation.annotations.ApiIgnore;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -56,6 +65,15 @@ public class H5Controller extends BaseController {
     private DashboardService dashboardService;
     @Autowired
     private WidgetService widgetService;
+    @Autowired
+    private ExternalService externalService;
+    @Resource
+    private WidgetMapper widgetMapper;
+    @Autowired
+    private ProjectService projectService;
+    @Autowired
+    private RedisUtils redisUtils;
+    public static String H5_INDEX_RECORD_REDIS_KEY = "DATAV_H5_INDEX_RECORD_@";
 
     /**
      * 检查用户获取token
@@ -66,18 +84,56 @@ public class H5Controller extends BaseController {
     @AuthIgnore
     @GetMapping("/token/{code}")
     public ResponseEntity checkAndGetToken(HttpServletRequest request, @PathVariable String code) {
-        if (code == null) {
+        User user;
+        try {
+            if (code == null) {
+                return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.NOT_FOUND.getCode()));
+            }
+            JSONObject result = externalService.queryQywxUserInfo(code);
+            if (result.getString("code") == null || result.getInteger("code") != 200) {
+                return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.NOT_FOUND.getCode()));
+            }
+            JSONObject userInfo = result.getJSONObject("data");
+            String email = userInfo.getString("email");
+            user = userService.getByUsername(email.replace("@zy.com", ""));
+            if (user == null) {
+                return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.NOT_FOUND.getCode()));
+            }
+        } catch (Exception e) {
             return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.NOT_FOUND.getCode()));
-        }
-//        String userId = "dlzyueqy_13128688632";
-//        WxToken wxToken = WxAccessTokenApi.getAccessToken("wx110001df99daf0de","OOX5XjDVa0by4GA6RWNAgor3jYrQ_bilCZuK3mJjFkU");
-//        WxAuthApi
-        User user = userService.getByUsername("lindajian");
-        if (user == null) {
-            return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.NOT_FOUND.getCode()));
-
         }
         return ResponseEntity.ok(new ResultMap().success(tokenUtils.generateContinuousToken(user)));
+    }
+
+    /**
+     * 校验token和用户的身份
+     *
+     * @param request
+     * @return
+     */
+    @AuthIgnore
+    @GetMapping("/token/{token}/{code}")
+    public ResponseEntity checkUserAndToken(HttpServletRequest request, HttpServletResponse response, @PathVariable String token, @PathVariable String code) {
+        try {
+            response.sendError(HttpCodeEnum.FORBIDDEN.getCode(), "ERROR Permission denied");
+            if (code == null) {
+                return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.NOT_FOUND.getCode()));
+            }
+            JSONObject result = externalService.queryQywxUserInfo(code);
+            if (result.getString("code") == null || result.getInteger("code") != 200) {
+                return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.NOT_FOUND.getCode()));
+            }
+            JSONObject userInfo = result.getJSONObject("data");
+            String userName = userInfo.getString("email").replace("@zy.com", "");
+            if (!userName.equals(tokenUtils.getUsername(token))) {
+                response.sendError(HttpCodeEnum.FORBIDDEN.getCode(), "ERROR Permission denied");
+                return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.FORBIDDEN.getCode()));
+            }
+
+        } catch (Exception e) {
+            return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.NOT_FOUND.getCode()));
+        }
+        return ResponseEntity.ok(new ResultMap().success(token));
     }
 
     /**
@@ -115,7 +171,7 @@ public class H5Controller extends BaseController {
                 Long id = widget.getId();
                 h5Widget.setId(id);
                 h5Widget.setText(widget.getName());
-                h5Widget.setShareToken(widgetService.shareWidget(id, user, ""));
+//                h5Widget.setShareToken(widgetService.shareWidget(id, user, ""));
                 h5Widget.setModel(JSON.parseObject(widget.getModel()));
                 h5Widget.setConfig(JSON.parseObject(widget.getConfig()));
                 h5Widgets.add(h5Widget);
@@ -128,6 +184,50 @@ public class H5Controller extends BaseController {
             e.printStackTrace();
         }
         return ResponseEntity.ok(new ResultMap(tokenUtils).successAndRefreshToken(request).payloads(h5Widgets));
+    }
+
+    /**
+     * 保存用户redis上的指标感兴趣记录
+     *
+     * @param user
+     * @param params
+     * @param request
+     * @return
+     */
+    @ApiOperation(value = "save redis h5 index record")
+    @PostMapping("/saveWidgetsRecords")
+    public ResponseEntity saveWidgetsRecords(@ApiIgnore @CurrentUser User user,
+                                             @RequestBody Params params,
+                                             HttpServletRequest request) {
+
+        try {
+            String key = H5_INDEX_RECORD_REDIS_KEY + user.getId();
+            redisUtils.set(key, params.getRecords());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return ResponseEntity.ok(new ResultMap(tokenUtils).successAndRefreshToken(request).payload(params.getRecords()));
+    }
+
+    /**
+     * 获取用户redis上的指标感兴趣记录
+     *
+     * @param user
+     * @param request
+     * @return
+     */
+    @ApiOperation(value = "get redis h5 index record")
+    @GetMapping("/getWidgetsRecords")
+    public ResponseEntity getWidgetsRecords(@ApiIgnore @CurrentUser User user,
+                                            HttpServletRequest request) {
+        String values = "[]";
+        try {
+            String key = H5_INDEX_RECORD_REDIS_KEY + user.getId();
+            values = redisUtils.get(key).toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return ResponseEntity.ok(new ResultMap(tokenUtils).successAndRefreshToken(request).payload(values));
     }
 
     /**
@@ -146,11 +246,11 @@ public class H5Controller extends BaseController {
         Set<Long> dashboardIds = dashboards.stream().map(GlobalDashboard::getId).collect(Collectors.toSet());
         for (Long dashboardId : dashboardIds) {
             H5Panel h5Panel = new H5Panel();
-            try {
-                h5Panel.setShareToken(dashboardService.shareDashboard(dashboardId, "", user));
-            } catch (Exception e) {
-               continue;
-            }
+//            try {
+//                h5Panel.setShareToken(dashboardService.shareDashboard(dashboardId, "", user));
+//            } catch (Exception e) {
+//                continue;
+//            }
             List<H5Widget> h5Widgets = new ArrayList<>();
             for (GlobalDashboard globalDashboard : dashboards) {
                 if (globalDashboard.getId().equals(dashboardId)) {
@@ -164,7 +264,7 @@ public class H5Controller extends BaseController {
                         Long id = widget.getId();
                         h5Widget.setId(id);
                         h5Widget.setText(widget.getName());
-                        h5Widget.setShareToken(widgetService.shareWidget(id, user, ""));
+//                        h5Widget.setShareToken(widgetService.shareWidget(id, user, ""));
                         h5Widget.setModel(JSON.parseObject(widget.getModel()));
                         h5Widget.setConfig(JSON.parseObject(widget.getConfig()));
                         h5Widgets.add(h5Widget);
@@ -176,5 +276,37 @@ public class H5Controller extends BaseController {
         }
 
         return ResponseEntity.ok(new ResultMap(tokenUtils).successAndRefreshToken(request).payloads(panels));
+    }
+
+    /**
+     * 获取widget列表
+     *
+     * @param id
+     * @param user
+     * @param request
+     * @return
+     */
+    @ApiOperation(value = "get widget info")
+    @GetMapping("/widgets/{id}")
+    public ResponseEntity getWidgetInfo(@PathVariable Long id,
+                                        @ApiIgnore @CurrentUser User user,
+                                        HttpServletRequest request) {
+        if (invalidId(id)) {
+            ResultMap resultMap = new ResultMap(tokenUtils).failAndRefreshToken(request).message("Invalid id");
+            return ResponseEntity.status(resultMap.getCode()).body(resultMap);
+        }
+        Widget widget = widgetMapper.getById(id);
+
+        if (null == widget) {
+            log.info("widget {} not found", id);
+            throw new NotFoundException("widget is not found");
+        }
+        ProjectDetail projectDetail = projectService.getProjectDetail(widget.getProjectId(), user, false);
+
+        return ResponseEntity.ok(new ResultMap(tokenUtils).successAndRefreshToken(request).payload(widget));
+    }
+    @Data
+    static class Params{
+        private String records;
     }
 }
