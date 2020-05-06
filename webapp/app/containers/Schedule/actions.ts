@@ -159,6 +159,16 @@ export const ScheduleActions = {
     }
   },
 
+  executeScheduleImmediately (id: number, resolve: () => void) {
+    return {
+      type: ActionTypes.EXECUTE_SCHEDULE_IMMEDIATELY,
+      payload: {
+        id,
+        resolve
+      }
+    }
+  },
+
   resetScheduleState () {
     return {
       type: ActionTypes.RESET_SCHEDULE_STATE,
@@ -206,11 +216,11 @@ export type ScheduleActionType = typeof mockAction
 export default ScheduleActions
 
 // @FIXME need refactor
-export function loadVizs(pid) {
+export function loadVizs(projectId) {
   return {
     type: ActionTypes.LOAD_VIZS,
     payload: {
-      pid
+      projectId
     }
   }
 }

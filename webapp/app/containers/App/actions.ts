@@ -19,6 +19,10 @@
  */
 
 import {
+  GET_EXTERNAL_AUTH_PROVIDERS,
+  GET_EXTERNAL_AUTH_PROVIDERS_SUCESS,
+  TRY_EXTERNAL_AUTH,
+  EXTERNAL_AUTH_LOGOUT,
   LOGIN,
   LOGGED,
   LOGIN_ERROR,
@@ -46,11 +50,37 @@ import {
   LOAD_DOWNLOAD_LIST_FAILURE,
   DOWNLOAD_FILE,
   DOWNLOAD_FILE_FAILURE,
-  DOWNLOAD_FILE_SUCCESS,
-  INITIATE_DOWNLOAD_TASK,
-  INITIATE_DOWNLOAD_TASK_SUCCESS,
-  INITIATE_DOWNLOAD_TASK_FAILURE
+  DOWNLOAD_FILE_SUCCESS
 } from './constants'
+
+export function getExternalAuthProviders () {
+  return {
+    type: GET_EXTERNAL_AUTH_PROVIDERS
+  }
+}
+
+export function gotExternalAuthProviders (externalAuthProviders) {
+  return {
+    type: GET_EXTERNAL_AUTH_PROVIDERS_SUCESS,
+    payload: {
+      externalAuthProviders
+    }
+  }
+}
+
+export function tryExternalAuth (resolve) {
+  return {
+    type: TRY_EXTERNAL_AUTH,
+    payload: {
+      resolve
+    }
+  }
+}
+export function externalAuthlogout () {
+  return {
+    type: EXTERNAL_AUTH_LOGOUT
+  }
+}
 
 export function login (username, password, resolve) {
   return {
@@ -297,38 +327,6 @@ export function fileDownloaded (id) {
 export function downloadFileFail (error) {
   return {
     type: DOWNLOAD_FILE_FAILURE,
-    payload: {
-      error
-    }
-  }
-}
-
-export function initiateDownloadTask (id, type, downloadParams?, itemId?) {
-  return {
-    type: INITIATE_DOWNLOAD_TASK,
-    payload: {
-      id,
-      type,
-      downloadParams,
-      itemId
-    }
-  }
-}
-
-export function DownloadTaskInitiated (type, itemId?, statistic?) {
-  return {
-    type: INITIATE_DOWNLOAD_TASK_SUCCESS,
-    payload: {
-      type,
-      itemId
-    },
-    statistic
-  }
-}
-
-export function initiateDownloadTaskFail (error) {
-  return {
-    type: INITIATE_DOWNLOAD_TASK_FAILURE,
     payload: {
       error
     }

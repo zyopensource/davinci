@@ -23,12 +23,14 @@ import config, { env } from '../globalConfig'
 const host = config[env].host
 
 export default {
+  externalAuthProviders: `${host}/login/getOauth2Clients`,
+  tryExternalAuth: `${host}/login/externalLogin`,
+  externalLogout: `/login/oauth2/logout`,
   login: `${host}/login`,
   group: `${host}/groups`,
   user: `${host}/users`,
   changepwd: `${host}/changepwd`,
   source: `${host}/sources`,
-  bizlogic: `${host}/views`,
   view: `${host}/views`,
   // bizdata: `${host}/bizdatas`,
   widget: `${host}/widgets`,

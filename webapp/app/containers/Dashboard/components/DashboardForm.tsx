@@ -21,8 +21,9 @@
 import * as React from 'react'
 
 import { Form, Row, Col, Input, Radio, Select, Tabs, Checkbox} from 'antd'
-import {IExludeRoles} from 'containers/Portal/components/PortalList'
-const styles = require('containers/Portal/Portal.less')
+import { IExludeRoles } from 'containers/Viz/components/PortalList'
+import { FormComponentProps } from 'antd/lib/form'
+const styles = require('containers/Viz/Viz.less')
 const TabPane = Tabs.TabPane
 const Option = Select.Option
 const FormItem = Form.Item
@@ -30,11 +31,10 @@ const RadioGroup = Radio.Group
 
 const utilStyles = require('assets/less/util.less')
 
-interface IDashboardFormProps {
+interface IDashboardFormProps extends FormComponentProps {
   portalId: number
   type: string
   itemId: number
-  form: any
   dashboards: any[]
   onCheckUniqueName: (pathname: string, data: any, resolve: () => any, reject: (error: string) => any) => any
   exludeRoles?: IExludeRoles[]
@@ -92,13 +92,13 @@ export class DashboardForm extends React.PureComponent<IDashboardFormProps, {}> 
 
     return (
       <Form>
-        <FormItem className={utilStyles.hide}>
-          {getFieldDecorator('id', {
-            hidden: type === 'add' && 'copy'
-          })(
-            <Input />
-          )}
-        </FormItem>
+        {type !== 'add' && type !== 'copy' && (
+          <FormItem className={utilStyles.hide}>
+            {getFieldDecorator('id', {})(
+              <Input />
+            )}
+          </FormItem>
+        )}
         <Row gutter={8} className={type === 'move' ? '' : utilStyles.hide}>
           <Col span={24}>
             <FormItem label="所属文件夹" {...commonFormItemStyle}>
@@ -200,5 +200,5 @@ export class DashboardForm extends React.PureComponent<IDashboardFormProps, {}> 
   }
 }
 
-export default Form.create()(DashboardForm)
+export default Form.create<IDashboardFormProps>()(DashboardForm)
 

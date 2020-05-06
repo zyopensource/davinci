@@ -39,7 +39,6 @@ public interface OrganizationMapper {
     @Select({"select * from organization where id = #{id}"})
     Organization getById(@Param("id") Long id);
 
-
     @Select({"select id from organization where name = #{name}"})
     Long getIdByName(@Param("name") String name);
 
@@ -66,7 +65,6 @@ public interface OrganizationMapper {
     })
     List<OrganizationInfo> getOrganizationByUser(@Param("userId") Long userId);
 
-
     @Update({
             "update organization",
             "set `name` = #{name},",
@@ -79,8 +77,8 @@ public interface OrganizationMapper {
             "update_by = #{updateBy}",
             "where id = #{id}"
     })
-    int update(Organization organization);
 
+    int update(Organization organization);
 
     int updateProjectNum(Organization organization);
 
@@ -90,10 +88,8 @@ public interface OrganizationMapper {
 
     int updateRoleNum(Organization organization);
 
-
     @Delete({"delete from organization where id = #{id}"})
     int deleteById(@Param("id") Long id);
-
 
     List<OrganizationInfo> getJointlyOrganization(@Param("list") List<Long> userIds, @Param("userId") Long userId);
 }

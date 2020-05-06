@@ -136,7 +136,7 @@ interface IOperatingPanelProps {
   }) => void
   onLoadData: (
     viewId: number,
-    requestParams: IDataRequestParams,
+    requestParams: IDataRequestBody,
     resolve: (data) => void,
     reject: (error) => void
   ) => void
@@ -281,7 +281,9 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
       const {dataParams} = this.state
       const model = selectedView.model
       const currentWidgetlibs = widgetlibs[mode || 'pivot'] // FIXME 兼容 0.3.0-beta.1 之前版本
-
+      if (mode === 'pivot') {
+        model['指标名称']   = ({sqlType: 'VARCHAR', visualType: ViewModelVisualTypes.String, modelType: ViewModelTypes.Category})
+      }
       cols.forEach((c) => {
         const modelColumn = model[c.name]
         if (modelColumn) {
@@ -1963,32 +1965,17 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
       case 'setting':
         tabPane = (
           <div className={styles.paramsPane}>
-            {
-              queryInfo.length
-                ? <div className={styles.paneBlock}>
-                  <h4>
-                    <span>控制器</span>
-                    <span
-                      className={styles.addVariable}
-                      onClick={this.showControlConfig}
-                    >
-                        <Icon type="edit"/> 点击配置
-                      </span>
-                  </h4>
-                </div>
-                : <div className={styles.paneBlock}>
-                  <h4>控制器</h4>
-                  <Row
-                    gutter={8}
-                    type="flex"
-                    justify="center"
-                    align="middle"
-                    className={`${styles.blockRow} ${styles.noVariable}`}
-                  >
-                    <Icon type="stop"/> 没有变量可以设置
-                  </Row>
-                </div>
-            }
+            <div className={styles.paneBlock}>
+              <h4>
+                <span>控制器</span>
+                <span
+                  className={styles.addVariable}
+                  onClick={this.showControlConfig}
+                >
+                  <Icon type="edit" /> 点击配置
+                </span>
+              </h4>
+            </div>
             <div className={styles.paneBlock}>
               <h4>开启缓存</h4>
               <div className={styles.blockBody}>

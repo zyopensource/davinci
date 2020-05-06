@@ -73,7 +73,7 @@ export function* addView (action: ViewActionType) {
   const { view, resolve } = payload
   const { viewAdded, addViewFail } = ViewActions
   try {
-    const asyncData = yield call<AxiosRequestConfig>(request, {
+    const asyncData = yield call(request, {
       method: 'post',
       url: api.view,
       data: view
@@ -92,7 +92,7 @@ export function* editView (action: ViewActionType) {
   const { view, resolve } = payload
   const { viewEdited, editViewFail } = ViewActions
   try {
-    yield call<AxiosRequestConfig>(request, {
+    yield call(request, {
       method: 'put',
       url: `${api.view}/${view.id}`,
       data: view
@@ -110,7 +110,7 @@ export function* deleteView (action: ViewActionType) {
   const { payload } = action
   const { viewDeleted, deleteViewFail } = ViewActions
   try {
-    yield call<AxiosRequestConfig>(request, {
+    yield call(request, {
       method: 'delete',
       url: `${api.view}/${payload.id}`
     })
@@ -130,7 +130,7 @@ export function* copyView (action: ViewActionType) {
     const fromViewResponse = yield call(request, `${api.view}/${view.id}`)
     const fromView = fromViewResponse.payload
     const copyView: IView = { ...fromView, name: view.name, description: view.description }
-    const asyncData = yield call<AxiosRequestConfig>(request, {
+    const asyncData = yield call(request, {
       method: 'post',
       url: api.view,
       data: copyView
@@ -151,7 +151,7 @@ export function* executeSql (action: ViewActionType) {
   const variableParam = variables.map((v) => omit(v, omitKeys))
   const { sqlExecuted, executeSqlFail } = ViewActions
   try {
-    const asyncData: IDavinciResponse<IExecuteSqlResponse> = yield call<AxiosRequestConfig>(request, {
+    const asyncData: IDavinciResponse<IExecuteSqlResponse> = yield call(request, {
       method: 'post',
       url: `${api.view}/executesql`,
       data: {
@@ -202,7 +202,7 @@ export function* getSelectOptions (action: ViewActionType) {
       const { columns, filters, variables, cache, expired } = params
       return call(request, {
         method: 'post',
-        url: `${api.bizlogic}/${viewId}/getdistinctvalue`,
+        url: `${api.view}/${viewId}/getdistinctvalue`,
         data: {
           columns,
           filters,
@@ -261,16 +261,23 @@ export function* getViewDataFromVizItem (action: ViewActionType) {
   const { viewDataFromVizItemLoaded, loadViewDataFromVizItemFail } = ViewActions
   const {
     filters,
-    tempFilters,
+    tempFilters,  // @TODO combine widget static filters with local filters
     linkageFilters,
     globalFilters,
     variables,
     linkageVariables,
     globalVariables,
     pagination,
+    drillStatus,
+    groups,
     ...rest
   } = requestParams
   const { pageSize, pageNo } = pagination || { pageSize: 0, pageNo: 0 }
+
+  let searchFilters = filters.concat(tempFilters).concat(linkageFilters).concat(globalFilters)
+  if (drillStatus && drillStatus.filters) {
+    searchFilters = searchFilters.concat(drillStatus.filters)  // 改成 drillStatus.filters
+  }
 
   try {
     const asyncData = yield call(request, {
@@ -278,15 +285,18 @@ export function* getViewDataFromVizItem (action: ViewActionType) {
       url: `${api.view}/${viewId}/getdata`,
       data: {
         ...omit(rest, 'customOrders'),
-        filters: filters.concat(tempFilters).concat(linkageFilters).concat(globalFilters),
+        groups:  drillStatus && drillStatus.groups ? drillStatus.groups : groups,
+        filters: searchFilters,
         params: variables.concat(linkageVariables).concat(globalVariables),
         pageSize,
         pageNo
       },
       cancelToken: cancelTokenSource.token
     })
-    const { resultList } = asyncData.payload
-    asyncData.payload.resultList = (resultList && resultList.slice(0, 600)) || []
+    asyncData.payload = asyncData.payload || {}
+    const { payload } = asyncData
+    payload.resultList = payload.resultList || []
+    payload.resultList = payload.resultList.slice(0, 600)
     yield put(viewDataFromVizItemLoaded(renderType, itemId, requestParams, asyncData.payload, vizType, action.statistic))
   } catch (err) {
     yield put(loadViewDataFromVizItemFail(itemId, vizType, getErrorMessage(err)))

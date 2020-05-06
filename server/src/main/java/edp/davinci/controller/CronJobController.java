@@ -118,6 +118,24 @@ public class CronJobController extends BaseController {
         return ResponseEntity.ok(new ResultMap(tokenUtils).successAndRefreshToken(request).payload(jobInfo));
     }
 
+    /**
+     * 立即执行 cronjob
+     *
+     * @param id
+     * @param user
+     * @param request
+     * @return
+     */
+    @ApiOperation(value = "execute job")
+    @PostMapping(value = "/execute/{id}")
+    public ResponseEntity executeCronJob(@PathVariable Long id,
+                                         @ApiIgnore @CurrentUser User user,
+                                         HttpServletRequest request) {
+
+        cronJobService.executeCronJob(id, user);
+        return ResponseEntity.ok(new ResultMap(tokenUtils).successAndRefreshToken(request));
+    }
+
 
     /**
      * 更新 cron job

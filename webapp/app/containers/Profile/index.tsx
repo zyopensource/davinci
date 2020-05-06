@@ -1,6 +1,6 @@
 import React from 'react'
 import { connect } from 'react-redux'
-import { Link } from 'react-router'
+import { Link } from 'react-router-dom'
 import { Icon, Col, message, Row, Input, Form, Button, Breadcrumb } from 'antd'
 const FormItem = Form.Item
 const styles = require('./profile.less')
@@ -158,11 +158,7 @@ const mapStateToProps = createStructuredSelector({
 })
 
 const withConnect = connect(mapStateToProps, mapDispatchToProps)
-// const withReducerApp = injectReducer({key: 'global', reducer})
-// const withSagaAccount = injectSaga({key: 'account', saga})
 
 export default compose(
-  // withReducerApp,
-  // withSagaAccount,
   withConnect
 )(Form.create()(Profile))
