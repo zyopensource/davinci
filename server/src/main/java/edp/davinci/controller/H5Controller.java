@@ -170,6 +170,7 @@ public class H5Controller extends BaseController {
                 H5Widget h5Widget = new H5Widget();
                 Long id = widget.getId();
                 h5Widget.setId(id);
+                h5Widget.setProjectId(widget.getProjectId());
                 h5Widget.setText(widget.getName());
 //                h5Widget.setShareToken(widgetService.shareWidget(id, user, ""));
                 h5Widget.setModel(JSON.parseObject(widget.getModel()));
@@ -254,6 +255,7 @@ public class H5Controller extends BaseController {
             List<H5Widget> h5Widgets = new ArrayList<>();
             for (GlobalDashboard globalDashboard : dashboards) {
                 if (globalDashboard.getId().equals(dashboardId)) {
+                    h5Panel.setProjectId(globalDashboard.getProjectId());
                     h5Panel.setDashboardId(dashboardId);
                     h5Panel.setDashboardName(globalDashboard.getName());
                     h5Panel.setDashboardPortalId(globalDashboard.getDashboardPortalId());

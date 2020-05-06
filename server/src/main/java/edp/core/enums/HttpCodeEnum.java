@@ -19,6 +19,10 @@
 
 package edp.core.enums;
 
+/**
+ * @author linda
+ */
+
 public enum HttpCodeEnum {
 
     OK(200, "OK"),
@@ -26,7 +30,9 @@ public enum HttpCodeEnum {
     UNAUTHORIZED(401, "Unauthorized"),
     FORBIDDEN(403, "Forbidden"),
     NOT_FOUND(404, "Not Found"),
-    SERVER_ERROR(500, "Internal Server Error");
+    SERVER_ERROR(500, "Internal Server Error"),
+    AUTH_FAIL(4001, "用户访问被禁止");
+
 
     private int code;
     private String message;

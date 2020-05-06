@@ -12,6 +12,7 @@ import lombok.Data;
 @Data
 public class H5Widget {
     private Long id;
+    private Long projectId;
 
     private String text;
 

@@ -110,6 +110,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             }
             log.info("current user is not activated, username: {}", user.getUsername());
             response.setStatus(HttpCodeEnum.FAIL.getCode());
+            response.setHeader("x-error-code","4001");
             ResultMap resultMap = new ResultMap(tokenUtils);
             response.getWriter().print(JSONObject.toJSONString(resultMap.failAndRefreshToken(request).message("Account not active yet. Please check your email to activate your account")));
             return false;

@@ -490,16 +490,21 @@ public class ViewServiceImpl implements ViewService {
         if (null != executeParam) {
             //构造参数， 原有的被传入的替换
             STGroup stg = new STGroupFile(Constants.SQL_TEMPLATE);
+            List<String> groups = executeParam.getGroups();
+            List<Order> orders = executeParam.getOrders(source.getJdbcUrl(), source.getDbVersion());
             ST st = stg.getInstanceOf("querySql");
             st.add("nativeQuery", executeParam.isNativeQuery());
-            st.add("groups", executeParam.getGroups());
+            st.add("groups", groups);
 
             if (executeParam.isNativeQuery()) {
                 st.add("aggregators", executeParam.getAggregators());
             } else {
                 st.add("aggregators", executeParam.getAggregators(source.getJdbcUrl(), source.getDbVersion()));
             }
-            st.add("orders", executeParam.getOrders(source.getJdbcUrl(), source.getDbVersion()));
+            //修复因排序导致下钻异常的问题
+            if(groups == null || (groups != null && orders != null && groups.containsAll(orders.stream().map(v->v.getColumn()).collect(Collectors.toList())))){
+                st.add("orders", orders);
+            }
             st.add("filters", convertFilters(executeParam.getFilters(), source));
             st.add("keywordPrefix", sqlUtils.getKeywordPrefix(source.getJdbcUrl(), source.getDbVersion()));
             st.add("keywordSuffix", sqlUtils.getKeywordSuffix(source.getJdbcUrl(), source.getDbVersion()));
@@ -667,11 +672,11 @@ public class ViewServiceImpl implements ViewService {
     public List<Map<String, Object>> getDistinctValueData(boolean isMaintainer, ViewWithSource viewWithSource, DistinctParam param, User user) throws ServerException {
 
         try {
-            
+
             if(StringUtils.isEmpty(viewWithSource.getSql())) {
                 return null;
             }
-            
+
             List<SqlVariable> variables = viewWithSource.getVariables();
             SqlEntity sqlEntity = sqlParseUtils.parseSql(viewWithSource.getSql(), variables, sqlTempDelimiter);
             packageParams(isMaintainer, viewWithSource.getId(), sqlEntity, variables, param.getParams(), null, user);

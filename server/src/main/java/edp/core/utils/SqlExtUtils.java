@@ -181,7 +181,8 @@ public class SqlExtUtils {
 				matchAny = true;
 			}
 			if(containFilterColumn && !dataProfiles.containsKey(filterColumn)){
-				throw new ServerException(String.format("未分配字段[%s]权限", filterColumn));
+				return originSql;
+//				throw new ServerException(String.format("未分配字段[%s]权限", filterColumn));
 			}
 		}
 		//如果不包含需要过滤的列，直接返回
