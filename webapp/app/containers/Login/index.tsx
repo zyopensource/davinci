@@ -22,6 +22,7 @@ import * as React from 'react'
 import Helmet from 'react-helmet'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
+import { RouteComponentProps } from 'react-router-dom'
 
 import LoginForm from './LoginForm'
 import { Icon } from 'antd'
@@ -37,11 +38,11 @@ import { makeSelectLoginLoading } from '../App/selectors'
 import checkLogin from 'utils/checkLogin'
 import { setToken } from 'utils/request'
 import { statistic } from 'utils/statistic/statistic.dv'
+import ExternalLogin from '../ExternalLogin'
 
 const styles = require('./Login.less')
 
 interface ILoginProps {
-  router: any
   loginLoading: boolean
   onLogin: (username: string, password: string, resolve: () => any) => any
   onLogged: (user) => void
@@ -52,7 +53,7 @@ interface ILoginStates {
   password: string
 }
 
-export class Login extends React.PureComponent<ILoginProps, ILoginStates> {
+export class Login extends React.PureComponent<ILoginProps & RouteComponentProps, ILoginStates> {
   constructor (props) {
     super(props)
     this.state = {
@@ -69,10 +70,9 @@ export class Login extends React.PureComponent<ILoginProps, ILoginStates> {
     if (checkLogin()) {
       const token = localStorage.getItem('TOKEN')
       const loginUser = localStorage.getItem('loginUser')
-
       setToken(token)
       this.props.onLogged(JSON.parse(loginUser))
-      this.props.router.replace('/')
+      this.props.history.replace('/')
     }
   }
 
@@ -89,17 +89,17 @@ export class Login extends React.PureComponent<ILoginProps, ILoginStates> {
   }
 
   private toSignUp = () => {
-    const { router } = this.props
-    router.replace('/register')
+    const { history } = this.props
+    history.replace('/register')
   }
 
   private doLogin = () => {
-    const { onLogin, router } = this.props
+    const { onLogin, history } = this.props
     const { username, password } = this.state
 
     if (username && password) {
       onLogin(username, password, () => {
-        router.replace('/')
+        history.replace('/')
         statistic.whenSendTerminal()
         statistic.setOperations({
             create_time:  statistic.getCurrentDateTime()
@@ -142,6 +142,7 @@ export class Login extends React.PureComponent<ILoginProps, ILoginStates> {
           <span>还没有账号？ </span>
           <a href="javascript:;" onClick={this.toSignUp}>注册davinci账号</a>
         </p>
+        <ExternalLogin />
       </div>
     )
   }
@@ -159,12 +160,8 @@ export function mapDispatchToProps (dispatch) {
 }
 
 const withConnect = connect<{}, {}, ILoginProps>(mapStateToProps, mapDispatchToProps)
-// const withReducer = injectReducer({ key: 'global', reducer })
-// const withSaga = injectSaga({ key: 'global', saga })
 
 export default compose(
-//  withReducer,
-//  withSaga,
  withConnect
 )(Login)
 

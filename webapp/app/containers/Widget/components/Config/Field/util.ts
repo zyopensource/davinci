@@ -1,7 +1,7 @@
 import moment from 'moment'
 import { message } from 'antd'
 import { IFieldConfig } from './types'
-import { IQueryVariableMap } from 'app/containers/Dashboard/Grid'
+import { IQueryVariableMap } from 'app/containers/Dashboard/types'
 
 export function getDefaultFieldConfig (): IFieldConfig {
   return {
@@ -40,7 +40,10 @@ export function getFieldAlias (fieldConfig: IFieldConfig, queryVariableMap: IQue
     if (queryValue === undefined) {
       vals.push('')
     } else {
-      vals.push(queryValue)
+      vals.push(
+        typeof queryValue === 'number'
+          ? queryValue
+          : queryValue.replace(/^(['"])|(['"])$/g, ''))
     }
   })
 

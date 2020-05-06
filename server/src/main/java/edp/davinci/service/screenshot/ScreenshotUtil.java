@@ -20,8 +20,11 @@
 package edp.davinci.service.screenshot;
 
 import com.alibaba.druid.util.StringUtils;
+import edp.core.exception.ServerException;
+import edp.davinci.core.enums.LogNameEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.*;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeDriverService;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -30,6 +33,8 @@ import org.openqa.selenium.phantomjs.PhantomJSDriverService;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -38,12 +43,15 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static edp.davinci.service.screenshot.BrowserEnum.valueOf;
 
 @Slf4j
 @Component
 public class ScreenshotUtil {
+	
+	private static final Logger scheduleLogger = LoggerFactory.getLogger(LogNameEnum.BUSINESS_SCHEDULE.getName());
 
     @Value("${screenshot.default_browser:PHANTOMJS}")
     private String DEFAULT_BROWSER;
@@ -57,29 +65,28 @@ public class ScreenshotUtil {
     @Value("${screenshot.timeout_second:600}")
     private int timeOutSecond;
 
-
     private static final int DEFAULT_SCREENSHOT_WIDTH = 1920;
     private static final int DEFAULT_SCREENSHOT_HEIGHT = 1080;
 
     private static final ExecutorService executorService = Executors.newFixedThreadPool(8);
 
-
-    public void screenshot(long jobId, List<ImageContent> imageContents) {
-        log.info("start screenshot for job: {}", jobId);
+    public void screenshot(long jobId, List<ImageContent> imageContents, Integer imageWidth) {
+    	scheduleLogger.info("Start screenshot for job({})", jobId);
         try {
-            CountDownLatch countDownLatch = new CountDownLatch(imageContents.size());
-            List<Future> futures = new ArrayList<>(imageContents.size());
+        	int contentsSize = imageContents.size();
+            List<Future> futures = new ArrayList<>(contentsSize);
+            final AtomicInteger index = new AtomicInteger(1);
             imageContents.forEach(content -> futures.add(executorService.submit(() -> {
-                log.info("thread for screenshot start, type: {}, id: {}", content.getDesc(), content.getCId());
+            	scheduleLogger.info("Cronjob({}) thread({}) for screenshot start, type:{}, id:{}, total:{}", jobId, index.get(), content.getDesc(), content.getCId(), contentsSize);
                 try {
-                    File image = doScreenshot(content.getUrl());
+                    File image = doScreenshot(jobId, content.getUrl(), imageWidth);
                     content.setContent(image);
                 } catch (Exception e) {
-                    log.error("error ScreenshotUtil.screenshot, ", e);
-                    e.printStackTrace();
+                	scheduleLogger.error("Cronjob({}) thread({}) screenshot error", jobId, index.get());
+                	scheduleLogger.error(e.getMessage(), e);
                 } finally {
-                    countDownLatch.countDown();
-                    log.info("thread for screenshot finish, type: {}, id: {}", content.getDesc(), content.getCId());
+                    scheduleLogger.info("Cronjob({}) thread({}) for screenshot finish, type:{}, id:{}, total:{}", jobId, index.get(), content.getDesc(), content.getCId(), contentsSize);
+                    index.incrementAndGet();
                 }
             })));
 
@@ -87,24 +94,23 @@ public class ScreenshotUtil {
                 for (Future future : futures) {
                     future.get();
                 }
-                countDownLatch.await();
             } catch (ExecutionException e) {
+            	scheduleLogger.error(e.getMessage(), e);
             }
 
             imageContents.sort(Comparator.comparing(ImageContent::getOrder));
 
         } catch (InterruptedException e) {
-            e.printStackTrace();
+        	scheduleLogger.error(e.getMessage(), e);
         } finally {
-            log.info("finish screenshot for job: {}", jobId);
+        	scheduleLogger.info("Cronjob({}) finish screenshot", jobId);
         }
     }
 
-
-    private File doScreenshot(String url) throws Exception {
-        WebDriver driver = generateWebDriver();
+    private File doScreenshot(long jobId, String url, Integer imageWidth) throws Exception {
+        WebDriver driver = generateWebDriver(jobId, imageWidth);
         driver.get(url);
-        log.info("getting... {}", url);
+        scheduleLogger.info("Cronjob({}) do screenshot for url({}) start", jobId, url);
         try {
             WebDriverWait wait = new WebDriverWait(driver, timeOutSecond);
 
@@ -117,7 +123,7 @@ public class ScreenshotUtil {
             String widthVal = driver.findElement(By.id("width")).getAttribute("value");
             String heightVal = driver.findElement(By.id("height")).getAttribute("value");
 
-            int width = DEFAULT_SCREENSHOT_WIDTH;
+            int width = imageWidth != null && imageWidth > 0 ? imageWidth : DEFAULT_SCREENSHOT_WIDTH;
             int height = DEFAULT_SCREENSHOT_HEIGHT;
 
             if (!StringUtils.isEmpty(widthVal)) {
@@ -127,35 +133,43 @@ public class ScreenshotUtil {
             if (!StringUtils.isEmpty(heightVal)) {
                 height = Integer.parseInt(heightVal);
             }
+
             driver.manage().window().setSize(new Dimension(width, height));
             Thread.sleep(2000);
             return ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+
+        } catch (TimeoutException te) {
+        	scheduleLogger.error(te.getMessage(), te);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+        	scheduleLogger.error(e.getMessage(), e);
         } finally {
-            log.info("finish get {}, webdriver will quit soon", url);
+        	scheduleLogger.info("Cronjob({}) do screenshot for url({}) finish", jobId, url);
             driver.quit();
         }
+
         return null;
     }
 
-    private WebDriver generateWebDriver() throws ExecutionException {
+    private WebDriver generateWebDriver(Long jobId, Integer imageWidth) throws ExecutionException {
         WebDriver driver;
         BrowserEnum browserEnum = valueOf(DEFAULT_BROWSER);
         switch (browserEnum) {
             case CHROME:
                 driver = generateChromeDriver();
+                scheduleLogger.info("Cronjob({}) generating chrome driver({})...", jobId, CHROME_DRIVER_PATH);
                 break;
             case PHANTOMJS:
                 driver = generatePhantomJsDriver();
+                scheduleLogger.info("Cronjob({}) generating PhantomJs driver({})...", jobId, PHANTOMJS_PATH);
                 break;
             default:
-                throw new IllegalArgumentException("Unknown Web browser :" + DEFAULT_BROWSER);
+                throw new IllegalArgumentException("Unknown Web browser:" + DEFAULT_BROWSER);
         }
 
         driver.manage().timeouts().implicitlyWait(3, TimeUnit.MINUTES);
         driver.manage().window().maximize();
-        driver.manage().window().setSize(new Dimension(DEFAULT_SCREENSHOT_WIDTH, DEFAULT_SCREENSHOT_HEIGHT));
+        driver.manage().window().setSize(new Dimension(imageWidth != null && imageWidth > 0 ? imageWidth : DEFAULT_SCREENSHOT_WIDTH, DEFAULT_SCREENSHOT_HEIGHT));
+        
         return driver;
     }
 
@@ -164,21 +178,23 @@ public class ScreenshotUtil {
         File file = new File(CHROME_DRIVER_PATH);
         if (!file.canExecute()) {
             if (!file.setExecutable(true)) {
-                throw new ExecutionException(new Exception(CHROME_DRIVER_PATH + "is not executable!"));
+                throw new ExecutionException(new Exception(CHROME_DRIVER_PATH + " is not executable!"));
             }
         }
 
-        log.info("Generating Chrome driver ({})...", CHROME_DRIVER_PATH);
         System.setProperty(ChromeDriverService.CHROME_DRIVER_EXE_PROPERTY, CHROME_DRIVER_PATH);
         ChromeOptions options = new ChromeOptions();
 
         options.addArguments("headless");
         options.addArguments("no-sandbox");
         options.addArguments("disable-gpu");
+        options.addArguments("disable-gpu");
         options.addArguments("disable-features=NetworkService");
         options.addArguments("ignore-certificate-errors");
         options.addArguments("silent");
-        options.addArguments("--disable-application-cache");
+        options.addArguments("disable-application-cache");
+        options.addArguments("disable-web-security");
+        options.addArguments("no-proxy-server");
 
         return new ChromeDriver(options);
     }
@@ -187,12 +203,10 @@ public class ScreenshotUtil {
         File file = new File(PHANTOMJS_PATH);
         if (!file.canExecute()) {
             if (!file.setExecutable(true)) {
-                throw new ExecutionException(new Exception(PHANTOMJS_PATH + "is not executable!"));
+                throw new ExecutionException(new Exception(PHANTOMJS_PATH + " is not executable!"));
             }
         }
-        log.info("Generating PhantomJs driver ({})...", PHANTOMJS_PATH);
         System.setProperty(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, PHANTOMJS_PATH);
-
         return new PhantomJSDriver();
     }
 }

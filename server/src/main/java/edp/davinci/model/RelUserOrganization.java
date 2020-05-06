@@ -24,6 +24,7 @@ import lombok.Data;
 
 @Data
 public class RelUserOrganization extends RecordInfo<RelUserOrganization> {
+
     private Long id;
 
     private Long orgId;
@@ -33,6 +34,7 @@ public class RelUserOrganization extends RecordInfo<RelUserOrganization> {
     private Short role = 0;
 
     public RelUserOrganization() {
+
     }
 
     public RelUserOrganization(Long orgId, Long userId, Short role) {

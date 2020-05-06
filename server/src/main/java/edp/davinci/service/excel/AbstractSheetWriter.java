@@ -87,10 +87,10 @@ public abstract class AbstractSheetWriter {
     }
 
     protected void writeHeader(SheetContext context) throws Exception {
-        if (context.getTable() && !CollectionUtils.isEmpty(context.getExcelHeaders())) {
+        if (context.getIsTable() && !CollectionUtils.isEmpty(context.getExcelHeaders())) {
             int rownum = 0;
             int colnum = 0;
-            Map<String, QueryColumn> columnMap = context.getQueryColumns().stream().collect(Collectors.toMap(x -> x.getName(), x -> x));
+            Map<String, QueryColumn> columnMap = context.getQueryColumns().stream().collect(Collectors.toMap(x -> x.getName(), x -> x, (v1, v2) -> v1));
             List<QueryColumn> queryColumns = new ArrayList<>();
             for (ExcelHeader excelHeader : context.getExcelHeaders()) {
                 //计算多级表头行
@@ -167,7 +167,7 @@ public abstract class AbstractSheetWriter {
             Row row = context.getSheet().createRow(nextRowNum++);
             for (int i = 0; i < context.getQueryColumns().size(); i++) {
                 String type = context.getQueryColumns().get(i).getType();
-                if (context.getTable()) {
+                if (context.getIsTable()) {
                     type = SqlTypeEnum.VARCHAR.getName();
                 }
                 row.createCell(i).setCellValue(type);
@@ -238,22 +238,22 @@ public abstract class AbstractSheetWriter {
 
     private Double formatNumber(Object value, NumericUnitEnum unitEnum) {
         try {
-            Double d = Double.parseDouble(String.valueOf(value));
+            return Double.parseDouble(String.valueOf(value));
 
-            if (null == unitEnum) {
-                return d;
-            }
+//            if (null == unitEnum) {
+//                return d;
+//            }
 
             //如果单位为"万"和"亿"，格式按照"k"和"M"，数据上除10计算渲染
-            switch (unitEnum) {
-                case TenThousand:
-                case OneHundredMillion:
-                    d = d / 10;
-                    break;
-                default:
-                    break;
-            }
-            return d;
+//            switch (unitEnum) {
+//                case TenThousand:
+//                case OneHundredMillion:
+//                    d = d / 10;
+//                    break;
+//                default:
+//                    break;
+//            }
+//            return d;
         } catch (NumberFormatException e) {
         }
         return null;

@@ -31,12 +31,9 @@
       background: transparent !important;
     }
 
-    .ant-table-header-column {
-      width: 100%;
-    }
-
     .ant-table-body {
       background: transparent !important;
+      margin: 0 !important;
     }
 
     .ant-table-tbody > tr > td {
@@ -45,11 +42,11 @@
 
     .react-resizable-handle {
       position: absolute;
-      width: 10px;
+      width: 4px;
       height: 100%;
       padding: 0;
       bottom: 0;
-      right: -5px;
+      right: 0;
       cursor: col-resize;
       background: none;
     }
@@ -70,10 +67,14 @@
 
   .headerIcon {
     font-size: 14px;
+    line-height: 14px;
     margin: 0 8px;
-
-    &:hover {
-      cursor: pointer;
-    }
+    vertical-align: middle;
+    cursor: pointer;
   }
+}
+
+.select {
+  background-color: #1890ff!important;
+  color: #fff!important;
 }

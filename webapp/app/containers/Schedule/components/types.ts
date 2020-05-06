@@ -18,6 +18,10 @@
  * >>
  */
 
+import { IScheduleVizConfigItem } from './ScheduleVizConfig/types'
+import { RichTextNode } from 'components/RichText'
+
+export * from './ScheduleVizConfig/types'
 export type JobStatus = 'new' | 'failed' | 'started' | 'stopped'
 export type JobType = 'email'
 export type ScheduleType = 'image' | 'excel' | 'imageAndExcel'
@@ -46,21 +50,15 @@ export interface IScheduleRaw extends IScheduleBase {
   config: string
 }
 
-export interface IScheduleVizItem {
-  contentType: 'portal' | 'display'
-  id: number
-  items: number[]
-}
-
 export interface IScheduleMailConfig {
   subject: string
-  content: string
+  content: string | RichTextNode[]
   to: string
   cc: string
   bcc: string
   type: ScheduleType
   imageWidth: number
-  contentList: IScheduleVizItem[]
+  contentList: IScheduleVizConfigItem[]
 }
 
 export interface ISchedule extends IScheduleBase {

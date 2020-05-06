@@ -1,8 +1,9 @@
 import React from 'react'
 import classnames from 'classnames'
 import debounce from 'lodash/debounce'
-import { IOrganizationMembers } from 'containers/Organizations/Organization'
+import { IOrganizationMember } from 'containers/Organizations/types'
 import { Button, Form, Input, Icon } from 'antd'
+import { FormComponentProps } from 'antd/lib/form/Form'
 const FormItem = Form.Item
 const InputGroup = Input.Group
 const styles = require('../Team.less')
@@ -13,28 +14,29 @@ interface IAddFormProps {
     iconType?: string
     optionList: any[]
     title: string
+    category: string
     descripton: string
+    inviteMemberList: any
     submit: () => any
-    handleSearch?: (searchValue: string) => any
-}
-
-interface IAddFormStates {
-    searchValue: string
+    handleSearchMember: () => any
+    addHandler: () => void
 }
 
 interface IAddFormStates {
   visible: boolean
   isDisabled: boolean
+  searchValue: string
   inviteMemberInputValue: string
-  filteredCurrentOrganizationMembers: IOrganizationMembers[]
+  filteredCurrentOrganizationMembers: IOrganizationMember[]
 }
 
-export class AddForm extends React.PureComponent<IAddFormProps, IAddFormStates> {
+export class AddForm extends React.PureComponent<IAddFormProps & FormComponentProps, IAddFormStates> {
   constructor (props) {
     super(props)
     this.state = {
       visible: false,
       isDisabled: true,
+      searchValue: '',
       inviteMemberInputValue: '',
       filteredCurrentOrganizationMembers: []
     }
@@ -231,10 +233,9 @@ export class AddForm extends React.PureComponent<IAddFormProps, IAddFormStates> 
             <FormItem>
               <InputGroup compact>
                 {getFieldDecorator('searchValue', {
-                  initialValue: '',
-                  onChange: this.debouncedChange
+                  initialValue: ''
                 })(
-                  <Input style={{width: '65%'}} autoComplete="off"/>
+                  <Input style={{width: '65%'}} autoComplete="off" onChange={this.debouncedChange}/>
                 )}
                 <Button className={styles.plusBtn}  type="primary" onClick={this.props.addHandler} disabled={isDisabled}>
                   {this.submitText(category)}<Icon type="plus"/>
@@ -249,7 +250,7 @@ export class AddForm extends React.PureComponent<IAddFormProps, IAddFormStates> 
   }
 }
 
-export default Form.create()(AddForm)
+export default Form.create<IAddFormProps & FormComponentProps>()(AddForm)
 
 
 

@@ -3,9 +3,9 @@ import classnames from 'classnames'
 import set from 'lodash/set'
 
 import widgetlibs from '../../config'
-import { IDataRequestParams } from 'app/containers/Dashboard/Grid'
+import { IDataRequestBody } from 'app/containers/Dashboard/types'
 import { IViewBase, IFormedView } from 'containers/View/types'
-import { ViewModelVisualTypes } from 'containers/View/constants'
+import { ViewModelVisualTypes, ViewModelTypes } from 'containers/View/constants'
 import Dropbox, { DropboxType, DropType, AggregatorType, IDataParamSource, IDataParamConfig, DragType, IDragItem} from './Dropbox'
 import { IWidgetProps, IChartStyles, IChartInfo, IPaginationParams, WidgetMode, RenderType, DimetionType } from '../Widget'
 import { IFieldConfig, getDefaultFieldConfig, FieldConfigModal } from '../Config/Field'
@@ -14,7 +14,6 @@ import { IFieldSortConfig, FieldSortTypes, SortConfigModal } from '../Config/Sor
 import ColorSettingForm from './ColorSettingForm'
 import ActOnSettingForm from './ActOnSettingForm'
 import FilterSettingForm from './FilterSettingForm'
-import VariableConfigForm from '../VariableConfigForm'
 import ControlConfig from './ControlConfig'
 import ComputedConfigForm from '../ComputedConfigForm'
 import ChartIndicator from './ChartIndicator'
@@ -91,7 +90,7 @@ interface IOperatingPanelProps {
   onSetWidgetProps: (widgetProps: IWidgetProps) => void
   onLoadData: (
     viewId: number,
-    requestParams: IDataRequestParams,
+    requestParams: IDataRequestBody,
     resolve: (data) => void,
     reject: (error) => void
   ) => void
@@ -182,10 +181,8 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
   private actOnSettingForm = null
   private filterSettingForm = null
 
-  private variableConfigForm = null
   private computedConfigForm = null
   private refHandlers = {
-    variableConfigForm: (ref) => this.variableConfigForm = ref,
     computedConfigForm: (ref) => this.computedConfigForm = ref
   }
 
@@ -232,7 +229,9 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
       const { dataParams } = this.state
       const model = selectedView.model
       const currentWidgetlibs = widgetlibs[mode || 'pivot'] // FIXME 兼容 0.3.0-beta.1 之前版本
-
+      if (mode === 'pivot') {
+        model['指标名称']   = ({sqlType: 'VARCHAR', visualType: ViewModelVisualTypes.String, modelType: ViewModelTypes.Category})
+      }
       cols.forEach((c) => {
         const modelColumn = model[c.name]
         if (modelColumn) {
@@ -1537,7 +1536,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
     } = this.state
 
     const widgetPropsModel = selectedView && selectedView.model ? selectedView.model : {}
-  
+
     const { metrics } = dataParams
     const [dimetionsCount, metricsCount] = this.getDimetionsAndMetricsCount()
     const {
@@ -1768,32 +1767,17 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
       case 'setting':
         tabPane = (
           <div className={styles.paramsPane}>
-            {
-              queryInfo.length
-                ? <div className={styles.paneBlock}>
-                    <h4>
-                      <span>控制器</span>
-                      <span
-                        className={styles.addVariable}
-                        onClick={this.showControlConfig}
-                      >
-                        <Icon type="edit" /> 点击配置
-                      </span>
-                    </h4>
-                  </div>
-                : <div className={styles.paneBlock}>
-                    <h4>控制器</h4>
-                    <Row
-                      gutter={8}
-                      type="flex"
-                      justify="center"
-                      align="middle"
-                      className={`${styles.blockRow} ${styles.noVariable}`}
-                    >
-                      <Icon type="stop" /> 没有变量可以设置
-                    </Row>
-                  </div>
-            }
+            <div className={styles.paneBlock}>
+              <h4>
+                <span>控制器</span>
+                <span
+                  className={styles.addVariable}
+                  onClick={this.showControlConfig}
+                >
+                  <Icon type="edit" /> 点击配置
+                </span>
+              </h4>
+            </div>
             <div className={styles.paneBlock}>
               <h4>开启缓存</h4>
               <div className={styles.blockBody}>
@@ -1879,6 +1863,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
               size="small"
               placeholder="选择一个View"
               showSearch
+              dropdownMatchSelectWidth={false}
               value={selectedView && selectedView.id}
               onChange={this.viewSelect}
               filterOption={this.filterView}
@@ -2078,23 +2063,6 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
           onSave={this.saveControls}
           onCancel={this.closeControlConfig}
         />
-        {/* <Modal
-          title="控制器配置"
-          wrapClassName="ant-modal-large"
-          visible={variableConfigModalVisible}
-          onCancel={this.hideVariableConfigTable}
-          afterClose={this.resetVariableConfigForm}
-          footer={false}
-          maskClosable={false}
-        >
-          <VariableConfigForm
-            queryInfo={queryInfo}
-            control={variableConfigControl}
-            onSave={this.saveControl}
-            onClose={this.hideVariableConfigTable}
-            wrappedComponentRef={this.refHandlers.variableConfigForm}
-          />
-        </Modal> */}
         {!currentEditingItem ? null : [(
           <FieldConfigModal
             key="fieldConfigModal"

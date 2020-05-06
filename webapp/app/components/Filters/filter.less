@@ -56,6 +56,7 @@
 
 .filterList {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 
@@ -375,58 +376,6 @@
   }
 }
 
-.controlPanel {
-  background-color: @white;
-  padding: 4px 8px 8px;
-  margin-top: 16px;
-  border-radius: 3px;
-  display: flex;
-  align-items: flex-end;
-
-  &.empty {
-    padding: 0;
-    margin: 0;
-    display: none;
-  }
-
-  .controls {
-    flex: 1;
-  }
-
-  .actions {
-    flex-shrink: 0;
-    padding: 6px 8px;
-
-    button {
-      // margin-top: 20px;
-      margin-left: 8px;
-
-      &:first-child {
-        margin-left: 0;
-      }
-    }
-  }
-}
-
-.controlItem {
-  margin: 2px 0;
-  :global(.ant-form-item) {
-    margin-bottom: 4px;
-  }
-  :global(.ant-form-item-label) {
-    line-height: 1em;
-  }
-  :global(.ant-form-item-label label) {
-    color: @disabled-text-color;
-    font-size: 12px;
-    font-weight: bold;
-  }
-  :global(.ant-form-item-required:before) {
-    margin-right: 2px;
-    vertical-align: middle;
-  }
-}
-
 .optionsModal {
   .formItem {
     margin: 0;
@@ -436,10 +385,6 @@
   :global(.ant-modal-body) {
     padding: 16px;
   }
-}
-
-.controlComponent {
-  width: 100% !important;
 }
 
 .queryMode {

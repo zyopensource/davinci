@@ -25,11 +25,16 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-@EnableAutoConfiguration(exclude = {org.springframework.boot.autoconfigure.gson.GsonAutoConfiguration.class})
+@EnableAutoConfiguration(
+        exclude = {
+                org.springframework.boot.autoconfigure.gson.GsonAutoConfiguration.class,
+                org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class
+        })
 @EnableScheduling
 public class DavinciServerApplication {
 
     public static void main(String[] args) {
+        System.setProperty("mail.mime.splitlongparameters", "false");
         SpringApplication.run(DavinciServerApplication.class, args);
     }
 

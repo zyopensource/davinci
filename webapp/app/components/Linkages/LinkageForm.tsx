@@ -1,7 +1,7 @@
-import * as React from 'react'
+import React from 'react'
 
-import { WrappedFormUtils } from 'antd/lib/form/Form'
 import { Form, Row, Col, Cascader, Select } from 'antd'
+import { FormComponentProps } from 'antd/lib/form/Form'
 const FormItem = Form.Item
 const Option = Select.Option
 
@@ -10,7 +10,6 @@ import { LinkageOperatorTypes } from 'utils/operatorTypes'
 const styles = require('./Linkage.less')
 
 interface ILinkageFormProps {
-  form: WrappedFormUtils
   cascaderSource: any[]
 }
 
@@ -20,7 +19,7 @@ export interface ILinkageForm {
   relation: string
 }
 
-export class LinkageForm extends React.PureComponent<ILinkageFormProps, {}> {
+export class LinkageForm extends React.PureComponent<ILinkageFormProps & FormComponentProps, {}> {
   private displayRenderHandles = {
     trigger: (labels) => labels.join(' - '),
     linkager: (labels) => labels.join(' - ')
@@ -77,8 +76,14 @@ export class LinkageForm extends React.PureComponent<ILinkageFormProps, {}> {
       wrapperCol: { span: 12 }
     }
 
-    const triggerOptions = cascaderSource.map(({ label, value, children: { columns } }) => ({ label, value, children: columns }))
-    const linkagerOptions = cascaderSource.map(({ label, value, children: { columns, variables } }) => ({ label, value, children: [].concat(columns, variables) }))
+    const triggerOptions = cascaderSource
+      .map(({ label, value, children: { triggerColumns } }) =>
+        ({ label, value, children: triggerColumns })
+      )
+    const linkagerOptions = cascaderSource
+      .map(({ label, value, children: { linkagerColumns, variables } }) =>
+        ({ label, value, children: [].concat(linkagerColumns, variables) })
+      )
 
     return (
       <Form className={styles.linkageForm}>
@@ -148,4 +153,4 @@ export class LinkageForm extends React.PureComponent<ILinkageFormProps, {}> {
   }
 }
 
-export default Form.create()(LinkageForm)
+export default Form.create<ILinkageFormProps & FormComponentProps>()(LinkageForm)

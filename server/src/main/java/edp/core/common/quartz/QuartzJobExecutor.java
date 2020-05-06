@@ -22,54 +22,73 @@ package edp.core.common.quartz;
 import com.alibaba.druid.util.StringUtils;
 import edp.core.model.ScheduleJob;
 import edp.core.utils.DateUtils;
+import edp.core.utils.LockFactory;
 import edp.core.utils.QuartzHandler;
+import edp.davinci.core.common.Constants;
 import edp.davinci.core.config.SpringContextHolder;
+import edp.davinci.core.enums.CheckEntityEnum;
+import edp.davinci.core.enums.LockType;
+import edp.davinci.core.enums.LogNameEnum;
 import edp.davinci.service.excel.ExecutorUtil;
-import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.TriggerKey;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@Slf4j
 public class QuartzJobExecutor implements Job {
 
-    private static ExecutorService executorService = Executors.newFixedThreadPool(4);
+    private static final Logger scheduleLogger = LoggerFactory.getLogger(LogNameEnum.BUSINESS_SCHEDULE.getName());
+
+    public static final ExecutorService executorService = Executors.newFixedThreadPool(4);
 
     @Override
     public void execute(JobExecutionContext jobExecutionContext) {
-        ExecutorUtil.printThreadPoolStatusLog(executorService, "Cronjob_Executor");
+        ExecutorUtil.printThreadPoolStatusLog(executorService, "Cronjob_Executor", scheduleLogger);
         executorService.submit(() -> {
             TriggerKey triggerKey = jobExecutionContext.getTrigger().getKey();
             ScheduleJob scheduleJob = (ScheduleJob) jobExecutionContext.getMergedJobDataMap().get(QuartzHandler.getJobDataKey(triggerKey));
             if (scheduleJob == null) {
-                log.warn("scheduleJob is not found, {}", triggerKey.getName());
+            	scheduleLogger.warn("ScheduleJob({}) is not found", triggerKey.getName());
                 return;
             }
-
-            if (scheduleJob.getStartDate().getTime() <= System.currentTimeMillis()
-                    && scheduleJob.getEndDate().getTime() >= System.currentTimeMillis()) {
-                String jobType = scheduleJob.getJobType().trim();
-
-                if (!StringUtils.isEmpty(jobType)) {
-                    ScheduleService scheduleService = (ScheduleService) SpringContextHolder.getBean(jobType + "ScheduleService");
-                    try {
-                        scheduleService.execute(scheduleJob.getId());
-                    } catch (Exception e) {
-                    }
-                } else {
-                    log.warn("Unknown job type [{}], job ID: (:{})", jobType, scheduleJob.getId());
-                }
-            } else {
-                log.warn("ScheduleJob (:{}), current time [{}] is not within the planned execution time, StartTime: [{}], EndTime: [{}], Cron Expression: [{}]",
-                        scheduleJob.getId(),
-                        DateUtils.toyyyyMMddHHmmss(System.currentTimeMillis()),
-                        DateUtils.toyyyyMMddHHmmss(scheduleJob.getStartDate()),
-                        DateUtils.toyyyyMMddHHmmss(scheduleJob.getEndDate()),
-                        scheduleJob.getCronExpression());
+            
+			Long id = scheduleJob.getId();
+            if (scheduleJob.getStartDate().getTime() > System.currentTimeMillis()
+                    || scheduleJob.getEndDate().getTime() < System.currentTimeMillis()) {
+            	 Object[] args = {
+            			 id,
+                         DateUtils.toyyyyMMddHHmmss(System.currentTimeMillis()),
+                         DateUtils.toyyyyMMddHHmmss(scheduleJob.getStartDate()),
+                         DateUtils.toyyyyMMddHHmmss(scheduleJob.getEndDate()),
+                         scheduleJob.getCronExpression()
+                 };
+                 scheduleLogger.warn("ScheduleJob (:{}), current time [{}] is not within the planned execution time, StartTime: [{}], EndTime: [{}], Cron Expression: [{}]", args);
+                 return;
             }
+
+			String jobType = scheduleJob.getJobType().trim();
+			ScheduleService scheduleService = (ScheduleService) SpringContextHolder
+					.getBean(jobType + "ScheduleService");
+			if (StringUtils.isEmpty(jobType) || scheduleService == null) {
+				scheduleLogger.warn("Unknown job type [{}], jobId(:{})", jobType, scheduleJob.getId());
+				return;
+			}
+			
+			try {
+				String lockKey = CheckEntityEnum.CRONJOB.getSource().toUpperCase() + Constants.AT_SYMBOL + id + Constants.AT_SYMBOL + "EXECUTED";
+				if (!LockFactory.getLock(lockKey, 500, LockType.REDIS).getLock()) {
+					scheduleLogger.warn("ScheduleJob({}) has been executed by other instance", id);
+					return;
+				}
+				scheduleService.execute(id);
+			} catch (Exception e) {
+				scheduleLogger.error("ScheduleJob({}) execute error:{}", id, e.getMessage());
+				scheduleLogger.error(e.getMessage(), e);
+			}
         });
     }
 }

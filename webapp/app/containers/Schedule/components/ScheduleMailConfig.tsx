@@ -25,8 +25,6 @@ import React, {
   useImperativeHandle,
   forwardRef
 } from 'react'
-import ReactQuill, { Quill } from 'react-quill'
-import ImageResize from 'quill-image-resize-module'
 import { Form, Row, Col, Input, Select, Icon, InputNumber, Spin } from 'antd'
 const FormItem = Form.Item
 const { Option } = Select
@@ -41,27 +39,7 @@ import {
   DefaultEmailContent
 } from './constants'
 
-import 'react-quill/dist/quill.core.css'
-import 'react-quill/dist/quill.snow.css'
-
-const modules = {
-  toolbar: [
-    [{ font: [] }],
-    [{ header: [1, 2, 3, 4, 5, 6, false] }],
-    ['bold', 'italic', 'underline', 'strike'],
-    ['blockquote'],
-    [{ color: [] }, { background: [] }],
-
-    [{ list: 'ordered' }, { list: 'bullet' }],
-    [{ align: [] }],
-    [{ indent: '-1' }, { indent: '+1' }],
-    ['image', 'link'],
-    ['clean']
-  ],
-  imageResize: {
-    displaySize: true
-  }
-}
+import { RichText } from 'components/RichText'
 
 interface IScheduleMailConfigProps
   extends FormComponentProps<IScheduleMailConfig> {
@@ -88,10 +66,6 @@ export const ScheduleMailConfig: React.FC<IScheduleMailConfigProps> = (
       />
     </span>
   )
-
-  useEffect(() => {
-    Quill.register('modules/imageResize', ImageResize)
-  }, [])
 
   const resetMailList = useCallback(
     () => {
@@ -166,6 +140,7 @@ export const ScheduleMailConfig: React.FC<IScheduleMailConfigProps> = (
           initialValue: config.to
         })(
           <MailTag
+            allowCreate
             dataSource={mailList}
             onLoadDataSource={onLoadMailList}
             onBlur={resetMailList}
@@ -177,6 +152,7 @@ export const ScheduleMailConfig: React.FC<IScheduleMailConfigProps> = (
           initialValue: config.cc
         })(
           <MailTag
+            allowCreate
             dataSource={mailList}
             onLoadDataSource={onLoadMailList}
             onBlur={resetMailList}
@@ -189,6 +165,7 @@ export const ScheduleMailConfig: React.FC<IScheduleMailConfigProps> = (
             initialValue: config.bcc
           })(
             <MailTag
+              allowCreate
               dataSource={mailList}
               onLoadDataSource={onLoadMailList}
               onBlur={resetMailList}
@@ -210,11 +187,7 @@ export const ScheduleMailConfig: React.FC<IScheduleMailConfigProps> = (
             ],
             initialValue: config.content
           })(
-            <ReactQuill
-              style={{ height: 350, lineHeight: 1, marginBottom: 70 }}
-              modules={modules}
-              theme="snow"
-            />
+            <RichText />
           )
         )}
       </FormItem>

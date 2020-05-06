@@ -147,7 +147,7 @@ export class SourceTable extends React.Component<ISourceTableProps, ISourceTable
     }
   )
 
-  private loadTreeData = (node: AntTreeNode) => new Promise((resolve) => {
+  private loadTreeData = (node: AntTreeNode) => new Promise<void>((resolve) => {
     const { dataRef } = node.props
     if (dataRef === 'column') {
       resolve()
@@ -250,6 +250,7 @@ export class SourceTable extends React.Component<ISourceTableProps, ISourceTable
           <Col span={24}>
             <Select
               showSearch
+              dropdownMatchSelectWidth={false}
               placeholder="数据源"
               style={{width: '100%'}}
               value={sourceId}
