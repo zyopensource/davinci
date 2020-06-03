@@ -20,10 +20,7 @@ import edp.davinci.dto.widgetDto.WidgetWithViewModel;
 import edp.davinci.model.*;
 import edp.davinci.model.h5.H5Panel;
 import edp.davinci.model.h5.H5Widget;
-import edp.davinci.service.DashboardService;
-import edp.davinci.service.ExternalService;
-import edp.davinci.service.ProjectService;
-import edp.davinci.service.WidgetService;
+import edp.davinci.service.*;
 import edp.davinci.service.impl.UserServiceImpl;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -41,6 +38,7 @@ import springfox.documentation.annotations.ApiIgnore;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -73,6 +71,8 @@ public class H5Controller extends BaseController {
     private ProjectService projectService;
     @Autowired
     private RedisUtils redisUtils;
+    @Autowired
+    private DatavService datavService;
     public static String H5_INDEX_RECORD_REDIS_KEY = "DATAV_H5_INDEX_RECORD_@";
 
     /**
@@ -245,7 +245,7 @@ public class H5Controller extends BaseController {
         List<H5Panel> panels = new ArrayList<>();
         List<GlobalDashboard> dashboards = dashboardService.getGlobalDashboards(user);
         Set<Long> dashboardIds = dashboards.stream().map(GlobalDashboard::getId).collect(Collectors.toSet());
-        for (Long dashboardId : dashboardIds) {
+        for (GlobalDashboard globalDashboard : dashboards) {
             H5Panel h5Panel = new H5Panel();
 //            try {
 //                h5Panel.setShareToken(dashboardService.shareDashboard(dashboardId, "", user));
@@ -253,7 +253,7 @@ public class H5Controller extends BaseController {
 //                continue;
 //            }
             List<H5Widget> h5Widgets = new ArrayList<>();
-            for (GlobalDashboard globalDashboard : dashboards) {
+            for (Long dashboardId : dashboardIds) {
                 if (globalDashboard.getId().equals(dashboardId)) {
                     h5Panel.setProjectId(globalDashboard.getProjectId());
                     h5Panel.setDashboardId(dashboardId);
@@ -303,12 +303,61 @@ public class H5Controller extends BaseController {
             log.info("widget {} not found", id);
             throw new NotFoundException("widget is not found");
         }
-        ProjectDetail projectDetail = projectService.getProjectDetail(widget.getProjectId(), user, false);
-
+        widget.setIsSubscribe(datavService.isSubscribe(widget.getId(),user));
         return ResponseEntity.ok(new ResultMap(tokenUtils).successAndRefreshToken(request).payload(widget));
     }
+
+
+    /**
+     * 获取订阅指标列表
+     *
+     * @param user
+     * @param request
+     * @return
+     */
+    @ApiOperation(value = "get subscribe info")
+    @GetMapping("/subscribe/list")
+    public ResponseEntity getSubscribeWidgetInfo(@ApiIgnore @CurrentUser User user,
+                                                 HttpServletRequest request) {
+        List<Widget> widgets = datavService.getSubscribeWidgets(user);
+        return ResponseEntity.ok(new ResultMap(tokenUtils).successAndRefreshToken(request).payload(widgets));
+    }
+
+    /**
+     * 指标订阅
+     *
+     * @param datavWidgetSubscribe
+     * @param user
+     * @param request
+     * @return
+     */
+    @ApiOperation(value = "get subscribe info")
+    @PostMapping("/subscribe")
+    public ResponseEntity subscribeWidget(@Valid @RequestBody DatavWidgetSubscribe datavWidgetSubscribe,
+                                          @ApiIgnore @CurrentUser User user,
+                                          HttpServletRequest request) {
+        DatavWidgetSubscribe datavWidgetSubscribeNew = datavService.widgetSubscribe(datavWidgetSubscribe, user);
+        return ResponseEntity.ok(new ResultMap(tokenUtils).successAndRefreshToken(request).payload(datavWidgetSubscribeNew));
+    }
+
+    /**
+     * 获取订阅指标列表
+     *
+     * @param user
+     * @param request
+     * @return
+     */
+    @ApiOperation(value = "get subscribe info")
+    @PostMapping("/subscribe/canel")
+    public ResponseEntity canelSubscribeWidget(@Valid @RequestBody DatavWidgetSubscribe datavWidgetSubscribe,
+                                               @ApiIgnore @CurrentUser User user,
+                                               HttpServletRequest request) {
+        datavService.cancelWidgetSubscribe(datavWidgetSubscribe, user);
+        return ResponseEntity.ok(new ResultMap(tokenUtils).successAndRefreshToken(request).payload(datavWidgetSubscribe));
+    }
+
     @Data
-    static class Params{
+    static class Params {
         private String records;
     }
 }

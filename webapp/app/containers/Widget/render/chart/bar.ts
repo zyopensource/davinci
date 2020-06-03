@@ -222,7 +222,7 @@ export default function (chartProps: IChartProps, drillOptions) {
     } else {
       const serieObj = {
         id: m.name,
-        name: m.displayName,
+        name: decodeMetricAliasName(m.field.alias,m.name),
         type: 'bar',
         ...stackOption,
         sampling: 'average',

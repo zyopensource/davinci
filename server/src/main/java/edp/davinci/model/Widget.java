@@ -22,6 +22,9 @@ package edp.davinci.model;
 import edp.core.model.RecordInfo;
 import lombok.Data;
 
+/**
+ * @author linda
+ */
 @Data
 public class Widget extends RecordInfo<Widget> {
     private Long id;
@@ -39,5 +42,7 @@ public class Widget extends RecordInfo<Widget> {
     private Boolean publish = false;
 
     private String config;
+
+    private Boolean isSubscribe=false;
 
 }

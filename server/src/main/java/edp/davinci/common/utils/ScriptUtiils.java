@@ -16,19 +16,14 @@ import edp.davinci.core.common.Constants;
 import edp.davinci.core.enums.FieldFormatTypeEnum;
 import edp.davinci.core.enums.NumericUnitEnum;
 import edp.davinci.core.model.*;
-import edp.davinci.dto.viewDto.Aggregator;
-import edp.davinci.dto.viewDto.Order;
-import edp.davinci.dto.viewDto.Param;
-import edp.davinci.dto.viewDto.ViewExecuteParam;
+import edp.davinci.dto.viewDto.*;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
-import org.springframework.stereotype.Component;
 
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.io.InputStreamReader;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -88,6 +83,7 @@ public class ScriptUtiils {
             if (obj instanceof ScriptObjectMirror) {
                 ScriptObjectMirror vsom = (ScriptObjectMirror) obj;
                 List<String> groups = new ArrayList<>();
+                List<TypeGroup> typeGroups = new ArrayList<>();
                 List<Aggregator> aggregators = new ArrayList<>();
                 List<Order> orders = new ArrayList<>();
                 List<String> filters = new ArrayList<>();
@@ -102,6 +98,18 @@ public class ScriptUtiils {
                             ScriptObjectMirror groupMirror = (ScriptObjectMirror) vsom.get(key);
                             if (groupMirror.isArray()) {
                                 Collection<Object> values = groupMirror.values();
+                                values.forEach(v -> {
+                                    ScriptObjectMirror agg = (ScriptObjectMirror) v;
+                                    TypeGroup typeGroup = new TypeGroup(String.valueOf(agg.get("column")),
+                                            String.valueOf(agg.get("visualType")),String.valueOf(agg.get("value")));
+                                    typeGroups.add(typeGroup);
+                                });
+                            }
+                            break;
+                        case "typeGroups":
+                            ScriptObjectMirror typeGroupMirror = (ScriptObjectMirror) vsom.get(key);
+                            if (typeGroupMirror.isArray()) {
+                                Collection<Object> values = typeGroupMirror.values();
                                 values.forEach(v -> groups.add(String.valueOf(v)));
                             }
                             break;
@@ -175,7 +183,7 @@ public class ScriptUtiils {
                     }
                 }
 
-                return new ViewExecuteParam(groups, aggregators, orders, filters, params, cache, expired, nativeQuery);
+                return new ViewExecuteParam(groups,typeGroups, aggregators, orders, filters, params, cache, expired, nativeQuery);
             }
 
         }

@@ -282,7 +282,11 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
       const model = selectedView.model
       const currentWidgetlibs = widgetlibs[mode || 'pivot'] // FIXME 兼容 0.3.0-beta.1 之前版本
       if (mode === 'pivot') {
-        model['指标名称']   = ({sqlType: 'VARCHAR', visualType: ViewModelVisualTypes.String, modelType: ViewModelTypes.Category})
+        model['指标名称'] = ({
+          sqlType: 'VARCHAR',
+          visualType: ViewModelVisualTypes.String,
+          modelType: ViewModelTypes.Category
+        })
       }
       cols.forEach((c) => {
         const modelColumn = model[c.name]
@@ -736,6 +740,14 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
     }
   }
 
+  private getDateTypeItem = (from: string) => (item: IDataParamSource, type) => {
+    const {dataParams,styleParams} = this.state
+    const prop = dataParams[from]
+    item.dateType = type
+    prop.items = [...prop.items]
+    this.setWidgetProps(dataParams, styleParams)
+  }
+
   private getDropboxItemAggregator = (from: string) => (item: IDataParamSource, agg: AggregatorType) => {
     const {dataParams, styleParams} = this.state
     const prop = dataParams[from]
@@ -1002,6 +1014,9 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
     let groups = cols.items.map((c) => c.name)
       .concat(rows.items.map((r) => r.name))
       .filter((g) => g !== '指标名称')
+    let typeGroups = cols.items.map((c) => {return {column:c.name,visualType:c.visualType,value:c.dateType}})
+      .concat(rows.items.map((r) => {return {column:r.name,visualType:r.visualType,value:r.dateType}}))
+      .filter((g) => g.column !== '指标名称' && g.value)
     let aggregators = metrics.items.map((m) => ({
       column: decodeMetricName(m.name),
       func: m.agg,
@@ -1127,6 +1142,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
 
     const requestParams = {
       groups,
+      typeGroups,
       aggregators,
       // filters: filters.items.map((i) => [].concat(i.config.sql)),
       filters: requestParamsFilters,
@@ -1801,6 +1817,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
             onItemChangeChart={this.getDropboxItemChart}
             beforeDrop={this.beforeDrop}
             onDrop={this.drop}
+            onItemDateType={this.getDateTypeItem(k)}
           />
         )
       })
@@ -1972,7 +1989,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
                   className={styles.addVariable}
                   onClick={this.showControlConfig}
                 >
-                  <Icon type="edit" /> 点击配置
+                  <Icon type="edit"/> 点击配置
                 </span>
               </h4>
             </div>

@@ -46,6 +46,7 @@ import edp.davinci.model.*;
 import edp.davinci.service.ProjectService;
 import edp.davinci.service.ViewService;
 import edp.davinci.service.excel.SQLContext;
+import edp.davinci.service.types.TypeGroupService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,6 +99,9 @@ public class ViewServiceImpl extends BaseEntityService implements ViewService {
 
     @Autowired
     private SqlParseUtils sqlParseUtils;
+
+    @Autowired
+    private TypeGroupService typeGroupService;
 
     @Value("${sql_template_delimiter:$}")
     private String sqlTempDelimiter;
@@ -506,10 +510,16 @@ public class ViewServiceImpl extends BaseEntityService implements ViewService {
             //构造参数， 原有的被传入的替换
             STGroup stg = new STGroupFile(Constants.SQL_TEMPLATE);
             List<String> groups = executeParam.getGroups();
+            List<TypeGroup> typeGroups = executeParam.getTypeGroups();
+            String keywordPrefix = sqlUtils.getKeywordPrefix(source.getJdbcUrl(), source.getDbVersion());
+            String keywordSuffix = sqlUtils.getKeywordSuffix(source.getJdbcUrl(), source.getDbVersion());
+            typeGroups = typeGroupService.toTypeGroups(typeGroups,keywordPrefix,keywordSuffix);
+            groups = typeGroupService.groupsFilter(groups,typeGroups);
             List<Order> orders = executeParam.getOrders(source.getJdbcUrl(), source.getDbVersion());
             ST st = stg.getInstanceOf("querySql");
             st.add("nativeQuery", executeParam.isNativeQuery());
             st.add("groups", groups);
+            st.add("typeGroups", typeGroups);
 
             if (executeParam.isNativeQuery()) {
                 st.add("aggregators", executeParam.getAggregators());
@@ -517,16 +527,15 @@ public class ViewServiceImpl extends BaseEntityService implements ViewService {
                 st.add("aggregators", executeParam.getAggregators(source.getJdbcUrl(), source.getDbVersion()));
             }
             //修复因排序导致下钻异常的问题
-            if(groups == null || (groups != null && orders != null && groups.containsAll(orders.stream().map(v->v.getColumn()).collect(Collectors.toList())))){
-                st.add("orders", orders);
-            }
+            st.add("orders", orders);
             st.add("filters", convertFilters(executeParam.getFilters(), source));
-            st.add("keywordPrefix", sqlUtils.getKeywordPrefix(source.getJdbcUrl(), source.getDbVersion()));
-            st.add("keywordSuffix", sqlUtils.getKeywordSuffix(source.getJdbcUrl(), source.getDbVersion()));
+            st.add("keywordPrefix", keywordPrefix);
+            st.add("keywordSuffix", keywordSuffix);
 
-        for (int i = 0; i < querySqlList.size(); i++) {
-            st.add("sql", querySqlList.get(i));
-            querySqlList.set(i, st.render());
+            for (int i = 0; i < querySqlList.size(); i++) {
+                st.add("sql", querySqlList.get(i));
+                querySqlList.set(i, st.render());
+            }
         }
     }
 

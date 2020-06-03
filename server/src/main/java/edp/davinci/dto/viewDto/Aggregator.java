@@ -33,6 +33,8 @@ public class Aggregator {
 
     private Calculate calculate;
 
+    private String alias;
+
     public Aggregator() {
     }
 

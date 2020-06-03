@@ -56,24 +56,29 @@ SELECT * FROM <tableName>
 >>
 
 
-querySql(nativeQuery, groups, aggregators, filters, orders, sql, keywordPrefix, keywordSuffix)
+queryChildSql(nativeQuery, groups, typeGroups, aggregators, filters, orders, sql, keywordPrefix, keywordSuffix)
 ::=<<
-<if(!groups && !aggregators && !filters && !orders)>
+<if(!groups && !aggregators && !filters && !orders && !typeGroups)>
 <sql>
 <else>
 SELECT
-<if(!groups && !aggregators)>
+<if(!groups && !aggregators && !typeGroups)>
  *
 <endif>
 <if(groups)>
  <groups:{group|<if(keywordPrefix && keywordSuffix)><keywordPrefix><group><keywordSuffix><else><group><endif>}; separator=",">
 <endif>
-<if(groups && aggregators)>,<endif>
+<! group维度聚合运算 !>
+<if(typeGroups)>
+<if(groups)>,<endif>
+ <typeGroups:{typeGroup|<typeGroup.agg> AS <typeGroup.columnAlias>}; separator=",">
+<endif>
+<if((groups && aggregators) || (typeGroups && aggregators))>,<endif>
 <if(aggregators)>
 <if(nativeQuery)>
  <aggregators:{agg|<if(agg)><if(keywordPrefix && keywordSuffix)><keywordPrefix><agg.column><keywordSuffix><else><agg.column><endif><endif>}; separator=",">
 <else>
- <aggregators:{agg|<if(agg)><agg><endif>}; separator=",">
+ <aggregators:{agg|<if(agg)><agg.column><endif>}; separator=",">
 <endif>
 <endif>
 FROM (<sql>) T
@@ -85,12 +90,37 @@ WHERE <filters:{filter|<if(filter)><filter><endif>}; separator=" AND ">
 GROUP BY <groups:{group|<if(keywordPrefix && keywordSuffix)><keywordPrefix><group><keywordSuffix><else><group><endif>}; separator=",">
 <endif>
 <endif>
-<if(orders)>
-ORDER BY <orders:{order|<if(order)><order.column> <order.direction><endif>}; separator=", ">
+<if(typeGroups)>
+<if(groups)>,<else> GROUP BY <endif>
+ <typeGroups:{typeGroup|<typeGroup.agg>}; separator=",">
 <endif>
 <endif>
 >>
 
+querySql(nativeQuery, groups, typeGroups, aggregators, filters, orders, sql, keywordPrefix, keywordSuffix)
+::=<<
+SELECT
+<if(!groups && !aggregators && !typeGroups)>*<endif>
+<if(groups)>
+ <groups:{group|<if(keywordPrefix && keywordSuffix)><keywordPrefix><group><keywordSuffix><else><group><endif>}; separator=",">
+<endif>
+<if(typeGroups)><if(groups)>,<endif>
+<typeGroups:{typeGroup| <if(typeGroup.columnAgg)><typeGroup.columnAgg><else><typeGroup.columnAlias> AS <typeGroup.column><endif>  }; separator=",">
+<endif>
+<if((groups && aggregators) || (typeGroups && aggregators))>,<endif>
+<if(aggregators)>
+<if(nativeQuery)>
+ <aggregators:{agg|<if(agg)><if(keywordPrefix && keywordSuffix)><keywordPrefix><keywordSuffix><else><agg.column><endif><endif>}; separator=",">
+<else>
+ <aggregators:{agg|`<if(agg)><agg.alias><endif>`}; separator=",">
+<endif>
+<endif>
+FROM
+(<queryChildSql(nativeQuery, groups, typeGroups, aggregators, filters, orders, sql, keywordPrefix, keywordSuffix)>) L3
+<if(orders)>
+ORDER BY <orders:{order|<if(order)><order.column> <order.direction><endif>}; separator=", ">
+<endif>
+>>
 
 queryDistinctSql(columns, filters, sql, keywordPrefix, keywordSuffix)
 ::=<<

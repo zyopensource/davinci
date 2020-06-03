@@ -102,6 +102,11 @@ public class Constants extends Consts {
      */
     public static final String SQL_TEMPLATE = "templates/sql/sqlTemplate.stg";
 
+    /**
+     * sql维度聚合运算 ST模板
+     */
+    public static final String TYPE_GROUP_TEMPLATE = "templates/sql/typeGroupTemplate.stg";
+
 
     /**
      * excel 表头，数据格式化js

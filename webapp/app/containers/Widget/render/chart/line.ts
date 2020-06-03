@@ -141,7 +141,7 @@ export default function (chartProps: IChartProps, drillOptions?: any) {
     } else {
       const serieObj = {
         id: m.name,
-        name: m.displayName,
+        name: decodeMetricAliasName(m.field.alias,m.name),
         type: 'line',
         sampling: 'average',
         data: data.map((g, index) => {

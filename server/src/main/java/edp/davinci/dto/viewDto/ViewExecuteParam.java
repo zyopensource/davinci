@@ -34,6 +34,7 @@ import static edp.core.consts.Consts.*;
 @Data
 public class ViewExecuteParam {
     private List<String> groups;
+    private List<TypeGroup> typeGroups;
     private List<Aggregator> aggregators;
     private List<Order> orders;
     private List<String> filters;
@@ -54,6 +55,7 @@ public class ViewExecuteParam {
     }
 
     public ViewExecuteParam(List<String> groupList,
+                            List<TypeGroup> typeGroupList,
                             List<Aggregator> aggregators,
                             List<Order> orders,
                             List<String> filterList,
@@ -62,6 +64,7 @@ public class ViewExecuteParam {
                             Long expired,
                             Boolean nativeQuery) {
         this.groups = groupList;
+        this.typeGroups = typeGroupList;
         this.aggregators = aggregators;
         this.orders = orders;
         this.filters = filterList;
@@ -132,9 +135,14 @@ public class ViewExecuteParam {
         }
     }
 
-    public List<String> getAggregators(String jdbcUrl, String dbVersion) {
+    public List<Aggregator> getAggregators(String jdbcUrl, String dbVersion) {
         if (!CollectionUtils.isEmpty(aggregators)) {
-            return this.aggregators.stream().map(a -> formatColumn(a.getColumn(), a.getFunc(), jdbcUrl, dbVersion, false)).collect(Collectors.toList());
+            return this.aggregators.stream().map(a -> {
+                String formatColumn = formatColumn(a.getColumn(), a.getFunc(), jdbcUrl, dbVersion, false);
+                a.setColumn(formatColumn);
+                a.setAlias(formatColumn.split("AS")[1].trim().replaceAll("'",""));
+                return a;
+            }).collect(Collectors.toList());
         }
         return null;
     }

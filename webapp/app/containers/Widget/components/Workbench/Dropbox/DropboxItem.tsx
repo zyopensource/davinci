@@ -29,6 +29,7 @@ interface IDropboxItemProps {
   onRemove: (e) => void
   onCalculate: (item: IDataParamSource) => void
   onCustomFiltersConfig: (item: IDataParamSource) => void
+  onDateType: (item: IDataParamSource, type) => void
 }
 
 interface IDropboxItemStates {
@@ -76,9 +77,9 @@ export class DropboxItem extends React.PureComponent<IDropboxItemProps, IDropbox
       onCustomFiltersConfig,
       onSort,
       onChangeColorConfig,
-      onChangeFilterConfig } = this.props
+      onChangeFilterConfig,
+      onDateType} = this.props
     const settingKey = getSettingKeyByDropItem(key)
-
     switch (settingKey) {
       case 'aggregator':
         onChangeAgg(item as IDataParamSource, key as AggregatorType)
@@ -103,6 +104,9 @@ export class DropboxItem extends React.PureComponent<IDropboxItemProps, IDropbox
         break
       case 'customFilters':
         onCustomFiltersConfig(item as IDataParamSource)
+        break
+      case 'dataType':
+        onDateType(item as IDataParamSource,key)
         break
     }
   }

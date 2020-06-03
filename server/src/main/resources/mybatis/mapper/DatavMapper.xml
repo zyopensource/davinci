@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="edp.davinci.dao.DatavMapper">
+
+
+<!--    <select id="selectSubscribeWidgets" resultType="edp.davinci.model.Widget" parameterType="java.lang.Long">-->
+<!--SELECT-->
+<!--	w.*-->
+<!--FROM-->
+<!--	widget w-->
+<!--	JOIN project p ON w.project_id = p.id-->
+<!--	AND p.org_id = 2-->
+<!--	JOIN datav_rel_user_widget druw ON w.id = druw.widget_id-->
+<!--	AND druw.user_id = #{userId} and druw.is_delete=0-->
+<!--	JOIN datav_rel_user_widget_subscribe druws ON druws.widget_id = w.id-->
+<!--	AND druws.user_id = #{userId} and druws.is_delete=0-->
+<!--    </select>   -->
+	<select id="selectSubscribeWidgets" resultType="edp.davinci.model.Widget" parameterType="java.lang.Long">
+SELECT
+	w.*
+FROM
+	widget w
+	JOIN mem_dashboard_widget mdw on mdw.widget_id = w.id
+	JOIN datav_rel_user_widget_subscribe druws ON druws.widget_id = w.id
+	AND druws.user_id = #{userId} and druws.is_delete=0
+	order by mdw.dashboard_id, druws.create_time desc
+    </select>
+
+	<insert id="insertSubscribeWidgets" parameterType="edp.davinci.model.DatavWidgetSubscribe">
+		<selectKey resultType="java.lang.Long" order="AFTER" keyProperty="id">
+			SELECT LAST_INSERT_ID() AS id
+		</selectKey>
+		insert into datav_rel_user_widget_subscribe
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			`user_id`,
+			`widget_id`,
+			`is_delete`,
+			`create_by`,
+			`create_time`
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			#{userId,jdbcType=BIGINT},
+			#{widgetId,jdbcType=BIGINT},
+			0,
+			#{createBy,jdbcType=BIGINT},
+			#{createTime,jdbcType=TIMESTAMP}
+		</trim>
+	</insert>
+</mapper>

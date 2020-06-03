@@ -50,6 +50,7 @@ export interface IDataParamSource extends IDataColumn {
   title?: string
   chart?: IChartInfo
   config?: IDataParamConfig
+  dateType?:string
 }
 
 export interface IDragItem extends IDataParamSource {
@@ -104,6 +105,7 @@ interface IDropboxProps {
   onItemChangeChart: (item: IDataParamSource) => (chart: IChartInfo) => void
   beforeDrop: (name: string, cachedItem: IDataParamSource, resolve: (next: boolean) => void) => void
   onDrop: (name: string, dropIndex: number, dropType: DropType, changedItems: IDataParamSource[], config?: IDataParamConfig) => void
+  onItemDateType:(item: IDataParamSource, type) => void
 }
 
 interface IDropboxStates {
@@ -307,7 +309,8 @@ export class Dropbox extends React.PureComponent<IDropboxProps, IDropboxStates> 
       onItemCalculate,
       onItemCustomFiltersConfig,
       onItemChangeChart,
-      onItemRemove
+      onItemRemove,
+      onItemDateType
     } = this.props
 
     const { entering, items } = this.state
@@ -395,6 +398,7 @@ export class Dropbox extends React.PureComponent<IDropboxProps, IDropboxStates> 
           onChangeFilterConfig={onItemChangeFilterConfig}
           onChangeChart={onItemChangeChart}
           onRemove={onItemRemove(item.name)}
+          onDateType={onItemDateType}
         />
       ))
       : (
