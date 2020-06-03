@@ -510,6 +510,9 @@ public class ViewServiceImpl extends BaseEntityService implements ViewService {
             //构造参数， 原有的被传入的替换
             STGroup stg = new STGroupFile(Constants.SQL_TEMPLATE);
             List<String> groups = executeParam.getGroups();
+            if(groups!=null&& groups.size()>1){
+                groups = groups.stream().distinct().collect(Collectors.toList());
+            }
             List<TypeGroup> typeGroups = executeParam.getTypeGroups();
             String keywordPrefix = sqlUtils.getKeywordPrefix(source.getJdbcUrl(), source.getDbVersion());
             String keywordSuffix = sqlUtils.getKeywordSuffix(source.getJdbcUrl(), source.getDbVersion());
