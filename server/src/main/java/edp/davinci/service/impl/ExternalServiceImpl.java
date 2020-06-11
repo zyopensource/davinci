@@ -34,6 +34,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.jeesuite.common.util.DigestUtils;
 
 import edp.core.utils.SqlExtUtils;
 import edp.davinci.addons.UserDataProfileItem;
@@ -171,7 +172,12 @@ public class ExternalServiceImpl implements ExternalService, EnvironmentAware {
         ParameterizedTypeReference<List<Department>> arearesponseType = new ParameterizedTypeReference<List<Department>>() {
         };
         HttpHeaders headers = new HttpHeaders();
-        headers.add("x-invoker-appid", "davinci");
+        
+        String appId = "davinci";
+        String appSecret = "89a84c9e8d1ceb1c11a62d85";
+        String sign = DigestUtils.md5(appId + appSecret);
+        headers.add("x-invoker-appid", "appId");
+        headers.add("x-sign", sign);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
         headers.setContentType(MediaType.APPLICATION_JSON);
         Map<String, Object> params = new HashMap(1);
