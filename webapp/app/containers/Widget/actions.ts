@@ -180,7 +180,26 @@ export const WidgetActions = {
         sql
       }
     }
-  }
+  },
+  loadDepartments() {
+    return {
+      type: ActionTypes.LOAD_DEPARTMENTS,
+    }
+  },
+  departmentsLoaded(departments: IWidgetFormed[]) {
+    return {
+      type: ActionTypes.LOAD_DEPARTMENTS_SUCCESS,
+      payload: {
+        departments
+      }
+    }
+  },
+  departmentsFail() {
+    return {
+      type: ActionTypes.LOAD_DEPARTMENTS_FAILURE,
+      payload: {}
+    }
+  },
 }
 
 const mockAction = returnType(WidgetActions)

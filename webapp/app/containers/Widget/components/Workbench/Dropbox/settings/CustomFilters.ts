@@ -1,4 +1,4 @@
-import {ISettingItem, ItemTypes, SettingTypes} from './type'
+import {ISettingItem, ItemTypes, ItemValueTypes, SettingTypes} from './type'
 
 const CustomFilters: ISettingItem = {
   key: 'customFilters',
@@ -6,7 +6,7 @@ const CustomFilters: ISettingItem = {
   constrants: [{
     settingType: SettingTypes.CustomFilters,
     itemType: ItemTypes.Category,
-    itemValueType: null
+    itemValueType: ItemValueTypes.String
   }],
   sub: false,
   items: [{

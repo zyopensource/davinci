@@ -38,12 +38,15 @@ spring:
     time-between-eviction-runs-millis: 30000
     min-evictable-idle-time-millis: 300000
     test-while-idle: true
-    test-on-borrow: true
+    test-on-borrow: false
     test-on-return: false
     filters: stat
     break-after-acquire-failure: true
     connection-error-retry-attempts: 3
     validation-query: SELECT 1
+    remove-abandoned: true
+    remove-abandoned-timeout: 180
+    log-abandoned: true
 
   resources:
     static-locations: classpath:/META-INF/resources/, classpath:/resources/, classpath:/static/, file:${file.userfiles-path}, file:${file.web_resources}

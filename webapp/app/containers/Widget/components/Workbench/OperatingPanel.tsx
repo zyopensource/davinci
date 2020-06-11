@@ -3,88 +3,87 @@ import classnames from 'classnames'
 import set from 'lodash/set'
 
 import widgetlibs from '../../config'
-import {IDataRequestParams} from 'app/containers/Dashboard/Grid'
-import {IViewBase, IFormedView, IViewModel} from 'containers/View/types'
-import {ViewModelVisualTypes} from 'containers/View/constants'
+import {IFormedView, IViewBase, IViewModel} from 'containers/View/types'
+import {ViewModelTypes, ViewModelVisualTypes} from 'containers/View/constants'
+import {IDataRequestBody} from 'app/containers/Dashboard/types'
 import Dropbox, {
+  AggregatorType,
+  DragType,
   DropboxType,
   DropType,
-  AggregatorType,
-  IDataParamSource,
-  IDataParamConfig,
-  DragType,
-  IDragItem,
   ICalculateColumn,
-  ICustomFiltersColumn
+  ICustomFiltersColumn,
+  IDataParamConfig,
+  IDataParamSource,
+  IDragItem
 } from './Dropbox'
 import {
-  IWidgetProps,
-  IChartStyles,
+  DimetionType,
   IChartInfo,
+  IChartStyles,
   IPaginationParams,
-  WidgetMode,
+  IWidgetProps,
   RenderType,
-  DimetionType
+  WidgetMode
 } from '../Widget'
-import {IFieldConfig, getDefaultFieldConfig, FieldConfigModal} from '../Config/Field'
-import {IFieldFormatConfig, getDefaultFieldFormatConfig, FormatConfigModal} from '../Config/Format'
-import {IFieldSortConfig, FieldSortTypes, SortConfigModal} from '../Config/Sort'
+import {FieldConfigModal, getDefaultFieldConfig, IFieldConfig} from '../Config/Field'
+import {FormatConfigModal, getDefaultFieldFormatConfig, IFieldFormatConfig} from '../Config/Format'
+import {FieldSortTypes, IFieldSortConfig, SortConfigModal} from '../Config/Sort'
 import ColorSettingForm from './ColorSettingForm'
 import ActOnSettingForm from './ActOnSettingForm'
 import FilterSettingForm from './FilterSettingForm'
-import VariableConfigForm from '../VariableConfigForm'
 import ControlConfig from './ControlConfig'
 import ComputedConfigForm from '../ComputedConfigForm'
 import ChartIndicator from './ChartIndicator'
-import AxisSection, {IAxisConfig} from './ConfigSections/AxisSection'
-import SplitLineSection, {ISplitLineConfig} from './ConfigSections/SplitLineSection'
-import PivotSection, {IPivotConfig} from './ConfigSections/PivotSection'
-import SpecSection, {ISpecConfig} from './ConfigSections/SpecSection'
-import LabelSection, {ILabelConfig} from './ConfigSections/LabelSection'
-import LegendSection, {ILegendConfig} from './ConfigSections/LegendSection'
-import VisualMapSection, {IVisualMapConfig} from './ConfigSections/VisualMapSection'
-import ToolboxSection, {IToolboxConfig} from './ConfigSections/ToolboxSection'
-import DoubleYAxisSection, {IDoubleYAxisConfig} from './ConfigSections/DoubleYAxisSection'
-import AreaSelectSection, {IAreaSelectConfig} from './ConfigSections/AreaSelectSection'
-import ScorecardSection, {IScorecardConfig} from './ConfigSections/ScorecardSection'
-import IframeSection, {IframeConfig} from './ConfigSections/IframeSection'
+import AxisSection from './ConfigSections/AxisSection'
+import SplitLineSection from './ConfigSections/SplitLineSection'
+import PivotSection from './ConfigSections/PivotSection'
+import SpecSection from './ConfigSections/SpecSection'
+import LabelSection from './ConfigSections/LabelSection'
+import LegendSection from './ConfigSections/LegendSection'
+import VisualMapSection from './ConfigSections/VisualMapSection'
+import ToolboxSection from './ConfigSections/ToolboxSection'
+import DoubleYAxisSection from './ConfigSections/DoubleYAxisSection'
+import AreaSelectSection from './ConfigSections/AreaSelectSection'
+import ScorecardSection from './ConfigSections/ScorecardSection'
+import IframeSection from './ConfigSections/IframeSection'
 import TableSection from './ConfigSections/TableSection'
 import GaugeSection from './ConfigSections/GaugeSection'
-import {ITableConfig} from '../Config/Table'
 import BarSection from './ConfigSections/BarSection'
 import RadarSection from './ConfigSections/RadarSection'
 import {
-  encodeMetricName,
+  checkChartEnable,
   decodeMetricName,
+  encodeMetricName,
   getPivot,
-  getTable,
   getPivotModeSelectedCharts,
-  checkChartEnable
+  getTable
 } from '../util'
 import {PIVOT_DEFAULT_SCATTER_SIZE_TIMES} from 'app/globalConstants'
 import PivotTypes from '../../config/pivot/PivotTypes'
-import {uuid} from 'utils/util'
 
 import {RadioChangeEvent} from 'antd/lib/radio'
 import {
-  Row,
-  Col,
-  Icon,
-  Menu,
-  Radio,
-  InputNumber,
-  Dropdown,
-  Modal,
-  Popconfirm,
   Checkbox,
+  Col,
+  Dropdown,
+  Icon,
+  InputNumber,
+  Menu,
+  Modal,
   notification,
-  Tooltip,
-  Select
+  Popconfirm,
+  Radio,
+  Row,
+  Select,
+  Tooltip
 } from 'antd'
 import {IDistinctValueReqeustParams} from 'app/components/Filters/types'
 import {WorkbenchQueryMode} from './types'
 import {CheckboxChangeEvent} from 'antd/lib/checkbox'
 import {SelectProps} from 'antd/lib/select'
+import CalculateForm from './CalculateModal'
+import {CustomFiltersModal} from '../Config/CustomFilters'
 
 const MenuItem = Menu.Item
 const RadioButton = Radio.Button
@@ -95,8 +94,6 @@ const styles = require('./Workbench.less')
 const defaultTheme = require('assets/json/echartsThemes/default.project.json')
 const defaultThemeColors = defaultTheme.theme.color
 const utilStyles = require('assets/less/util.less')
-import CalculateForm from './CalculateModal'
-import {CustomFiltersModal} from '../Config/CustomFilters'
 
 
 export interface IDataParamProperty {
@@ -132,7 +129,7 @@ interface IOperatingPanelProps {
   onSetComputed: (computesField: any[]) => void
   onDeleteComputed: (computesField: any[]) => void
   onSetWidgetProps: (widgetProps: {
-    selectedChart: any; xAxis: IDataParamProperty; pagination: any; data: null; color: IDataParamProperty; drills: {}; secondaryMetrics: { agg: "sum" | "avg" | "count" | "COUNTDISTINCT" | "max" | "min" | "median" | "var" | "dev" | string; visualType: ViewModelVisualTypes; field: IFieldConfig; name: string; format: IFieldFormatConfig; from?: string; sort?: IFieldSortConfig; calculate?: ICalculateColumn; type: DragType; title?: string; chart: IChartInfo; config?: IDataParamConfig }[]; filters: { name: string; type: "category" | "value"; config: IDataParamConfig }[]; label: IDataParamProperty; chartStyles: {}; rows: { agg?: AggregatorType | string; visualType: ViewModelVisualTypes; field: IFieldConfig; name: string; format: IFieldFormatConfig; from?: string; sort: IFieldSortConfig; calculate?: CalculateColumn; type: DragType; title?: string; chart?: IChartInfo; config?: IDataParamConfig }[]; mode: "pivot" | "chart"; yAxis: IDataParamProperty; size: IDataParamProperty; dimetionAxis: "row" | "col"; tip: IDataParamProperty; customFilters: {}; orders: any[]; model: IViewModel; metrics: { agg: "sum" | "avg" | "count" | "COUNTDISTINCT" | "max" | "min" | "median" | "var" | "dev" | string; visualType: ViewModelVisualTypes; field: IFieldConfig; name: string; format: IFieldFormatConfig; from?: string; sort?: IFieldSortConfig; calculate?: ICalculateColumn; type: DragType; title?: string; chart: IChartInfo; config?: IDataParamConfig }[]; renderType: any; cols: { agg?: AggregatorType | string; visualType: ViewModelVisualTypes; field: IFieldConfig; name: string; format: IFieldFormatConfig; from?: string; sort: IFieldSortConfig; calculate?: ICalculateColumn; type: DragType; title?: string; chart?: IChartInfo; config?: IDataParamConfig }[]
+    selectedChart: any; xAxis: IDataParamProperty; pagination: any; data: null; color: IDataParamProperty; drills: {}; secondaryMetrics: { agg: "sum" | "avg" | "count" | "COUNTDISTINCT" | "max" | "min" | "median" | "var" | "dev" | string; visualType: ViewModelVisualTypes; field: IFieldConfig; name: string; format: IFieldFormatConfig; from?: string; sort?: IFieldSortConfig; calculate?: ICalculateColumn; type: DragType; title?: string; chart: IChartInfo; config?: IDataParamConfig }[]; filters: { name: string; type: "category" | "value"; config: IDataParamConfig }[]; label: IDataParamProperty; chartStyles: {}; rows: { agg?: AggregatorType | string; visualType: ViewModelVisualTypes; field: IFieldConfig; name: string; format: IFieldFormatConfig; from?: string; sort: IFieldSortConfig; calculate?: ICalculateColumn; type: DragType; title?: string; chart?: IChartInfo; config?: IDataParamConfig }[]; mode: "pivot" | "chart"; yAxis: IDataParamProperty; size: IDataParamProperty; dimetionAxis: "row" | "col"; tip: IDataParamProperty; customFilters: {}; orders: any[]; model: IViewModel; metrics: { agg: "sum" | "avg" | "count" | "COUNTDISTINCT" | "max" | "min" | "median" | "var" | "dev" | string; visualType: ViewModelVisualTypes; field: IFieldConfig; name: string; format: IFieldFormatConfig; from?: string; sort?: IFieldSortConfig; calculate?: ICalculateColumn; type: DragType; title?: string; chart: IChartInfo; config?: IDataParamConfig }[]; renderType: any; cols: { agg?: AggregatorType | string; visualType: ViewModelVisualTypes; field: IFieldConfig; name: string; format: IFieldFormatConfig; from?: string; sort: IFieldSortConfig; calculate?: ICalculateColumn; type: DragType; title?: string; chart?: IChartInfo; config?: IDataParamConfig }[]
   }) => void
   onLoadData: (
     viewId: number,
@@ -299,7 +296,6 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
           })
         }
       })
-
       rows.forEach((r) => {
         const modelColumn = model[r.name]
         if (modelColumn) {
@@ -311,7 +307,6 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
           })
         }
       })
-
       if (secondaryMetrics) {
         dataParams.metrics = {
           title: '左轴指标',
@@ -481,15 +476,17 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
   private getDragItemIconClass = (type: ViewModelVisualTypes) => {
     switch (type) {
       case ViewModelVisualTypes.Number:
-        return 'icon-values'
+        return 'iconfont icon-values'
       case ViewModelVisualTypes.Date:
-        return `icon-calendar ${styles.iconDate}`
+        return `iconfont icon-calendar ${styles.iconDate}`
       case ViewModelVisualTypes.GeoCountry:
+      case ViewModelVisualTypes.Department:
+        return `fa fa-sitemap ${styles.iconDepartment}`
       case ViewModelVisualTypes.GeoProvince:
       case ViewModelVisualTypes.GeoCity:
-        return 'icon-map'
+        return 'iconfont icon-map'
       default:
-        return 'icon-categories'
+        return 'iconfont icon-categories'
     }
   }
 
@@ -543,7 +540,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
 
     switch (name) {
       case 'filters':
-        if (cachedItem.visualType !== 'number' && cachedItem.visualType !== 'date') {
+        if (cachedItem.visualType !== 'number' && cachedItem.visualType !== 'date' && cachedItem.visualType !=ViewModelVisualTypes.Department) {
           onLoadDistinctValue(selectedView.id, {columns: [cachedItem.name]})
         }
         this.setState({
@@ -600,7 +597,6 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
       categoryDragItems,
       valueDragItems
     } = this.state
-
     const dragged = stateDragged || modalCachedData
     const from = dragged.from && dragged.from !== name && dataParams[dragged.from]
     const destination = dataParams[name]
@@ -995,6 +991,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
       orders?
     }
   ) => {
+    console.log(dataParams)
     const {cols, rows, metrics, secondaryMetrics, filters, color, label, size, xAxis, tip, yAxis, customFilters, drills} = dataParams
     const {selectedView, onLoadData, onSetWidgetProps} = this.props
     const {mode, chartModeSelectedChart, pagination} = this.state
@@ -1016,7 +1013,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
       .filter((g) => g !== '指标名称')
     let typeGroups = cols.items.map((c) => {return {column:c.name,visualType:c.visualType,value:c.dateType}})
       .concat(rows.items.map((r) => {return {column:r.name,visualType:r.visualType,value:r.dateType}}))
-      .filter((g) => g.column !== '指标名称' && g.value)
+      .filter((g) => g.column !== '指标名称')
     let aggregators = metrics.items.map((m) => ({
       column: decodeMetricName(m.name),
       func: m.agg,
@@ -2116,7 +2113,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
                     onDragEnd={this.dragEnd}
                     draggable
                   >
-                    <i className={`iconfont ${this.getDragItemIconClass(visualType)}`}/>
+                    <i className={`${this.getDragItemIconClass(visualType)}`}/>
                     <p>{name}</p>
                     {title === 'computedField' ? this.bootstrapMorePanel(data) : null}
                     {
@@ -2156,7 +2153,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
                     onDragEnd={this.dragEnd}
                     draggable
                   >
-                    <i className={`iconfont ${this.getDragItemIconClass(visualType)}`}/>
+                    <i className={`${this.getDragItemIconClass(visualType)}`}/>
                     <p>{name}</p>
                     {title === 'computedField' ? this.bootstrapMorePanel(data) : null}
                     {
@@ -2258,6 +2255,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
           />
         </Modal>
         <Modal
+          width='40%'
           title="筛选配置"
           visible={filterModalVisible}
           onCancel={this.cancelFilterModal}

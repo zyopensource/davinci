@@ -46,4 +46,5 @@ export interface IWidgetState {
   dataLoading: boolean
   columnValueLoading: boolean
   distinctColumnValues: any[]
+  departments: any[]
 }

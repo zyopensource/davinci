@@ -53,7 +53,10 @@ const makeSelectColumnValueLoading = () => createSelector(
   selectWidget,
   (widgetState) => widgetState.columnValueLoading
 )
-
+const makeSelectDepartments = () => createSelector(
+  selectWidget,
+  (widgetState) => widgetState.departments
+)
 export {
   selectWidget,
   makeSelectWidgets,
@@ -61,5 +64,6 @@ export {
   makeSelectLoading,
   makeSelectDataLoading,
   makeSelectDistinctColumnValues,
-  makeSelectColumnValueLoading
+  makeSelectColumnValueLoading,
+  makeSelectDepartments
 }

@@ -14,7 +14,10 @@ import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import edp.core.utils.RedisUtils;
+import edp.davinci.core.common.Constants;
 import edp.davinci.core.utils.HttpClientUtil;
+import edp.davinci.model.mdm.Department;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,6 +49,8 @@ import edp.davinci.service.ExternalService;
  */
 @Service
 public class ExternalServiceImpl implements ExternalService, EnvironmentAware {
+    @Autowired
+    public RedisUtils redisUtils;
 
     static Cache<String, Object> cache = CacheBuilder
             .newBuilder()
@@ -64,6 +69,9 @@ public class ExternalServiceImpl implements ExternalService, EnvironmentAware {
 
     @Value("${data-profile.qywx-agentId}")
     private String qywxAgentId;
+
+    @Value("${data-profile.department-url}")
+    private String departmentUrl;
     //后续考虑映射多个字段
     private Map<String, String> dataProfileColumnMappings = new HashMap<>();
 
@@ -84,7 +92,6 @@ public class ExternalServiceImpl implements ExternalService, EnvironmentAware {
         headers.add("x-invoker-appid", "davinci");
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
         HttpEntity<String> entity = new HttpEntity<String>(null, headers);
-
         try {
             lists = restTemplate
                     .exchange(url, HttpMethod.GET, entity, arearesponseType)
@@ -102,7 +109,9 @@ public class ExternalServiceImpl implements ExternalService, EnvironmentAware {
             }
         }
 
-        if (lists == null) lists = new ArrayList<>(0);
+        if (lists == null) {
+            lists = new ArrayList<>(0);
+        }
         cache.put(key, lists);
 
         return lists;
@@ -133,6 +142,50 @@ public class ExternalServiceImpl implements ExternalService, EnvironmentAware {
             e.printStackTrace();
         }
         return object;
+    }
+
+    @Override
+    public List<Department> queryDepartments() {
+        Object values = null;
+        try {
+            values = redisUtils.get(Constants.MDM_DEPARTMENTS_REDIS_KEY);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        List<Department> departments;
+        if (values != null) {
+            departments = (List) values;
+            if (departments.size() > 0) {
+                return departments;
+            }
+        }
+        List<Department> lists = queryMdmDepartments();
+
+        return lists;
+    }
+
+    @Override
+    public List<Department> queryMdmDepartments() {
+        String url = departmentUrl;
+        List<Department> lists = new ArrayList<>();
+        ParameterizedTypeReference<List<Department>> arearesponseType = new ParameterizedTypeReference<List<Department>>() {
+        };
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("x-invoker-appid", "davinci");
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        Map<String, Object> params = new HashMap(1);
+        params.put("updatedAtStart", "2017-01-01 00:00:01");
+        HttpEntity<Object> entity = new HttpEntity(params, headers);
+
+        try {
+            lists = restTemplate
+                    .exchange(url, HttpMethod.POST, entity, arearesponseType)
+                    .getBody();
+        } catch (RestClientException e) {
+            e.printStackTrace();
+        }
+        return lists;
     }
 
 }

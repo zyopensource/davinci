@@ -1,18 +1,21 @@
-import React, { createRef, PureComponent } from 'react'
+import React, {createRef, PureComponent} from 'react'
 import classnames from 'classnames'
-import moment, { Moment } from 'moment'
-import { IDataParamConfig, IDataParamSource } from './Dropbox'
-import ConditionalFilterForm, { ConditionalFilterPanel } from './ConditionalFilterForm'
-import { DEFAULT_DATETIME_FORMAT } from 'app/globalConstants'
-import { decodeMetricName } from '../util'
-import { uuid } from 'utils/util'
-import { Transfer, Radio, Button, DatePicker } from 'antd'
-import { IFilters } from 'app/components/Filters/types'
+import moment, {Moment} from 'moment'
+import {IDataParamConfig, IDataParamSource} from './Dropbox'
+import ConditionalFilterForm, {ConditionalFilterPanel} from './ConditionalFilterForm'
+import {DEFAULT_DATETIME_FORMAT} from 'app/globalConstants'
+import {decodeMetricName} from '../util'
+import {uuid} from 'utils/util'
+import {Transfer, Radio, Button, DatePicker} from 'antd'
+import {IFilters} from 'app/components/Filters/types'
+import {ViewModelVisualTypes} from "containers/View/constants";
+
 const RadioGroup = Radio.Group
 const RadioButton = Radio.Button
 const RangePicker = DatePicker.RangePicker
 const styles = require('./Workbench.less')
 const utilStyles = require('assets/less/util.less')
+import DepartmentFilterForm from './DepartmentFilterForm'
 
 interface IFilterSettingFormProps {
   item: IDataParamSource
@@ -24,18 +27,19 @@ interface IFilterSettingFormProps {
 }
 
 interface IFilterSettingFormStates {
-  mode: 'value' | 'conditional' | 'date'
+  mode: 'value' | 'conditional' | 'date' | 'department'
   name: string
   type: string
-  list: Array<{key: string, title: string}>,
+  list: Array<{ key: string, title: string }>,
   target: string[]
   filterTree: object
   selectedDate: string
   datepickerValue: [Moment, Moment]
+  departmentValue: string[]
 }
 
 export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IFilterSettingFormStates> {
-  constructor (props) {
+  constructor(props) {
     super(props)
     this.state = {
       mode: 'value',
@@ -45,42 +49,43 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
       target: [],
       filterTree: {},
       selectedDate: 'today',
-      datepickerValue: [moment(), moment()]
+      datepickerValue: [moment(), moment()],
+      departmentValue: []
     }
   }
 
   private dateRadioSource = [
     [
-      { name: '今天', value: 'today' },
-      { name: '昨天', value: 'yesterday' },
-      { name: '昨天以来', value: 'yesterdayFromNow' }
+      {name: '今天', value: 'today'},
+      {name: '昨天', value: 'yesterday'},
+      {name: '昨天以来', value: 'yesterdayFromNow'}
     ],
     [
-      { name: '最近7天', value: '7' },
-      { name: '最近30天', value: '30' },
-      { name: '最近90天', value: '90' },
-      { name: '最近一年', value: '365' }
+      {name: '最近7天', value: '7'},
+      {name: '最近30天', value: '30'},
+      {name: '最近90天', value: '90'},
+      {name: '最近一年', value: '365'}
     ],
     [
-      { name: '本周起', value: 'week' },
-      { name: '本月起', value: 'month' },
-      { name: '本季度起', value: 'quarter' },
-      { name: '今年起', value: 'year' }
+      {name: '本周起', value: 'week'},
+      {name: '本月起', value: 'month'},
+      {name: '本季度起', value: 'quarter'},
+      {name: '今年起', value: 'year'}
     ],
     [
-      { name: '自定义', value: 'other' }
+      {name: '自定义', value: 'other'}
     ]
   ]
   private conditionalFilterForm = createRef<ConditionalFilterPanel>()
 
-  public componentWillMount () {
-    const { item, config } = this.props
+  public componentWillMount() {
+    const {item, config} = this.props
     this.initNameAndType(item)
     this.initFilterSource(item.visualType, config)
   }
 
-  public componentWillReceiveProps (nextProps) {
-    const { item, config, list } = nextProps
+  public componentWillReceiveProps(nextProps) {
+    const {item, config, list} = nextProps
     if (item) {
       this.initNameAndType(item)
     }
@@ -98,15 +103,29 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
   }
 
   private initNameAndType = (item) => {
+    let mode
+    switch (item.visualType) {
+      case ViewModelVisualTypes.Date:
+        mode = 'date'
+        break;
+      case ViewModelVisualTypes.Number:
+        mode = 'conditional'
+        break;
+      case ViewModelVisualTypes.Department:
+        mode = 'department'
+        break;
+      default:
+        mode = 'value'
+    }
     this.setState({
       name: item.type === 'category' ? item.name : decodeMetricName(item.name),
       type: item.visualType,
-      mode: item.visualType === 'date' ? 'date' : item.visualType === 'number' ? 'conditional' : 'value'
+      mode: mode
     })
   }
 
   private initFilterSource = (visualType, config) => {
-    const { filterSource } = config
+    const {filterSource} = config
     if (filterSource) {
       if (visualType === 'date') {
         this.setState({
@@ -116,6 +135,11 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
       } else if (visualType === 'number') {
         this.setState({
           filterTree: filterSource
+        })
+      } else if (visualType === ViewModelVisualTypes.Department) {
+        this.setState({
+          filterTree: filterSource,
+          mode: ViewModelVisualTypes.Department
         })
       } else {
         if (Array.isArray(filterSource)) {
@@ -141,7 +165,7 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
 
   private transferRender = (item) => item.title
   private transferChange = (target) => {
-    this.setState({ target })
+    this.setState({target})
   }
 
   private initFilterTree = () => {
@@ -167,7 +191,7 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
   }
 
   private getSqlExpresstions = (tree) => {
-    const { name, type } = this.state
+    const {name, type} = this.state
     if (Object.keys(tree).length) {
       if (tree.type === 'link') {
         const partials = tree.children.map((c) => {
@@ -188,32 +212,32 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
   }
 
   private getSqlModel = (tree) => {
-    const { name, type } = this.state
+    const {name, type} = this.state
     const result = tree.map((t) => {
       let children
       if (t && t.children && t.children.length) {
-          children = this.getSqlModel(t.children)
+        children = this.getSqlModel(t.children)
       }
       if (t.type === 'link') {
         const filterJson = {
-            type: 'relation',
-            value: t.rel,
-            children
+          type: 'relation',
+          value: t.rel,
+          children
         }
         return filterJson
       } else {
-          const filterJson = {
-              name,
-              type: 'filter',
-              value: this.getFilterValue(t.filterValue, type),
-              operator: t.filterOperator,
-              sqlType: this.getSqlType(name)
-          }
-          return filterJson
+        const filterJson = {
+          name,
+          type: 'filter',
+          value: this.getFilterValue(t.filterValue, type),
+          operator: t.filterOperator,
+          sqlType: this.getSqlType(name)
+        }
+        return filterJson
       }
-  })
+    })
     return result
-}
+  }
 
   private getSqlType = (key) => {
     const {model} = this.props
@@ -233,9 +257,14 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
       datepickerValue: dates.slice()
     })
   }
+  private departmentChange = (v) => {
+    this.setState({
+      departmentValue: v
+    })
+  }
 // widget 编辑器filter 位置
   private getDateSql = () => {
-    const { name, selectedDate, datepickerValue } = this.state
+    const {name, selectedDate, datepickerValue} = this.state
     const today = moment().startOf('day').format(DEFAULT_DATETIME_FORMAT)
     const yesterday = moment().startOf('day').subtract(1, 'days').format(DEFAULT_DATETIME_FORMAT)
     const tml = {
@@ -296,8 +325,8 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
   }
 
   private save = () => {
-    const { onSave, onCancel } = this.props
-    const { name, mode, target, filterTree, selectedDate, datepickerValue } = this.state
+    const {onSave, onCancel} = this.props
+    const {name, mode, target, filterTree, selectedDate, datepickerValue, departmentValue} = this.state
     if (mode === 'value') {
       const sql = target.map((key) => `'${key}'`).join(',')
       const sqlModel = []
@@ -331,7 +360,7 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
       } else {
         onCancel()
       }
-    } else {
+    } else if (mode == 'date') {
       onSave({
         sqlModel: this.getDateSql(),
         filterSource: {
@@ -339,6 +368,25 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
           datepickerValue: datepickerValue.map((m) => m.format(DEFAULT_DATETIME_FORMAT))
         }
       })
+    } else if (mode === 'department') {
+      const sqlModel = []
+      const filterItem: IFilters = {
+        name,
+        type: 'filter',
+        value: departmentValue.join('|'),
+        operator: 'regexp',
+        visualType: ViewModelVisualTypes.Department,
+        sqlType: this.getSqlType(name)
+      }
+      sqlModel.push(filterItem)
+      if (sqlModel) {
+        onSave({
+          sqlModel,
+          filterSource: departmentValue,
+        })
+      } else {
+        onCancel()
+      }
     }
   }
 
@@ -355,9 +403,9 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
     })
   }
 
-  public render () {
-    const { onCancel } = this.props
-    const { mode, name, type, list, target, filterTree, selectedDate, datepickerValue } = this.state
+  public render() {
+    const {onCancel} = this.props
+    const {mode, name, type, list, target, filterTree, selectedDate, datepickerValue} = this.state
     const headerRadios = []
 
     if (type === 'number') {
@@ -368,6 +416,7 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
       headerRadios.push(
         <RadioButton key="date" value="date">日期筛选</RadioButton>
       )
+    } else if (type === 'department') {
     } else {
       headerRadios.push(
         <RadioButton key="value" value="value">值筛选</RadioButton>
@@ -380,7 +429,7 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
     const dateRadios = this.dateRadioSource.map((arr, index) => {
       return arr.map((s) => (
         <Radio key={s.value} value={s.value} className={styles.radio}>{s.name}</Radio>
-      )).concat(<br key={index} />)
+      )).concat(<br key={index}/>)
     })
 
     let shownBlock
@@ -410,7 +459,7 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
           />
         </div>
       )
-    } else {
+    } else if (mode === 'date') {
       shownBlock = (
         <div className={styles.dateBlock}>
           <RadioGroup
@@ -430,15 +479,22 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
           )}
         </div>
       )
+    } else if (mode === 'department') {
+      shownBlock = (
+        <DepartmentFilterForm
+          value={filterTree}
+          onChange={this.departmentChange}
+        />
+      )
     }
 
     return (
       <div className={styles.filterSettingForm}>
-        <div className={styles.header}>
+        {mode !== 'department' ? <div className={styles.header}>
           <RadioGroup onChange={this.radioChange} value={mode}>
             {headerRadios}
           </RadioGroup>
-        </div>
+        </div> : null}
         {shownBlock}
         <div className={styles.footer}>
           <Button type="primary" onClick={this.save}>保存</Button>

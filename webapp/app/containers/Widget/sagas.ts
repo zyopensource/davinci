@@ -172,7 +172,17 @@ export function* executeComputed(action: WidgetActionType) {
     errorHandler(err)
   }
 }
+export function* getDepartments() {
 
+  try {
+    const result = yield call(request, `${api.departments}`)
+    const departments: any[] = result.payload
+    yield put(WidgetActions.departmentsLoaded(departments))
+  } catch (err) {
+    yield put(WidgetActions.deleteWidgetFail())
+    errorHandler(err)
+  }
+}
 export default function* rootWidgetSaga() {
   yield all([
     takeLatest(ActionTypes.LOAD_WIDGETS, getWidgets),
@@ -181,6 +191,7 @@ export default function* rootWidgetSaga() {
     takeLatest(ActionTypes.LOAD_WIDGET_DETAIL, getWidgetDetail),
     takeEvery(ActionTypes.EDIT_WIDGET, editWidget),
     takeEvery(ActionTypes.COPY_WIDGET, copyWidget),
-    takeEvery(ActionTypes.EXECUTE_COMPUTED_SQL, executeComputed)
+    takeEvery(ActionTypes.EXECUTE_COMPUTED_SQL, executeComputed),
+    takeEvery(ActionTypes.LOAD_DEPARTMENTS, getDepartments)
   ])
 }

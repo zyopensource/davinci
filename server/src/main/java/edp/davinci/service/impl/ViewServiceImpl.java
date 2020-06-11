@@ -510,13 +510,17 @@ public class ViewServiceImpl extends BaseEntityService implements ViewService {
             //构造参数， 原有的被传入的替换
             STGroup stg = new STGroupFile(Constants.SQL_TEMPLATE);
             List<String> groups = executeParam.getGroups();
+            List<String> filters = executeParam.getFilters();
+            if (filters == null) {
+                filters = new ArrayList<>();
+            }
             if(groups!=null&& groups.size()>1){
                 groups = groups.stream().distinct().collect(Collectors.toList());
             }
             List<TypeGroup> typeGroups = executeParam.getTypeGroups();
             String keywordPrefix = sqlUtils.getKeywordPrefix(source.getJdbcUrl(), source.getDbVersion());
             String keywordSuffix = sqlUtils.getKeywordSuffix(source.getJdbcUrl(), source.getDbVersion());
-            typeGroups = typeGroupService.toTypeGroups(typeGroups,keywordPrefix,keywordSuffix);
+            typeGroups = typeGroupService.toTypeGroups(typeGroups,filters,keywordPrefix,keywordSuffix);
             groups = typeGroupService.groupsFilter(groups,typeGroups);
             List<Order> orders = executeParam.getOrders(source.getJdbcUrl(), source.getDbVersion());
             ST st = stg.getInstanceOf("querySql");
@@ -531,7 +535,7 @@ public class ViewServiceImpl extends BaseEntityService implements ViewService {
             }
             //修复因排序导致下钻异常的问题
             st.add("orders", orders);
-            st.add("filters", convertFilters(executeParam.getFilters(), source));
+            st.add("filters", convertFilters(filters, source));
             st.add("keywordPrefix", keywordPrefix);
             st.add("keywordSuffix", keywordSuffix);
 

@@ -161,6 +161,10 @@ public class Constants extends Consts {
     public static final String DAVINCI_TOPIC_CHANNEL = "DAVINCI_TOPIC_CHANNEL";
 
     public static final String UCIN_APPID = "datav";
+    /**
+     * 主数据部门集合redis KEY
+     */
+    public static final String MDM_DEPARTMENTS_REDIS_KEY = "DATAV_MDM_DEPARTMENTS";
 
 
     public static char getSqlTempDelimiter(String sqlTempDelimiter) {

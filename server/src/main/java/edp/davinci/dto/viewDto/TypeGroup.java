@@ -53,6 +53,15 @@ public class TypeGroup {
         this.value = value;
     }
 
+    public TypeGroup(@NotBlank(message = "Invalid group column") String column, String columnAgg, String columnAlias, String visualType, String value, String agg) {
+        this.column = column;
+        this.columnAgg = columnAgg;
+        this.columnAlias = columnAlias;
+        this.visualType = visualType;
+        this.value = value;
+        this.agg = agg;
+    }
+
     public TypeGroup() {
     }
 }

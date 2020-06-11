@@ -19,6 +19,7 @@ public class SqlFilter {
     private Object value;
 
     private String sqlType;
+    private String visualType;
 
     private String operator;
 

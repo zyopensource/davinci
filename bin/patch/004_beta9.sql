@@ -18,3 +18,11 @@ ALTER TABLE `display`
 ADD COLUMN `config` text NULL AFTER `publish`;
 ALTER TABLE `cron_job`
 MODIFY COLUMN `update_by` bigint(20) NULL DEFAULT NULL AFTER `create_time`;
+
+
+
+ALTER TABLE `rel_user_organization`
+ADD COLUMN `create_by` bigint(20) NULL AFTER `role`,
+ADD COLUMN `create_time` datetime(0) NULL AFTER `create_by`,
+ADD COLUMN `update_by` bigint(20) NULL AFTER `create_time`,
+ADD COLUMN `update_time` datetime(0) NULL AFTER `update_by`;

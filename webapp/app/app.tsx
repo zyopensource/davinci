@@ -47,6 +47,7 @@ import 'assets/override/antd.css'
 import 'assets/override/react-grid.css'
 import 'assets/override/datepicker.css'
 import 'assets/less/style.less'
+import 'font-awesome/css/font-awesome.min.css'
 
 import * as echarts from 'echarts/lib/echarts'
 import 'zrender/lib/svg/svg'

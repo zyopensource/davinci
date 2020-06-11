@@ -72,6 +72,7 @@ interface IWorkbenchProps {
   onLoadViewDistinctValue: (viewId: number, params: Partial<IDistinctValueReqeustParams>) => void
   onClearCurrentWidget: () => void
   onExecuteComputed: (sql: string) => void
+  onLoadDepartments: () => void
 }
 
 interface IWorkbenchStates {
@@ -147,9 +148,10 @@ export class Workbench extends React.Component<IWorkbenchProps & RouteComponentW
   }
 
   public componentWillMount () {
-    const { match, onLoadViews, onLoadWidgetDetail } = this.props
+    const { match, onLoadViews, onLoadWidgetDetail,onLoadDepartments } = this.props
     const projectId = +match.params.projectId
     const widgetId = match.params.widgetId
+    onLoadDepartments()
     onLoadViews(projectId, () => {
       if (widgetId !== 'add' && !Number.isNaN(Number(widgetId))) {
         onLoadWidgetDetail(+widgetId)
@@ -627,7 +629,8 @@ export function mapDispatchToProps (dispatch) {
     onEditWidget: (widget, resolve) => dispatch(WidgetActions.editWidget(widget, resolve)),
     onLoadViewDistinctValue: (viewId, params) => dispatch(loadViewDistinctValue(viewId, params)),
     onClearCurrentWidget: () => dispatch(WidgetActions.clearCurrentWidget()),
-    onExecuteComputed: (sql) => dispatch(WidgetActions.executeComputed(sql))
+    onExecuteComputed: (sql) => dispatch(WidgetActions.executeComputed(sql)),
+    onLoadDepartments: () => dispatch(WidgetActions.loadDepartments()),
   }
 }
 

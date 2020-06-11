@@ -34,7 +34,8 @@ export const initialState: IWidgetState = {
   loading: false,
   dataLoading: false,
   columnValueLoading: false,
-  distinctColumnValues: null
+  distinctColumnValues: null,
+  departments: []
 }
 
 const widgetReducer = (
@@ -147,6 +148,9 @@ const widgetReducer = (
 
       case ActionTypes.CLEAR_CURRENT_WIDGET:
         draft.currentWidget = null
+        break
+      case ActionTypes.LOAD_DEPARTMENTS_SUCCESS:
+        draft.departments = action.payload.departments
         break
     }
   })

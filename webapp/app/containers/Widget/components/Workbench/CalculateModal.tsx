@@ -1,17 +1,17 @@
 import * as React from 'react'
 import {FormComponentProps} from 'antd/lib/form/Form'
 import {Form, Input, Checkbox, Select, Button, Modal} from 'antd'
-import {CalculateColumn} from './Dropbox'
+import {ICalculateColumn} from './Dropbox'
 import {getAggregatorLocale} from '../../components/util'
 
 
 interface ICalculateConfigFormProps {
   visible: boolean
   fields: any
-  calculate: CalculateColumn
+  calculate: ICalculateColumn
   onCancel: () => void
   onClear: () => void
-  onSave: (config: CalculateColumn) => void
+  onSave: (config: ICalculateColumn) => void
 }
 
 
@@ -27,13 +27,12 @@ export class CalculateForm extends React.PureComponent<ICalculateConfigFormProps
 
   private save = () => {
     const {form} = this.props
-    let calculate: CalculateColumn
+    let calculate: ICalculateColumn
     form.validateFieldsAndScroll((err, fieldsValues) => {
       if (err) {
         return
       }
       const {isExpression} = this.state
-      console.log(fieldsValues)
       let expression
       if (isExpression) {
         expression = fieldsValues.expression
@@ -93,7 +92,7 @@ export class CalculateForm extends React.PureComponent<ICalculateConfigFormProps
   public render () {
     let {visible, form, calculate, fields} = this.props
     let {isExpression} = this.state
-    let c: CalculateColumn = {symbol: '', expression: '', isExpression: false}
+    let c: ICalculateColumn = {symbol: '', expression: '', isExpression: false}
     if (calculate == undefined) {
       calculate = c
     }

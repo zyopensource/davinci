@@ -19,6 +19,7 @@
 
 package edp.davinci.common.controller;
 
+import edp.core.utils.RedisUtils;
 import edp.core.utils.TokenUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -28,6 +29,9 @@ public class BaseController {
 
     @Autowired
     public TokenUtils tokenUtils;
+
+    @Autowired
+    public RedisUtils redisUtils;
 
     public boolean invalidId(Long value) {
         if (null == value || value.longValue() < 1L) {

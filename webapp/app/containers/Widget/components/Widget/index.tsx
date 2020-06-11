@@ -7,7 +7,7 @@ import {
   AggregatorType,
   DragType,
   IDataParamConfig,
-  CalculateColumn
+  ICalculateColumn
 } from '../Workbench/Dropbox'
 import { IDataParamProperty } from '../Workbench/OperatingPanel'
 import { IFieldFormatConfig } from '../Config/Format'
@@ -59,7 +59,7 @@ export interface IWidgetMetric {
   chart: IChartInfo
   field: IFieldConfig
   format: IFieldFormatConfig
-  calculate: CalculateColumn
+  calculate: ICalculateColumn
   sort?: IFieldSortConfig
 }
 
