@@ -1,7 +1,7 @@
 import React from 'react'
 import {compose} from 'redux'
 import {connect} from 'react-redux'
-import {makeSelectDepartments} from "containers/Widget/selectors";
+import {makeSelectSubjects} from "containers/Widget/selectors";
 import injectReducer from "utils/injectReducer";
 import reducer from "containers/Widget/reducer";
 import injectSaga from "utils/injectSaga";
@@ -9,44 +9,38 @@ import saga from "containers/Widget/sagas";
 import {createStructuredSelector} from 'reselect'
 import TreeSelect, {ITreeNode} from "containers/Widget/components/Workbench/TreeSelect";
 
-interface DepartmentFilterProps {
+interface SubjectFilterProps {
   value: string[]
-  departments: Array<IDepartment>
+  subjects: Array<ISubject>
   onChange?: (v: string[]) => void
 
 }
 
-interface IDepartment {
-  id: string,
-  serialNo: string,
-  name: string,
-  displayName: string,
-  parentSerialNo: string,
-  enabled: number,
+interface ISubject {
+  subjectNumber: string,
+  subjectCode: string,
+  subjectName: string,
+  subjectId: string,
+  superiorSubjectsId: string,
 }
 
-const DepartmentFilterForm: React.FC<DepartmentFilterProps> = (props) => {
-  const {departments, onChange, value} = props
-
-  const treeData: Array<ITreeNode> = departments.map((department) => {
-    let name = department.name
-    if (department.enabled == 0) {
-      name = `${name}(已废弃)`
-    }
+const SubjectFilterForm: React.FC<SubjectFilterProps> = (props) => {
+  const {subjects, onChange, value} = props
+  const treeData: Array<ITreeNode> = subjects.map((costCenter: ISubject) => {
     return {
-      key: department.serialNo,
-      title: name, parent:
-      department.parentSerialNo, longName: department.displayName
+      key: costCenter.subjectId,
+      title: costCenter.subjectName,
+      parent: costCenter.superiorSubjectsId,
+      longName: costCenter.subjectName
     }
   })
-
   return (
     <TreeSelect value={value} treeData={treeData} onChange={onChange}/>
   );
 };
 
 const mapStateToProps = createStructuredSelector({
-  departments: makeSelectDepartments(),
+  subjects: makeSelectSubjects(),
 })
 
 export function mapDispatchToProps(dispatch) {
@@ -62,4 +56,4 @@ export default compose(
   withReducerWidget,
   withSagaWidget,
   withConnect
-)(DepartmentFilterForm)
+)(SubjectFilterForm)

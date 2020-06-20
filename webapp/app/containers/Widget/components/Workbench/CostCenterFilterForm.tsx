@@ -1,7 +1,7 @@
 import React from 'react'
 import {compose} from 'redux'
 import {connect} from 'react-redux'
-import {makeSelectDepartments} from "containers/Widget/selectors";
+import {makeSelectCostCenters} from "containers/Widget/selectors";
 import injectReducer from "utils/injectReducer";
 import reducer from "containers/Widget/reducer";
 import injectSaga from "utils/injectSaga";
@@ -9,44 +9,38 @@ import saga from "containers/Widget/sagas";
 import {createStructuredSelector} from 'reselect'
 import TreeSelect, {ITreeNode} from "containers/Widget/components/Workbench/TreeSelect";
 
-interface DepartmentFilterProps {
+interface CostCenterFilterProps {
   value: string[]
-  departments: Array<IDepartment>
+  costCenters: Array<ICostCenter>
   onChange?: (v: string[]) => void
 
 }
 
-interface IDepartment {
-  id: string,
-  serialNo: string,
-  name: string,
-  displayName: string,
-  parentSerialNo: string,
-  enabled: number,
+interface ICostCenter {
+  departmentCode: string,
+  departmentId: string,
+  departmentLongName: string,
+  departmentName: string,
+  superiorDepartmentId: string,
 }
 
-const DepartmentFilterForm: React.FC<DepartmentFilterProps> = (props) => {
-  const {departments, onChange, value} = props
-
-  const treeData: Array<ITreeNode> = departments.map((department) => {
-    let name = department.name
-    if (department.enabled == 0) {
-      name = `${name}(已废弃)`
-    }
+const CostCenterFilterForm: React.FC<CostCenterFilterProps> = (props) => {
+  const {costCenters, onChange, value} = props
+  const treeData: Array<ITreeNode> = costCenters.map((costCenter: ICostCenter) => {
     return {
-      key: department.serialNo,
-      title: name, parent:
-      department.parentSerialNo, longName: department.displayName
+      key: costCenter.departmentId,
+      title: costCenter.departmentName,
+      parent: costCenter.superiorDepartmentId,
+      longName: costCenter.departmentLongName
     }
   })
-
   return (
     <TreeSelect value={value} treeData={treeData} onChange={onChange}/>
   );
 };
 
 const mapStateToProps = createStructuredSelector({
-  departments: makeSelectDepartments(),
+  costCenters: makeSelectCostCenters(),
 })
 
 export function mapDispatchToProps(dispatch) {
@@ -62,4 +56,4 @@ export default compose(
   withReducerWidget,
   withSagaWidget,
   withConnect
-)(DepartmentFilterForm)
+)(CostCenterFilterForm)

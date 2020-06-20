@@ -179,7 +179,26 @@ export function* getDepartments() {
     const departments: any[] = result.payload
     yield put(WidgetActions.departmentsLoaded(departments))
   } catch (err) {
-    yield put(WidgetActions.deleteWidgetFail())
+    errorHandler(err)
+  }
+}
+export function* getCostCenters() {
+
+  try {
+    const result = yield call(request, `${api.costCenters}`)
+    const costCenters: any[] = result.payload
+    yield put(WidgetActions.costCentersLoaded(costCenters))
+  } catch (err) {
+    errorHandler(err)
+  }
+}
+export function* getSubjects() {
+
+  try {
+    const result = yield call(request, `${api.subjects}`)
+    const subjects: any[] = result.payload
+    yield put(WidgetActions.subjectsLoaded(subjects))
+  } catch (err) {
     errorHandler(err)
   }
 }
@@ -192,6 +211,8 @@ export default function* rootWidgetSaga() {
     takeEvery(ActionTypes.EDIT_WIDGET, editWidget),
     takeEvery(ActionTypes.COPY_WIDGET, copyWidget),
     takeEvery(ActionTypes.EXECUTE_COMPUTED_SQL, executeComputed),
-    takeEvery(ActionTypes.LOAD_DEPARTMENTS, getDepartments)
+    takeEvery(ActionTypes.LOAD_DEPARTMENTS, getDepartments),
+    takeEvery(ActionTypes.LOAD_COSTCENTERS, getCostCenters),
+    takeEvery(ActionTypes.LOAD_SUBJECTS, getSubjects),
   ])
 }

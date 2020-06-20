@@ -47,4 +47,6 @@ export interface IWidgetState {
   columnValueLoading: boolean
   distinctColumnValues: any[]
   departments: any[]
+  costCenters: any[]
+  subjects: any[]
 }

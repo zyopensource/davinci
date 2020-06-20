@@ -476,17 +476,21 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
   private getDragItemIconClass = (type: ViewModelVisualTypes) => {
     switch (type) {
       case ViewModelVisualTypes.Number:
-        return 'iconfont icon-values'
+        return 'icon-values'
       case ViewModelVisualTypes.Date:
-        return `iconfont icon-calendar ${styles.iconDate}`
+        return `icon-calendar ${styles.iconDate}`
       case ViewModelVisualTypes.GeoCountry:
       case ViewModelVisualTypes.Department:
-        return `fa fa-sitemap ${styles.iconDepartment}`
+        return `icon-department  ${styles.departmentFilter}`
+      case ViewModelVisualTypes.CostCenter:
+        return `icon-costcenter`
+      case ViewModelVisualTypes.Subject:
+        return `icon-subject`
       case ViewModelVisualTypes.GeoProvince:
       case ViewModelVisualTypes.GeoCity:
-        return 'iconfont icon-map'
+        return 'icon-map'
       default:
-        return 'iconfont icon-categories'
+        return 'icon-categories'
     }
   }
 
@@ -1008,12 +1012,21 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
     const fromPagination = !!updatedPagination
     updatedPagination = {...pagination, ...updatedPagination}
 
-    let groups = cols.items.map((c) => c.name)
-      .concat(rows.items.map((r) => r.name))
+    let groups = cols.items.map((c) => {
+      const visualType = c.visualType
+      if([ViewModelVisualTypes.Date].includes(visualType)){
+        return  JSON.stringify({column:c.name,visualType:visualType,value:c.dateType})
+      }
+      return c.name
+    })
+      .concat(rows.items.map((r) => {
+        const visualType = r.visualType
+        if([ViewModelVisualTypes.Date].includes(visualType)){
+          return  JSON.stringify({column:r.name,visualType:visualType,value:r.dateType})
+        }
+        return r.name
+      }))
       .filter((g) => g !== '指标名称')
-    let typeGroups = cols.items.map((c) => {return {column:c.name,visualType:c.visualType,value:c.dateType}})
-      .concat(rows.items.map((r) => {return {column:r.name,visualType:r.visualType,value:r.dateType}}))
-      .filter((g) => g.column !== '指标名称')
     let aggregators = metrics.items.map((m) => ({
       column: decodeMetricName(m.name),
       func: m.agg,
@@ -1136,10 +1149,12 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
     const requestParamsFilters = filters.items.reduce((a, b) => {
       return a.concat(b.config.sqlModel)
     }, [])
-
+    // let dateGroups = cols.items.map((c) => {return {column:c.name,visualType:c.visualType,value:c.dateType}})
+    //   .concat(rows.items.map((r) => {return {column:r.name,visualType:r.visualType,value:r.dateType}}))
+    //   .filter((g) => g.column !== '指标名称' && g.value && g.value!='' && g.visualType == ViewModelVisualTypes.Date)
     const requestParams = {
       groups,
-      typeGroups,
+      // dateGroups,
       aggregators,
       // filters: filters.items.map((i) => [].concat(i.config.sql)),
       filters: requestParamsFilters,
@@ -2113,7 +2128,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
                     onDragEnd={this.dragEnd}
                     draggable
                   >
-                    <i className={`${this.getDragItemIconClass(visualType)}`}/>
+                    <i className={`iconfont ${this.getDragItemIconClass(visualType)}`}/>
                     <p>{name}</p>
                     {title === 'computedField' ? this.bootstrapMorePanel(data) : null}
                     {
@@ -2153,7 +2168,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
                     onDragEnd={this.dragEnd}
                     draggable
                   >
-                    <i className={`${this.getDragItemIconClass(visualType)}`}/>
+                    <i className={`iconfont ${this.getDragItemIconClass(visualType)}`}/>
                     <p>{name}</p>
                     {title === 'computedField' ? this.bootstrapMorePanel(data) : null}
                     {

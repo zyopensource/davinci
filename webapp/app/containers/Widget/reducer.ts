@@ -35,7 +35,9 @@ export const initialState: IWidgetState = {
   dataLoading: false,
   columnValueLoading: false,
   distinctColumnValues: null,
-  departments: []
+  departments: [],
+  costCenters: [],
+  subjects: [],
 }
 
 const widgetReducer = (
@@ -145,12 +147,17 @@ const widgetReducer = (
       case ViewActionTypes.LOAD_VIEW_DISTINCT_VALUE_FAILURE:
         draft.columnValueLoading = false
         break
-
       case ActionTypes.CLEAR_CURRENT_WIDGET:
         draft.currentWidget = null
         break
       case ActionTypes.LOAD_DEPARTMENTS_SUCCESS:
         draft.departments = action.payload.departments
+        break
+      case ActionTypes.LOAD_COSTCENTERS_SUCCESS:
+        draft.costCenters = action.payload.costCenters
+        break
+      case ActionTypes.LOAD_SUBJECTS_SUCCESS:
+        draft.subjects = action.payload.subjects
         break
     }
   })

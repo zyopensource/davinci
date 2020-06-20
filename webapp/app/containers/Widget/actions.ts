@@ -200,6 +200,44 @@ export const WidgetActions = {
       payload: {}
     }
   },
+  loadCostCenters() {
+    return {
+      type: ActionTypes.LOAD_COSTCENTERS,
+    }
+  },
+  costCentersLoaded(costCenters: IWidgetFormed[]) {
+    return {
+      type: ActionTypes.LOAD_COSTCENTERS_SUCCESS,
+      payload: {
+        costCenters
+      }
+    }
+  },
+  costCentersFail() {
+    return {
+      type: ActionTypes.LOAD_COSTCENTERS_FAILURE,
+      payload: {}
+    }
+  },
+  loadSubjects() {
+    return {
+      type: ActionTypes.LOAD_SUBJECTS,
+    }
+  },
+  subjectsLoaded(subjects: IWidgetFormed[]) {
+    return {
+      type: ActionTypes.LOAD_SUBJECTS_SUCCESS,
+      payload: {
+        subjects
+      }
+    }
+  },
+  subjectsFail() {
+    return {
+      type: ActionTypes.LOAD_SUBJECTS_FAILURE,
+      payload: {}
+    }
+  },
 }
 
 const mockAction = returnType(WidgetActions)

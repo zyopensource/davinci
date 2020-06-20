@@ -50,5 +50,7 @@ export default {
   star: `${host}/star`,
   download: `${host}/download`,
   buriedPoints: `${host}/statistic`,
-  departments: `${host}/mdm/departments`
+  departments: `${host}/mdm/departments`,
+  costCenters: `${host}/mdm/costCenters`,
+  subjects: `${host}/mdm/subjects`,
 }

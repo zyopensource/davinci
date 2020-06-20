@@ -57,6 +57,14 @@ const makeSelectDepartments = () => createSelector(
   selectWidget,
   (widgetState) => widgetState.departments
 )
+const makeSelectCostCenters = () => createSelector(
+  selectWidget,
+  (widgetState) => widgetState.costCenters
+)
+const makeSelectSubjects = () => createSelector(
+  selectWidget,
+  (widgetState) => widgetState.subjects
+)
 export {
   selectWidget,
   makeSelectWidgets,
@@ -65,5 +73,7 @@ export {
   makeSelectDataLoading,
   makeSelectDistinctColumnValues,
   makeSelectColumnValueLoading,
-  makeSelectDepartments
+  makeSelectDepartments,
+  makeSelectCostCenters,
+  makeSelectSubjects,
 }

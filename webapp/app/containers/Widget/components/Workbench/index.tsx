@@ -73,6 +73,8 @@ interface IWorkbenchProps {
   onClearCurrentWidget: () => void
   onExecuteComputed: (sql: string) => void
   onLoadDepartments: () => void
+  onLoadCostCenters: () => void
+  onLoadSubjects: () => void
 }
 
 interface IWorkbenchStates {
@@ -148,10 +150,12 @@ export class Workbench extends React.Component<IWorkbenchProps & RouteComponentW
   }
 
   public componentWillMount () {
-    const { match, onLoadViews, onLoadWidgetDetail,onLoadDepartments } = this.props
+    const { match, onLoadViews, onLoadWidgetDetail,onLoadDepartments,onLoadCostCenters,onLoadSubjects } = this.props
     const projectId = +match.params.projectId
     const widgetId = match.params.widgetId
     onLoadDepartments()
+    onLoadCostCenters()
+    onLoadSubjects()
     onLoadViews(projectId, () => {
       if (widgetId !== 'add' && !Number.isNaN(Number(widgetId))) {
         onLoadWidgetDetail(+widgetId)
@@ -631,6 +635,8 @@ export function mapDispatchToProps (dispatch) {
     onClearCurrentWidget: () => dispatch(WidgetActions.clearCurrentWidget()),
     onExecuteComputed: (sql) => dispatch(WidgetActions.executeComputed(sql)),
     onLoadDepartments: () => dispatch(WidgetActions.loadDepartments()),
+    onLoadCostCenters: () => dispatch(WidgetActions.loadCostCenters()),
+    onLoadSubjects: () => dispatch(WidgetActions.loadSubjects()),
   }
 }
 

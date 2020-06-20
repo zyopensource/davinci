@@ -142,7 +142,9 @@ export enum ViewModelVisualTypes {
   GeoCountry = 'geoCountry',
   GeoProvince = 'geoProvince',
   GeoCity = 'geoCity',
-  Department = 'department'
+  Department = 'department',
+  CostCenter = 'costCenter',
+  Subject = 'subject'
 }
 
 export const VisualTypeSqlTypeSetting = {
@@ -160,7 +162,9 @@ export const ViewModelVisualTypesLocale = {
   [ViewModelVisualTypes.GeoCountry]: '地理国家',
   [ViewModelVisualTypes.GeoProvince]: '地理省份',
   [ViewModelVisualTypes.GeoCity]: '地理城市',
-  [ViewModelVisualTypes.Department]: '部门'
+  [ViewModelVisualTypes.Department]: '部门',
+  [ViewModelVisualTypes.CostCenter]: '成本中心',
+  [ViewModelVisualTypes.Subject]: '支出科目'
 }
 
 export const DEFAULT_SQL_LIMIT = 500

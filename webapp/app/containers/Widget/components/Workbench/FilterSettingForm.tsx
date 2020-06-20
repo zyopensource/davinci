@@ -16,6 +16,8 @@ const RangePicker = DatePicker.RangePicker
 const styles = require('./Workbench.less')
 const utilStyles = require('assets/less/util.less')
 import DepartmentFilterForm from './DepartmentFilterForm'
+import SubjectFilterForm from './SubjectFilterForm'
+import CostCenterFilterForm from "./CostCenterFilterForm";
 
 interface IFilterSettingFormProps {
   item: IDataParamSource
@@ -27,7 +29,7 @@ interface IFilterSettingFormProps {
 }
 
 interface IFilterSettingFormStates {
-  mode: 'value' | 'conditional' | 'date' | 'department'
+  mode: 'value' | 'conditional' | 'date' | 'department' | 'costCenter'
   name: string
   type: string
   list: Array<{ key: string, title: string }>,
@@ -36,6 +38,8 @@ interface IFilterSettingFormStates {
   selectedDate: string
   datepickerValue: [Moment, Moment]
   departmentValue: string[]
+  costCenterValue: string[]
+  subjectValue: string[]
 }
 
 export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IFilterSettingFormStates> {
@@ -50,7 +54,9 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
       filterTree: {},
       selectedDate: 'today',
       datepickerValue: [moment(), moment()],
-      departmentValue: []
+      departmentValue: [],
+      costCenterValue: [],
+      subjectValue: [],
     }
   }
 
@@ -114,6 +120,12 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
       case ViewModelVisualTypes.Department:
         mode = 'department'
         break;
+      case ViewModelVisualTypes.CostCenter:
+        mode = 'costCenter'
+        break;
+      case ViewModelVisualTypes.Subject:
+        mode = 'subject'
+        break;
       default:
         mode = 'value'
     }
@@ -140,6 +152,11 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
         this.setState({
           filterTree: filterSource,
           mode: ViewModelVisualTypes.Department
+        })
+      }else if (visualType === ViewModelVisualTypes.CostCenter) {
+        this.setState({
+          filterTree: filterSource,
+          mode: ViewModelVisualTypes.CostCenter
         })
       } else {
         if (Array.isArray(filterSource)) {
@@ -262,6 +279,16 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
       departmentValue: v
     })
   }
+  private costCenterChange = (v) => {
+    this.setState({
+      costCenterValue: v
+    })
+  }
+  private subjectChange = (v) => {
+    this.setState({
+      subjectValue: v
+    })
+  }
 // widget 编辑器filter 位置
   private getDateSql = () => {
     const {name, selectedDate, datepickerValue} = this.state
@@ -326,7 +353,7 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
 
   private save = () => {
     const {onSave, onCancel} = this.props
-    const {name, mode, target, filterTree, selectedDate, datepickerValue, departmentValue} = this.state
+    const {name, mode, target, filterTree, selectedDate, datepickerValue, departmentValue,costCenterValue,subjectValue} = this.state
     if (mode === 'value') {
       const sql = target.map((key) => `'${key}'`).join(',')
       const sqlModel = []
@@ -387,6 +414,44 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
       } else {
         onCancel()
       }
+    } else if (mode === 'costCenter') {
+      const sqlModel = []
+      const filterItem: IFilters = {
+        name,
+        type: 'filter',
+        value: costCenterValue.join('|'),
+        operator: 'regexp',
+        visualType: ViewModelVisualTypes.CostCenter,
+        sqlType: this.getSqlType(name)
+      }
+      sqlModel.push(filterItem)
+      if (sqlModel) {
+        onSave({
+          sqlModel,
+          filterSource: costCenterValue,
+        })
+      } else {
+        onCancel()
+      }
+    }else if (mode === 'subject') {
+      const sqlModel = []
+      const filterItem: IFilters = {
+        name,
+        type: 'filter',
+        value: subjectValue.join('|'),
+        operator: 'regexp',
+        visualType: ViewModelVisualTypes.Subject,
+        sqlType: this.getSqlType(name)
+      }
+      sqlModel.push(filterItem)
+      if (sqlModel) {
+        onSave({
+          sqlModel,
+          filterSource: subjectValue,
+        })
+      } else {
+        onCancel()
+      }
     }
   }
 
@@ -416,7 +481,7 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
       headerRadios.push(
         <RadioButton key="date" value="date">日期筛选</RadioButton>
       )
-    } else if (type === 'department') {
+    } else if (type === 'department'||type === 'costCenter') {
     } else {
       headerRadios.push(
         <RadioButton key="value" value="value">值筛选</RadioButton>
@@ -486,11 +551,25 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
           onChange={this.departmentChange}
         />
       )
+    } else if (mode === 'costCenter') {
+      shownBlock = (
+        <CostCenterFilterForm
+          value={filterTree}
+          onChange={this.costCenterChange}
+        />
+      )
+    }else if (mode === 'subject') {
+      shownBlock = (
+        <SubjectFilterForm
+          value={filterTree}
+          onChange={this.subjectChange}
+        />
+      )
     }
 
     return (
       <div className={styles.filterSettingForm}>
-        {mode !== 'department' ? <div className={styles.header}>
+        {!['department','costCenter','subject'].includes(mode)  ? <div className={styles.header}>
           <RadioGroup onChange={this.radioChange} value={mode}>
             {headerRadios}
           </RadioGroup>
