@@ -2,7 +2,9 @@ package edp.davinci.schedule;
 
 import edp.core.utils.RedisUtils;
 import edp.davinci.common.controller.BaseController;
+import edp.davinci.model.mdm.CostCenter;
 import edp.davinci.model.mdm.Department;
+import edp.davinci.model.mdm.Subject;
 import edp.davinci.service.DatavService;
 import edp.davinci.service.ExternalService;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-import  edp.davinci.core.common.Constants;
+import edp.davinci.core.common.Constants;
 
 /**
  * @author linda
@@ -30,8 +32,12 @@ public class MdmSchedule extends BaseController {
      */
     @Scheduled(cron = "0 0/30 * * * *")
     public void departmentsSync() {
+        //组织架构
         List<Department> departments = externalService.queryMdmDepartments();
-        String key = Constants.MDM_DEPARTMENTS_REDIS_KEY;
-        redisUtils.set(key, departments);
+        //成本中心
+        List<CostCenter> costCenters = externalService.queryMdmCostCenters();
+        //支出科目
+        List<Subject> subjects = externalService.queryMdmSubjects();
+
     }
 }

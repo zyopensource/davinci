@@ -8,3 +8,10 @@ CASE  from_timestamp(<typeGroup.columnAlias>,'MM/dd')
     WHEN '10/01' THEN  CONCAT(cast(year(<typeGroup.columnAlias>) as string),'-Q4')
 end <typeGroup.column>
 >>
+
+
+//层级正则聚合
+levelAgg(keywordPrefix,column,keywordSuffix,values)
+::=<<
+ regexp_extract(<keywordPrefix><column><keywordSuffix>,'(<values:{value|<value>}; separator="|">)',0)
+>>

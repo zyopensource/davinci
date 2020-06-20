@@ -206,7 +206,7 @@ public class ViewServiceImpl extends BaseEntityService implements ViewService {
 
         List<String> querySqlList = sqlParseUtils.getSqls(srcSql, Boolean.TRUE);
         if (!CollectionUtils.isEmpty(querySqlList)) {
-            buildQuerySql(querySqlList, source, executeParam);
+            buildQuerySql(querySqlList, source, executeParam,viewWithSource.getModel());
             executeParam.addExcludeColumn(excludeColumns, source.getJdbcUrl(), source.getDbVersion());
             context.setQuerySql(querySqlList);
             context.setViewExecuteParam(executeParam);
@@ -493,7 +493,7 @@ public class ViewServiceImpl extends BaseEntityService implements ViewService {
             throw new UnAuthorizedExecption("you have not permission to get data");
         }
 
-        return getResultDataList(projectService.isMaintainer(projectDetail, user), viewWithSource, executeParam, user);
+        return  getResultDataList(projectService.isMaintainer(projectDetail, user), viewWithSource, executeParam, user);
     }
 
     private ViewWithSource getViewWithSource(Long id) {
@@ -505,7 +505,7 @@ public class ViewServiceImpl extends BaseEntityService implements ViewService {
         return viewWithSource;
     }
 
-    public void buildQuerySql(List<String> querySqlList, Source source, ViewExecuteParam executeParam) {
+    public void buildQuerySql(List<String> querySqlList, Source source, ViewExecuteParam executeParam,String model) {
         if (null != executeParam) {
             //构造参数， 原有的被传入的替换
             STGroup stg = new STGroupFile(Constants.SQL_TEMPLATE);
@@ -514,14 +514,11 @@ public class ViewServiceImpl extends BaseEntityService implements ViewService {
             if (filters == null) {
                 filters = new ArrayList<>();
             }
-            if(groups!=null&& groups.size()>1){
-                groups = groups.stream().distinct().collect(Collectors.toList());
-            }
-            List<TypeGroup> typeGroups = executeParam.getTypeGroups();
             String keywordPrefix = sqlUtils.getKeywordPrefix(source.getJdbcUrl(), source.getDbVersion());
             String keywordSuffix = sqlUtils.getKeywordSuffix(source.getJdbcUrl(), source.getDbVersion());
-            typeGroups = typeGroupService.toTypeGroups(typeGroups,filters,keywordPrefix,keywordSuffix);
+            List<TypeGroup> typeGroups  = typeGroupService.toTypeGroups(groups,filters,keywordPrefix,keywordSuffix,model);
             groups = typeGroupService.groupsFilter(groups,typeGroups);
+            filters = typeGroupService.filtersFilter(filters);
             List<Order> orders = executeParam.getOrders(source.getJdbcUrl(), source.getDbVersion());
             ST st = stg.getInstanceOf("querySql");
             st.add("nativeQuery", executeParam.isNativeQuery());
@@ -624,7 +621,7 @@ public class ViewServiceImpl extends BaseEntityService implements ViewService {
 
             List<String> querySqlList = sqlParseUtils.getSqls(srcSql, true);
             if (!CollectionUtils.isEmpty(querySqlList)) {
-                buildQuerySql(querySqlList, source, executeParam);
+                buildQuerySql(querySqlList, source, executeParam,viewWithSource.getModel());
                 executeParam.addExcludeColumn(excludeColumns, source.getJdbcUrl(), source.getDbVersion());
 
                 if (null != executeParam && null != executeParam.getCache() && executeParam.getCache()

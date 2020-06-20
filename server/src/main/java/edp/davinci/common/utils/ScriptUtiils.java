@@ -83,7 +83,6 @@ public class ScriptUtiils {
             if (obj instanceof ScriptObjectMirror) {
                 ScriptObjectMirror vsom = (ScriptObjectMirror) obj;
                 List<String> groups = new ArrayList<>();
-                List<TypeGroup> typeGroups = new ArrayList<>();
                 List<Aggregator> aggregators = new ArrayList<>();
                 List<Order> orders = new ArrayList<>();
                 List<String> filters = new ArrayList<>();
@@ -100,9 +99,6 @@ public class ScriptUtiils {
                                 Collection<Object> values = groupMirror.values();
                                 values.forEach(v -> {
                                     ScriptObjectMirror agg = (ScriptObjectMirror) v;
-                                    TypeGroup typeGroup = new TypeGroup(String.valueOf(agg.get("column")),
-                                            String.valueOf(agg.get("visualType")),String.valueOf(agg.get("value")));
-                                    typeGroups.add(typeGroup);
                                 });
                             }
                             break;
@@ -183,7 +179,7 @@ public class ScriptUtiils {
                     }
                 }
 
-                return new ViewExecuteParam(groups,typeGroups, aggregators, orders, filters, params, cache, expired, nativeQuery);
+                return new ViewExecuteParam(groups, orders, filters, params, cache, expired, nativeQuery);
             }
 
         }

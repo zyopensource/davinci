@@ -7,10 +7,11 @@ import java.util.List;
 
 import com.alibaba.fastjson.JSONObject;
 import edp.davinci.addons.UserDataProfileItem;
+import edp.davinci.model.mdm.CostCenter;
 import edp.davinci.model.mdm.Department;
+import edp.davinci.model.mdm.Subject;
 
 /**
- * 
  * <br>
  * Class Name   : ExternalService
  *
@@ -19,13 +20,37 @@ import edp.davinci.model.mdm.Department;
  * @date 2019年11月18日
  */
 public interface ExternalService {
-	
-	List<UserDataProfileItem> queryUserDataProfiles(String email);
 
-	JSONObject queryQywxUserInfo(String code);
+    List<UserDataProfileItem> queryUserDataProfiles(String email);
+
+    JSONObject queryQywxUserInfo(String code);
 
 
-	List<Department> queryDepartments();
+    List<Department> queryDepartments();
 
-	List<Department> queryMdmDepartments();
+    List<Department> queryMdmDepartments();
+
+	/**
+	 * 获取成本中心
+	 * @return
+	 */
+	List<CostCenter> queryCostCenters();
+
+	/**
+	 * 接口服务获取成本中心
+	 * @return
+	 */
+    List<CostCenter> queryMdmCostCenters();
+
+	/**
+	 * 获取支出科目
+	 * @return
+	 */
+	List<Subject> querySubjects();
+
+	/**
+	 * 接口服务获取支出科目
+	 * @return
+	 */
+    List<Subject> queryMdmSubjects();
 }

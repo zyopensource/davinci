@@ -166,6 +166,16 @@ public class Constants extends Consts {
      */
     public static final String MDM_DEPARTMENTS_REDIS_KEY = "DATAV_MDM_DEPARTMENTS";
 
+    /**
+     * 成本中心集合redis KEY
+     */
+    public static final String MDM_COSTCENTERS_REDIS_KEY = "DATAV_MDM_COSTCENTERS";
+
+    /**
+     * 支出科目集合redis KEY
+     */
+    public static final String MDM_SUBJECTS_REDIS_KEY = "DATAV_MDM_SUBJECTS";
+
 
     public static char getSqlTempDelimiter(String sqlTempDelimiter) {
         return sqlTempDelimiter.charAt(sqlTempDelimiter.length() - 1);

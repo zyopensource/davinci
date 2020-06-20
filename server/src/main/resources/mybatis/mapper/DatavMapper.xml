@@ -18,7 +18,7 @@
 <!--    </select>   -->
 	<select id="selectSubscribeWidgets" resultType="edp.davinci.model.Widget" parameterType="java.lang.Long">
 SELECT
-	w.*
+	distinct w.*
 FROM
 	widget w
 	JOIN mem_dashboard_widget mdw on mdw.widget_id = w.id

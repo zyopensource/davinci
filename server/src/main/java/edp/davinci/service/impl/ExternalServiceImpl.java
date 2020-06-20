@@ -3,21 +3,20 @@
  */
 package edp.davinci.service.impl;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.jeesuite.common.util.DigestUtils;
 import edp.core.utils.RedisUtils;
+import edp.core.utils.SqlExtUtils;
+import edp.davinci.addons.UserDataProfileItem;
 import edp.davinci.core.common.Constants;
 import edp.davinci.core.utils.HttpClientUtil;
+import edp.davinci.model.mdm.CostCenter;
 import edp.davinci.model.mdm.Department;
+import edp.davinci.model.mdm.Subject;
+import edp.davinci.service.ExternalService;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,13 +31,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.jeesuite.common.util.DigestUtils;
-
-import edp.core.utils.SqlExtUtils;
-import edp.davinci.addons.UserDataProfileItem;
-import edp.davinci.service.ExternalService;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * <br>
@@ -73,6 +69,18 @@ public class ExternalServiceImpl implements ExternalService, EnvironmentAware {
 
     @Value("${data-profile.department-url}")
     private String departmentUrl;
+
+    @Value("${data-profile.costdenter-url}")
+    private String costCentertUrl;
+
+    @Value("${data-profile.subject-url}")
+    private String subjectUrl;
+
+    @Value("${data-profile.appId}")
+    private String appId;
+
+    @Value("${data-profile.appSecret}")
+    private String appSecret;
     //后续考虑映射多个字段
     private Map<String, String> dataProfileColumnMappings = new HashMap<>();
 
@@ -90,7 +98,9 @@ public class ExternalServiceImpl implements ExternalService, EnvironmentAware {
         };
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add("x-invoker-appid", "davinci");
+        String sign = DigestUtils.md5(appId + appSecret);
+        headers.add("x-invoker-appid", appId);
+        headers.add("x-sign", sign);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
         HttpEntity<String> entity = new HttpEntity<String>(null, headers);
         try {
@@ -172,16 +182,13 @@ public class ExternalServiceImpl implements ExternalService, EnvironmentAware {
         ParameterizedTypeReference<List<Department>> arearesponseType = new ParameterizedTypeReference<List<Department>>() {
         };
         HttpHeaders headers = new HttpHeaders();
-        
-        String appId = "davinci";
-        String appSecret = "89a84c9e8d1ceb1c11a62d85";
+
         String sign = DigestUtils.md5(appId + appSecret);
-        headers.add("x-invoker-appid", "appId");
+        headers.add("x-invoker-appid", appId);
         headers.add("x-sign", sign);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-        headers.setContentType(MediaType.APPLICATION_JSON);
         Map<String, Object> params = new HashMap(1);
-        params.put("updatedAtStart", "2017-01-01 00:00:01");
+        params.put("updatedAtStart", "2016-12-01 00:00:01");
         HttpEntity<Object> entity = new HttpEntity(params, headers);
 
         try {
@@ -190,6 +197,130 @@ public class ExternalServiceImpl implements ExternalService, EnvironmentAware {
                     .getBody();
         } catch (RestClientException e) {
             e.printStackTrace();
+        }
+        if (lists.size() > 0) {
+            String key = Constants.MDM_DEPARTMENTS_REDIS_KEY;
+            redisUtils.set(key, lists);
+        }
+        return lists;
+    }
+
+
+    @Override
+    public List<CostCenter> queryCostCenters() {
+        List<CostCenter> costCenters = queryRedisCostCenters();
+
+        List<CostCenter> list = costCenters.stream().map(v -> {
+            if (v.getSuperiorDepartmentId() == null || v.getSuperiorDepartmentId().isEmpty()) {
+                v.setSuperiorDepartmentId("0");
+            }
+            return v;
+        }).collect(Collectors.toList());
+        CostCenter costCenter = new CostCenter("", "", "成本中心", "成本中心", "0", "");
+        list.add(costCenter);
+        return list;
+    }
+
+    private List<CostCenter> queryRedisCostCenters() {
+        Object values = null;
+        try {
+            values = redisUtils.get(Constants.MDM_COSTCENTERS_REDIS_KEY);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        List<CostCenter> costCenters;
+        if (values != null) {
+            costCenters = (List) values;
+            if (costCenters.size() > 0) {
+                return costCenters;
+            }
+        }
+
+        List<CostCenter> lists = queryMdmCostCenters();
+
+        return lists;
+    }
+
+    @Override
+    public List<CostCenter> queryMdmCostCenters() {
+
+        List<CostCenter> lists = new ArrayList<>();
+        ParameterizedTypeReference<List<CostCenter>> arearesponseType = new ParameterizedTypeReference<List<CostCenter>>() {
+        };
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        Map<String, Object> params = new HashMap();
+        HttpEntity<Object> entity = new HttpEntity(params, headers);
+
+        try {
+            lists = restTemplate
+                    .exchange(costCentertUrl, HttpMethod.POST, entity, arearesponseType)
+                    .getBody();
+        } catch (RestClientException e) {
+            e.printStackTrace();
+        }
+        if (lists.size() > 0) {
+            String key = Constants.MDM_COSTCENTERS_REDIS_KEY;
+            redisUtils.set(key, lists);
+        }
+        return lists;
+    }
+
+    @Override
+    public List<Subject> querySubjects() {
+        List<Subject> subjects = queryRedisSubjects();
+
+        List<Subject> list = subjects.stream().map(v -> {
+            if (v.getSuperiorSubjectsId() == null || v.getSuperiorSubjectsId().isEmpty()) {
+                v.setSuperiorSubjectsId("0");
+            }
+            return v;
+        }).collect(Collectors.toList());
+        Subject subject = new Subject("", "", "", "支出科目", "支出科目", "0", "");
+        list.add(subject);
+        return list;
+    }
+
+    private List<Subject> queryRedisSubjects() {
+        Object values = null;
+        try {
+            values = redisUtils.get(Constants.MDM_SUBJECTS_REDIS_KEY);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        List<Subject> subjects;
+        if (values != null) {
+            subjects = (List) values;
+            if (subjects.size() > 0) {
+                return subjects;
+            }
+        }
+        List<Subject> lists = queryMdmSubjects();
+
+        return lists;
+    }
+
+    @Override
+    public List<Subject> queryMdmSubjects() {
+
+        List<Subject> lists = new ArrayList<>();
+        ParameterizedTypeReference<List<Subject>> arearesponseType = new ParameterizedTypeReference<List<Subject>>() {
+        };
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        Map<String, Object> params = new HashMap();
+        HttpEntity<Object> entity = new HttpEntity(params, headers);
+
+        try {
+            lists = restTemplate
+                    .exchange(subjectUrl, HttpMethod.POST, entity, arearesponseType)
+                    .getBody();
+        } catch (RestClientException e) {
+            e.printStackTrace();
+        }
+        if (lists.size() > 0) {
+            String key = Constants.MDM_SUBJECTS_REDIS_KEY;
+            redisUtils.set(key, lists);
         }
         return lists;
     }

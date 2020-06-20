@@ -34,7 +34,6 @@ import static edp.core.consts.Consts.*;
 @Data
 public class ViewExecuteParam {
     private List<String> groups;
-    private List<TypeGroup> typeGroups;
     private List<Aggregator> aggregators;
     private List<Order> orders;
     private List<String> filters;
@@ -55,8 +54,6 @@ public class ViewExecuteParam {
     }
 
     public ViewExecuteParam(List<String> groupList,
-                            List<TypeGroup> typeGroupList,
-                            List<Aggregator> aggregators,
                             List<Order> orders,
                             List<String> filterList,
                             List<Param> params,
@@ -64,8 +61,6 @@ public class ViewExecuteParam {
                             Long expired,
                             Boolean nativeQuery) {
         this.groups = groupList;
-        this.typeGroups = typeGroupList;
-        this.aggregators = aggregators;
         this.orders = orders;
         this.filters = filterList;
         this.params = params;

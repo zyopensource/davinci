@@ -90,6 +90,7 @@ public class H5Controller extends BaseController {
                 return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.NOT_FOUND.getCode()));
             }
             JSONObject result = externalService.queryQywxUserInfo(code);
+            log.info("qywx result:{}",result);
             if (result.getString("code") == null || result.getInteger("code") != 200) {
                 return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.NOT_FOUND.getCode()));
             }
@@ -100,6 +101,7 @@ public class H5Controller extends BaseController {
                 return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.NOT_FOUND.getCode()));
             }
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.NOT_FOUND.getCode()));
         }
         return ResponseEntity.ok(new ResultMap().success(tokenUtils.generateContinuousToken(user)));
@@ -120,6 +122,7 @@ public class H5Controller extends BaseController {
                 return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.NOT_FOUND.getCode()));
             }
             JSONObject result = externalService.queryQywxUserInfo(code);
+            log.info("qywx result:{}",result);
             if (result.getString("code") == null || result.getInteger("code") != 200) {
                 return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.NOT_FOUND.getCode()));
             }
@@ -131,6 +134,7 @@ public class H5Controller extends BaseController {
             }
 
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.NOT_FOUND.getCode()));
         }
         return ResponseEntity.ok(new ResultMap().success(token));
