@@ -511,6 +511,7 @@ public class ViewServiceImpl extends BaseEntityService implements ViewService {
             STGroup stg = new STGroupFile(Constants.SQL_TEMPLATE);
             List<String> groups = executeParam.getGroups();
             List<String> filters = executeParam.getFilters();
+            List<String> valueFilters = new ArrayList<>();
             if (filters == null) {
                 filters = new ArrayList<>();
             }
@@ -518,8 +519,10 @@ public class ViewServiceImpl extends BaseEntityService implements ViewService {
             String keywordSuffix = sqlUtils.getKeywordSuffix(source.getJdbcUrl(), source.getDbVersion());
             List<TypeGroup> typeGroups  = typeGroupService.toTypeGroups(groups,filters,keywordPrefix,keywordSuffix,model);
             groups = typeGroupService.groupsFilter(groups,typeGroups);
+            valueFilters = typeGroupService.valueFiltersFilter(filters);
             filters = typeGroupService.filtersFilter(filters);
             List<Order> orders = executeParam.getOrders(source.getJdbcUrl(), source.getDbVersion());
+//            orders = typeGroupService.ordersFilter(orders);
             ST st = stg.getInstanceOf("querySql");
             st.add("nativeQuery", executeParam.isNativeQuery());
             st.add("groups", groups);
@@ -533,6 +536,7 @@ public class ViewServiceImpl extends BaseEntityService implements ViewService {
             //修复因排序导致下钻异常的问题
             st.add("orders", orders);
             st.add("filters", convertFilters(filters, source));
+            st.add("valueFilters", convertFilters(valueFilters, source));
             st.add("keywordPrefix", keywordPrefix);
             st.add("keywordSuffix", keywordSuffix);
 

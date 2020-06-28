@@ -22,6 +22,7 @@ package edp.davinci.dto.viewDto;
 import com.alibaba.druid.util.StringUtils;
 import edp.core.utils.CollectionUtils;
 import edp.core.utils.SqlUtils;
+import edp.davinci.core.common.Constants;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -48,7 +49,6 @@ public class ViewExecuteParam {
 
     private boolean nativeQuery = false;
 
-    private final String calculateFlag= "@calculate@";
 
     public ViewExecuteParam() {
     }
@@ -157,8 +157,8 @@ public class ViewExecuteParam {
                 sb.append(column);
                 sb.append(PARENTHESES_END).append(SqlUtils.getAliasSuffix(jdbcUrl, dbVersion));
             }
-            else if(func.trim().toUpperCase().contains(calculateFlag.toUpperCase())){
-                sb.append(func.trim().replace(calculateFlag,PARENTHESES_START+field+PARENTHESES_END));
+            else if(func.trim().toUpperCase().contains(Constants.CALCULATE_FLAG.toUpperCase())){
+                sb.append(func.trim().replace(Constants.CALCULATE_FLAG,PARENTHESES_START+field+PARENTHESES_END));
                 sb.append(" AS ").append(SqlUtils.getAliasPrefix(jdbcUrl, dbVersion));
                 sb.append(func.trim()).append(PARENTHESES_START);
                 sb.append(column);

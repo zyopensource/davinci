@@ -70,6 +70,7 @@ export function* getExternalAuthProviders(): IterableIterator<any> {
       method: 'get',
       url: api.externalAuthProviders
     })
+    // @ts-ignore
     const providers = asyncData.payload
     yield put(gotExternalAuthProviders(providers))
     return providers
@@ -85,6 +86,7 @@ export function* tryExternalAuth(action): IterableIterator<any> {
       method: 'post',
       url: api.tryExternalAuth
     })
+    // @ts-ignore
     const loginUser = asyncData.payload
     localStorage.setItem('loginUser', JSON.stringify(loginUser))
     resolve()
@@ -105,7 +107,7 @@ export function* login(action): IterableIterator<any> {
         password
       }
     })
-
+    // @ts-ignore
     const loginUser = asyncData.payload
     localStorage.setItem('loginUser', JSON.stringify(loginUser))
     resolve()
@@ -135,19 +137,23 @@ export function* activeUser(action): IterableIterator<any> {
       method: 'post',
       url: `${api.signup}/active/${token}`
     })
+    // @ts-ignore
     switch (asyncData.header.code) {
       case 200:
+        // @ts-ignore
         const loginUser = asyncData.payload
         yield put(activeSuccess(loginUser))
         localStorage.setItem('loginUser', JSON.stringify(loginUser))
         resolve()
         return loginUser
       case 302:
+        // @ts-ignore
         message.error(asyncData.header.msg)
         setTimeout(() => location.replace('/'), 500)
         return
       default:
         yield put(activeError())
+        // @ts-ignore
         message.error(asyncData.header.msg)
         return null
     }
@@ -160,6 +166,7 @@ export function* activeUser(action): IterableIterator<any> {
 export function* getLoginUser(action): IterableIterator<any> {
   try {
     const asyncData = yield call(request, `${api.user}/token`)
+    // @ts-ignore
     const loginUser = asyncData.payload
     yield put(logged(loginUser))
     localStorage.setItem('loginUser', JSON.stringify(loginUser))
@@ -181,12 +188,17 @@ export function* checkName(action): IterableIterator<any> {
         name
       }
     })
+
     const msg =
+      // @ts-ignore
       asyncData && asyncData.header && asyncData.header.msg
+        // @ts-ignore
         ? asyncData.header.msg
         : ''
     const code =
+      // @ts-ignore
       asyncData && asyncData.header && asyncData.header.code
+        // @ts-ignore
         ? asyncData.header.code
         : ''
     resolve(msg)
@@ -207,11 +219,15 @@ export function* checkNameUnique(action): IterableIterator<any> {
       params: data
     })
     const msg =
+      // @ts-ignore
       asyncData && asyncData.header && asyncData.header.msg
+        // @ts-ignore
         ? asyncData.header.msg
         : ''
     const code =
+      // @ts-ignore
       asyncData && asyncData.header && asyncData.header.code
+        // @ts-ignore
         ? asyncData.header.code
         : ''
     resolve(msg)
@@ -270,8 +286,10 @@ export function* joinOrganization(action): IterableIterator<any> {
       method: 'post',
       url: `${api.organizations}/confirminvite/${token}`
     })
+    // @ts-ignore
     switch (asyncData.header.code) {
       case 200:
+        // @ts-ignore
         const detail = asyncData.payload
         yield put(joinOrganizationSuccess(detail))
         if (resolve) {
@@ -280,6 +298,7 @@ export function* joinOrganization(action): IterableIterator<any> {
         return token
       default:
         yield put(joinOrganizationError())
+        // @ts-ignore
         message.error(asyncData.header.msg)
         return null
     }
@@ -305,6 +324,7 @@ export function* joinOrganization(action): IterableIterator<any> {
 export function* getDownloadList(): IterableIterator<any> {
   try {
     const result = yield call(request, `${api.download}/page`)
+    // @ts-ignore
     yield put(downloadListLoaded(result.payload))
   } catch (err) {
     yield put(loadDownloadListFail(err))

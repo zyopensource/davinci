@@ -29,7 +29,7 @@ interface IFilterSettingFormProps {
 }
 
 interface IFilterSettingFormStates {
-  mode: 'value' | 'conditional' | 'date' | 'department' | 'costCenter'
+  mode: 'value' | 'conditional' | 'date' | 'department' | 'costCenter' | 'subject'
   name: string
   type: string
   list: Array<{ key: string, title: string }>,
@@ -158,7 +158,13 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
           filterTree: filterSource,
           mode: ViewModelVisualTypes.CostCenter
         })
-      } else {
+      } else if (visualType === ViewModelVisualTypes.Subject) {
+        this.setState({
+          filterTree: filterSource,
+          mode: ViewModelVisualTypes.Subject
+        })
+      }
+      else {
         if (Array.isArray(filterSource)) {
           this.setState({
             target: filterSource,

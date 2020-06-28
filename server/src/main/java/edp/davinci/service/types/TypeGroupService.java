@@ -7,6 +7,7 @@ import edp.davinci.core.enums.types.DateTypeEnum;
 import edp.davinci.core.enums.types.LevelTypeEnum;
 import edp.davinci.core.model.SqlFilter;
 import edp.davinci.dto.viewDto.Model;
+import edp.davinci.dto.viewDto.Order;
 import edp.davinci.dto.viewDto.TypeGroup;
 import edp.davinci.model.mdm.CostCenter;
 import edp.davinci.model.mdm.Department;
@@ -22,6 +23,7 @@ import org.stringtemplate.v4.STGroup;
 import org.stringtemplate.v4.STGroupFile;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -49,14 +51,20 @@ public class TypeGroupService {
         List<TypeGroup> typeGroups = new ArrayList<>();
         if (groups != null) {
             groups = groups.stream().distinct().collect(Collectors.toList());
+            JSONObject modelObj = JSON.parseObject(model);
             for (String group : groups) {
-                if (isTypeGroup(group)) {
-                    TypeGroup typeGroup = JSON.parseObject(group, TypeGroup.class);
+                if (isDateTypeGroup(group)) {
+                    String[] groupNames = group.split(Constants.DATE_FLAG);
+                    TypeGroup typeGroup = new TypeGroup(groupNames[0], "date", groupNames[1]);
+                    typeGroup.setColumnAlias(group);
                     typeGroups.add(typeGroup);
                 } else {
-                    JSONObject modelObj = JSON.parseObject(model);
                     Model modelVal = JSON.parseObject(modelObj.getString(group), Model.class);
-                    TypeGroup typeGroup = new TypeGroup(group, modelVal.getVisualType(), "");
+                    String visualType = modelVal.getVisualType();
+                    TypeGroup typeGroup = new TypeGroup(group, visualType, "");
+                    if ("date".equals(visualType)) {
+                        typeGroup.setValue(DateTypeEnum.ymd.name());
+                    }
                     typeGroups.add(typeGroup);
                 }
             }
@@ -93,14 +101,13 @@ public class TypeGroupService {
     private void buildDateTypeGroup(TypeGroup typeGroup, String keywordPrefix, String keywordSuffix) {
         String value = typeGroup.getValue();
         String column = typeGroup.getColumn();
-        typeGroup.setColumnAlias(column + '_' + value);
         for (DateTypeEnum dateTypeEnum : DateTypeEnum.values()) {
             if (dateTypeEnum.name().equals(value)) {
                 ST aggSt = new ST(dateTypeEnum.getAgg());
                 aggSt.add("keywordPrefix", keywordPrefix);
                 aggSt.add("column", column);
                 aggSt.add("keywordSuffix", keywordSuffix);
-                if (DateTypeEnum.YQ.name().equals(value)) {
+                if (DateTypeEnum.yq.name().equals(value)) {
                     //构造参数， 原有的被传入的替换
                     STGroup typeGroupStg = new STGroupFile(Constants.TYPE_GROUP_TEMPLATE);
                     ST columeAggSt = typeGroupStg.getInstanceOf("yqColumeSql");
@@ -116,14 +123,23 @@ public class TypeGroupService {
 
     private void buildTypeGroup(List<LevelData> levelDatas, TypeGroup typeGroup, List<String> filterStrs, String keywordPrefix, String keywordSuffix, String visualType) {
         String column = typeGroup.getColumn();
-        //获取对应类型和对应维度内的过滤数据
-        List<SqlFilter> filters = filterStrs.stream()
+        //获取对应类型和对应维度内的过滤s数据
+        List<SqlFilter> sqlFilters = filterStrs.stream()
                 .map(v -> JSON.parseObject(v, SqlFilter.class))
                 .filter(v ->
                         visualType.equals(v.getVisualType())
                                 && v.getName().equals(column)
                 )
                 .collect(Collectors.toList());
+        //层级的数据只获取最后一个筛选
+        List<SqlFilter> filters = new ArrayList<>();
+        if (sqlFilters != null && sqlFilters.size() > 1) {
+            int filtersLen = sqlFilters.size();
+            SqlFilter filter = sqlFilters.get(filtersLen - 1);
+            filters.add(filter);
+        } else {
+            filters = sqlFilters;
+        }
         //下一级节点的数据集合
         List<String> nextLevel = new ArrayList<>();
         //没有对应类型的过滤（默认按照最上级节点数据展示）
@@ -143,11 +159,15 @@ public class TypeGroupService {
             if (values.length == 1) {
                 //获取当前节点
                 List<LevelData> rootLevels = levelDatas.stream().filter(v -> values[0].equals(v.getLongName())).collect(Collectors.toList());
-                if (rootLevels.size() > 0) {
+                //只有一个的情况下，寻找下级节点
+                if (rootLevels.size() == 1) {
+                    LevelData levelData = rootLevels.get(0);
                     //获取当前节点下一级节点
-                    nextLevel = levelDatas.stream().filter(v -> v.getParentId() != null && v.getParentId().equals(rootLevels.get(0).getId())).map(v -> v.getLongName()).collect(Collectors.toList());
+                    nextLevel = levelDatas.stream().filter(v -> v.getParentId() != null && v.getParentId().equals(levelData.getId())).map(v -> v.getLongName()).collect(Collectors.toList());
                     //当前节点也要加上
                     nextLevel.add(0, rootLevels.get(0).getLongName() + "$");
+                } else if (rootLevels.size() > 1) {
+                    nextLevel = rootLevels.stream().map(v -> v.getLongName()).collect(Collectors.toList());
                 }
             }
         }
@@ -170,7 +190,6 @@ public class TypeGroupService {
         if (filters.size() == 0) {
             return;
         }
-        typeGroup.setColumnAlias(column + "_" + visualType);
         //获取过滤条件的所有值
         List<Object> values = filters.stream().map(v -> v.getValue()).collect(Collectors.toList());
         STGroup typeGroupStg = new STGroupFile(Constants.TYPE_GROUP_TEMPLATE);
@@ -240,6 +259,12 @@ public class TypeGroupService {
      */
     public List<String> groupsFilter(List<String> groups, List<TypeGroup> typeGroups) {
         if (groups != null && groups.size() > 0) {
+            groups = groups.stream().map(v -> {
+                if (isDateTypeGroup(v)) {
+                    return v.split(Constants.DATE_FLAG)[0];
+                }
+                return v;
+            }).collect(Collectors.toList());
             groups = groups.stream().filter(group -> !isTypeGroup(group) && !typeGroups.stream().map(t -> t.getColumn()).collect(Collectors.toList()).contains(group)).collect(Collectors.toList());
             groups = groups.stream().distinct().collect(Collectors.toList());
 
@@ -257,9 +282,44 @@ public class TypeGroupService {
         //去掉成本中心和支出科目根节点过滤
         filters = filters.stream().filter(v -> {
             SqlFilter sqlFilter = JSON.parseObject(v, SqlFilter.class);
-            return !"成本中心".equals(sqlFilter.getValue().toString().trim()) && !"支出科目".equals(sqlFilter.getValue().toString().trim());
+            return !"成本中心".equals(sqlFilter.getValue().toString().trim()) && !"支出科目".equals(sqlFilter.getValue().toString().trim()) && !"date".equals(sqlFilter.getVisualType()) && !(sqlFilter.isCustomFilter() && isLevelVisualType(sqlFilter.getVisualType()));
         }).collect(Collectors.toList());
         return filters;
+    }
+
+    /**
+     * 日期数据过滤条件的获取
+     *
+     * @param filters
+     * @return
+     */
+    public List<String> valueFiltersFilter(List<String> filters) {
+        //去掉成本中心和支出科目根节点过滤
+        filters = filters.stream().filter(v -> {
+            SqlFilter sqlFilter = JSON.parseObject(v, SqlFilter.class);
+            return ("date".equals(sqlFilter.getVisualType())) || (sqlFilter.isCustomFilter() && isLevelVisualType(sqlFilter.getVisualType()));
+        }).collect(Collectors.toList());
+        return filters;
+    }
+
+    /**
+     * 排序数据的转化
+     *
+     * @param orders
+     * @return
+     */
+    public List<Order> ordersFilter(List<Order> orders) {
+        if (orders == null) {
+            return orders;
+        }
+        orders = orders.stream().map(v -> {
+            String column = v.getColumn();
+            if (isDateTypeGroup(column)) {
+                v.setColumn(column.split(Constants.DATE_FLAG)[0]);
+            }
+            return v;
+        }).collect(Collectors.toList());
+        return orders;
     }
 
     public static boolean isTypeGroup(String content) {
@@ -271,4 +331,26 @@ public class TypeGroupService {
         }
     }
 
+    public static boolean isDateTypeGroup(String content) {
+        return content.indexOf(Constants.DATE_FLAG) != -1;
+    }
+
+    public static String getColumnVisualType(String content, JSONObject model) {
+        if (content.indexOf(Constants.DATE_FLAG) != -1) {
+            return "date";
+        }
+        Model modelVal = JSON.parseObject(model.getString(content), Model.class);
+        return modelVal.getVisualType();
+    }
+
+    /**
+     * 是否是层级类型数据
+     *
+     * @param visualType
+     * @return
+     */
+    public static boolean isLevelVisualType(String visualType) {
+        List<LevelTypeEnum> levelTypeEnums = Arrays.asList(LevelTypeEnum.values());
+        return levelTypeEnums.stream().filter(v -> v.getName().equals(visualType)).collect(Collectors.toList()).size() > 0;
+    }
 }

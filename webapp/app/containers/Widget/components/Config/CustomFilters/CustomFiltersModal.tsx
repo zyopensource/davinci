@@ -5,6 +5,7 @@ import {Button, Form, Modal, Radio} from 'antd'
 import {getDefaultFieldCustomFilterConfig} from './util'
 import {IFieldCustomFilterConfig} from './types'
 import {fromJS} from 'immutable'
+import {ICustomFiltersColumn} from "containers/Widget/components/Workbench/Dropbox";
 
 const FormItem = Form.Item
 const RadioGroup = Radio.Group
@@ -13,7 +14,7 @@ interface ICustomFiltersConfigFormProps extends FormComponentProps {
   visible: boolean
   customFiltersConfig: {}
   onCancel: () => void
-  onSave: (value: string) => void
+  onSave: (formConfig: ICustomFiltersColumn) => void
 }
 
 interface ICustomFiltersConfigFormStates {

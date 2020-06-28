@@ -9,11 +9,11 @@ public enum DateTypeEnum {
     /**
      *
      */
-    YMD("from_timestamp(<keywordPrefix><column><keywordSuffix>,'yyyy/MM/dd')"),
-    YM("from_timestamp(<keywordPrefix><column><keywordSuffix>,'yyyy/MM')"),
-    Y(" from_timestamp(<keywordPrefix><column><keywordSuffix>,'yyyy')"),
-    YQ("trunc(<keywordPrefix><column><keywordSuffix>,'Q')"),
-    YW("CONCAT(cast(year(<keywordPrefix><column><keywordSuffix>) as string),'-W',cast(weekofyear(<keywordPrefix><column><keywordSuffix>) as string))"),
+    ymd("from_timestamp(<keywordPrefix><column><keywordSuffix>,'yyyy/MM/dd')"),
+    ym("from_timestamp(<keywordPrefix><column><keywordSuffix>,'yyyy/MM')"),
+    y(" from_timestamp(<keywordPrefix><column><keywordSuffix>,'yyyy')"),
+    yq("trunc(<keywordPrefix><column><keywordSuffix>,'Q')"),
+    yw("CONCAT(cast(year(<keywordPrefix><column><keywordSuffix>) as string),'-W',cast(weekofyear(<keywordPrefix><column><keywordSuffix>) as string))"),
     ;
     private String agg;
 

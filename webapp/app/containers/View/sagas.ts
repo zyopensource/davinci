@@ -233,6 +233,7 @@ export function* getViewDistinctValue (action: ViewActionType) {
   const { viewId, params, resolve } = action.payload
   const { viewDistinctValueLoaded, loadViewDistinctValueFail } = ViewActions
   try {
+    console.log("sssss")
     const result = yield call(request, {
       method: 'post',
       url: `${api.view}/${viewId}/getdistinctvalue`,

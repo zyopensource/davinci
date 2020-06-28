@@ -274,6 +274,7 @@ export function getRequestParams(
       label.items.filter((l) => l.type === 'category').map((l) => l.name)
     )
     aggregators = aggregators.concat(
+      // @ts-ignore
       label.items
         .filter((l) => l.type === 'value')
         .map((l) => ({
@@ -284,6 +285,7 @@ export function getRequestParams(
   }
   if (size) {
     aggregators = aggregators.concat(
+      // @ts-ignore
       size.items.map((s) => ({
         column: decodeMetricName(s.name),
         func: s.agg
@@ -292,6 +294,7 @@ export function getRequestParams(
   }
   if (xAxis) {
     aggregators = aggregators.concat(
+      // @ts-ignore
       xAxis.items.map((x) => ({
         column: decodeMetricName(x.name),
         func: x.agg
@@ -300,6 +303,7 @@ export function getRequestParams(
   }
   if (tip) {
     aggregators = aggregators.concat(
+      // @ts-ignore
       tip.items.map((t) => ({
         column: decodeMetricName(t.name),
         func: t.agg

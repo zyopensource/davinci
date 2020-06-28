@@ -10,11 +10,11 @@ const DataType: ISettingItem = {
   }],
   sub: true,
   items: [{
-    YMD: '年月日',
-    Y: '年',
-    YQ: '年季',
-    YM: '年月',
-    YW: '年周',
+    ymd: '年月日',
+    y: '年',
+    yq: '年季',
+    ym: '年月',
+    yw: '年周',
   }]
 }
 

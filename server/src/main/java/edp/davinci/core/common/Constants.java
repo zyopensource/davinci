@@ -161,6 +161,11 @@ public class Constants extends Consts {
     public static final String DAVINCI_TOPIC_CHANNEL = "DAVINCI_TOPIC_CHANNEL";
 
     public static final String UCIN_APPID = "datav";
+
+    public static final String CALCULATE_FLAG= "@calculate@";
+
+    public static final String DATE_FLAG= "_time_";
+
     /**
      * 主数据部门集合redis KEY
      */

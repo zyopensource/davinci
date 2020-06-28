@@ -55,7 +55,12 @@ const Link: React.FC = () => {
   return (
     <Popover
       visible={visible}
-      content={<LinkFormWrapper ref={form} onSave={insertLink} />}
+      content={
+        <LinkFormWrapper
+          // @ts-ignore
+          ref={form}
+          onSave={insertLink}
+        />}
     >
       <Icon
         type="link"

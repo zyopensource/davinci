@@ -175,7 +175,9 @@ interface IOperatingPanelStates {
   selectedComputed: object
   calculateModalVisible: boolean
   customFiltersModalVisible: boolean
+  data:any[]
 }
+const dateFlag = '_time_'
 
 export class OperatingPanel extends React.Component<IOperatingPanelProps, IOperatingPanelStates> {
   constructor(props) {
@@ -212,7 +214,8 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
       computedConfigModalVisible: false,
       selectedComputed: null,
       calculateModalVisible: false,
-      customFiltersModalVisible: false
+      customFiltersModalVisible: false,
+      data:[]
     }
   }
 
@@ -286,7 +289,11 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
         })
       }
       cols.forEach((c) => {
-        const modelColumn = model[c.name]
+        let {name} = c
+        if(name.indexOf(dateFlag) != -1){
+          name = name.split(dateFlag)[0]
+        }
+        const modelColumn = model[name]
         if (modelColumn) {
           dataParams.cols.items = dataParams.cols.items.concat({
             ...c,
@@ -411,6 +418,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
     const {mode} = this.state
     const {dataParams, styleParams} = this.state
     const {metrics, color, size} = dataParams
+
     const dataConfig = {}
     const styleConfig = {}
     let specSign = false
@@ -731,7 +739,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
       this.setWidgetProps(dataParams, styleParams)
     } else {
       const {selectedView, onLoadDistinctValue} = this.props
-      onLoadDistinctValue(selectedView.id, {columns: [item.name]})
+      // onLoadDistinctValue(selectedView.id, {columns: [item.name]})
       this.setState({
         currentEditingCommonParamKey: from,
         currentEditingItem: item,
@@ -740,9 +748,34 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
     }
   }
 
+  private getDateName =(name)=>{
+    if(name.indexOf(dateFlag)!=-1){
+      name = name.split(dateFlag)[0]
+      return name
+    }
+    return name;
+}
+
   private getDateTypeItem = (from: string) => (item: IDataParamSource, type) => {
     const {dataParams,styleParams} = this.state
     const prop = dataParams[from]
+    let {cols, rows} = dataParams
+    let{name} = item
+    name = this.getDateName(name)
+    dataParams.cols.items = cols.items.map(c=>{
+      if(this.getDateName(c.name)== name){
+        c.name = `${name}${dateFlag}${type}`
+        return c
+      }
+      return c
+    })
+    dataParams.rows.items = rows.items.map(c=>{
+      if(this.getDateName(c.name) == name){
+        c.name = `${name}${dateFlag}${type}`
+        return c
+      }
+      return c
+    })
     item.dateType = type
     prop.items = [...prop.items]
     this.setWidgetProps(dataParams, styleParams)
@@ -995,8 +1028,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
       orders?
     }
   ) => {
-    console.log(dataParams)
-    const {cols, rows, metrics, secondaryMetrics, filters, color, label, size, xAxis, tip, yAxis, customFilters, drills} = dataParams
+     const {cols, rows, metrics, secondaryMetrics, filters, color, label, size, xAxis, tip, yAxis, customFilters, drills} = dataParams
     const {selectedView, onLoadData, onSetWidgetProps} = this.props
     const {mode, chartModeSelectedChart, pagination} = this.state
     let renderType
@@ -1012,21 +1044,10 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
     const fromPagination = !!updatedPagination
     updatedPagination = {...pagination, ...updatedPagination}
 
-    let groups = cols.items.map((c) => {
-      const visualType = c.visualType
-      if([ViewModelVisualTypes.Date].includes(visualType)){
-        return  JSON.stringify({column:c.name,visualType:visualType,value:c.dateType})
-      }
-      return c.name
-    })
-      .concat(rows.items.map((r) => {
-        const visualType = r.visualType
-        if([ViewModelVisualTypes.Date].includes(visualType)){
-          return  JSON.stringify({column:r.name,visualType:visualType,value:r.dateType})
-        }
-        return r.name
-      }))
+    let groups = cols.items.map((c) => c.name)
+      .concat(rows.items.map((r) => r.name))
       .filter((g) => g !== '指标名称')
+
     let aggregators = metrics.items.map((m) => ({
       column: decodeMetricName(m.name),
       func: m.agg,
@@ -1178,7 +1199,6 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
       && selectedView
       && requestParamString !== this.lastRequestParamString
       && queryMode === WorkbenchQueryMode.Immediately
-
     if (needRequest) {
       this.lastRequestParamString = requestParamString
       onLoadData(selectedView.id, requestParams, (result) => {
@@ -1189,6 +1209,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
           pageSize,
           totalCount
         }
+        this.setState({data})
         onSetWidgetProps({
           cols: cols.items.map((item) => ({
             ...item,
@@ -1716,7 +1737,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
     const {
       views,
       selectedView,
-      distinctColumnValues,
+      // distinctColumnValues,
       columnValueLoading,
       controls,
       cache,
@@ -1755,8 +1776,17 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
       computedConfigModalVisible,
       selectedComputed,
       calculateModalVisible,
-      customFiltersModalVisible
+      customFiltersModalVisible,
+      data
     } = this.state
+    let distinctColumnValues = []
+    if(currentEditingItem && data && data.length){
+      const {name} = currentEditingItem
+       distinctColumnValues = data.map((d)=>{
+        return d[name]
+      })
+      distinctColumnValues = Array.from(new Set(distinctColumnValues))
+    }
 
     const widgetPropsModel = selectedView && selectedView.model ? selectedView.model : {}
 
@@ -2084,7 +2114,6 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
     //     categories.push(compute)
     //   }
     // })
-
     return (
       <div className={styles.operatingPanel}>
         <div className={styles.model}>

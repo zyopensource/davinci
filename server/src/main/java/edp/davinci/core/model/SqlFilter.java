@@ -15,6 +15,10 @@ public class SqlFilter {
     private String name;
 
     private String type;
+    /**
+     * h5页面自定义查询
+     */
+    private boolean isCustomFilter=false;
 
     private Object value;
 

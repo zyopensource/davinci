@@ -1,12 +1,12 @@
 //年季转换
 yqColumeSql(typeGroup)
 ::=<<
-CASE  from_timestamp(<typeGroup.columnAlias>,'MM/dd')
-    WHEN '01/01' THEN  CONCAT(cast(year(<typeGroup.columnAlias>) as string),'-Q1')
-    WHEN '04/01' THEN  CONCAT(cast(year(<typeGroup.columnAlias>) as string),'-Q2')
-    WHEN '07/01' THEN  CONCAT(cast(year(<typeGroup.columnAlias>) as string),'-Q3')
-    WHEN '10/01' THEN  CONCAT(cast(year(<typeGroup.columnAlias>) as string),'-Q4')
-end <typeGroup.column>
+CASE  from_timestamp(<typeGroup.column>_TYPE,'MM/dd')
+    WHEN '01/01' THEN  CONCAT(cast(year(<typeGroup.column>_TYPE) as string),'-Q1')
+    WHEN '04/01' THEN  CONCAT(cast(year(<typeGroup.column>_TYPE) as string),'-Q2')
+    WHEN '07/01' THEN  CONCAT(cast(year(<typeGroup.column>_TYPE) as string),'-Q3')
+    WHEN '10/01' THEN  CONCAT(cast(year(<typeGroup.column>_TYPE) as string),'-Q4')
+end <typeGroup.columnAlias>
 >>
 
 

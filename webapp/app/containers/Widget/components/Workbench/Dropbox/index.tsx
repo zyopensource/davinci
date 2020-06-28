@@ -51,6 +51,7 @@ export interface IDataParamSource extends IDataColumn {
   chart?: IChartInfo
   config?: IDataParamConfig
   dateType?:string
+  customFilters?:any
 }
 
 export interface IDragItem extends IDataParamSource {

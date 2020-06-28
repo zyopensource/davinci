@@ -534,7 +534,6 @@ export class Workbench extends React.Component<IWorkbenchProps & RouteComponentW
       empty: !data.length,
       hasDataConfig
     }
-
     return (
       <div className={styles.workbench}>
         <EditorHeader

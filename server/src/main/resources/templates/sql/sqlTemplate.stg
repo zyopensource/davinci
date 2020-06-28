@@ -68,10 +68,10 @@ SELECT
 <if(groups)>
  <groups:{group|<if(keywordPrefix && keywordSuffix)><keywordPrefix><group><keywordSuffix><else><group><endif>}; separator=",">
 <endif>
-<! group维度聚合运算 !>
+<! group层级维度聚合运算 !>
 <if(typeGroups)>
 <if(groups)>,<endif>
- <typeGroups:{typeGroup|<typeGroup.agg> AS <typeGroup.columnAlias>}; separator=",">
+ <typeGroups:{typeGroup|<typeGroup.agg> AS <typeGroup.column>_TYPE}; separator=",">
 <endif>
 <if((groups && aggregators) || (typeGroups && aggregators))>,<endif>
 <if(aggregators)>
@@ -90,6 +90,7 @@ WHERE <filters:{filter|<if(filter)><filter><endif>}; separator=" AND ">
 GROUP BY <groups:{group|<if(keywordPrefix && keywordSuffix)><keywordPrefix><group><keywordSuffix><else><group><endif>}; separator=",">
 <endif>
 <endif>
+<! group层级维度聚合运算 !>
 <if(typeGroups)>
 <if(groups)>,<else> GROUP BY <endif>
  <typeGroups:{typeGroup|<typeGroup.agg>}; separator=",">
@@ -97,15 +98,19 @@ GROUP BY <groups:{group|<if(keywordPrefix && keywordSuffix)><keywordPrefix><grou
 <endif>
 >>
 
-querySql(nativeQuery, groups, typeGroups, aggregators, filters, orders, sql, keywordPrefix, keywordSuffix)
+querySql(nativeQuery, groups, typeGroups, aggregators, filters, orders, sql, keywordPrefix, keywordSuffix, valueFilters)
 ::=<<
+SELECT *
+FROM
+(
 SELECT
 <if(!groups && !aggregators && !typeGroups)>*<endif>
 <if(groups)>
  <groups:{group|<if(keywordPrefix && keywordSuffix)><keywordPrefix><group><keywordSuffix><else><group><endif>}; separator=",">
 <endif>
+<! group层级维度聚合运算 !>
 <if(typeGroups)><if(groups)>,<endif>
-<typeGroups:{typeGroup| <if(typeGroup.columnAgg)><typeGroup.columnAgg><else><typeGroup.columnAlias> AS <typeGroup.column><endif>  }; separator=",">
+<typeGroups:{typeGroup| <if(typeGroup.columnAgg)><typeGroup.columnAgg><else><typeGroup.column>_TYPE AS <typeGroup.columnAlias><endif>  }; separator=",">
 <endif>
 <if((groups && aggregators) || (typeGroups && aggregators))>,<endif>
 <if(aggregators)>
@@ -117,6 +122,11 @@ SELECT
 <endif>
 FROM
 (<queryChildSql(nativeQuery, groups, typeGroups, aggregators, filters, orders, sql, keywordPrefix, keywordSuffix)>) L3
+) L4
+<! 数据的筛选 !>
+<if(valueFilters)>
+WHERE <valueFilters:{filter|<if(filter)><filter><endif>}; separator=" AND ">
+<endif>
 <if(orders)>
 ORDER BY <orders:{order|<if(order)><order.column> <order.direction><endif>}; separator=", ">
 <endif>
