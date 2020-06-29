@@ -127,6 +127,13 @@ FROM
 <if(valueFilters)>
 WHERE <valueFilters:{filter|<if(filter)><filter><endif>}; separator=" AND ">
 <endif>
+<! group层级维度聚合运算 !>
+<if(typeGroups)>
+<if(valueFilters)>
+     AND <else> WHERE
+<endif>
+<typeGroups:{typeGroup| <if(typeGroup.columnAgg)><typeGroup.columnAgg> != ""<else><typeGroup.columnAlias> != "" <endif>}; separator=" AND ">
+<endif>
 <if(orders)>
 ORDER BY <orders:{order|<if(order)><order.column> <order.direction><endif>}; separator=", ">
 <endif>
