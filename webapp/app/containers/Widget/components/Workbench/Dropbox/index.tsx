@@ -13,6 +13,7 @@ import { IFieldSortConfig, FieldSortTypes } from '../../Config/Sort'
 import { decodeMetricName } from '../../util'
 import { Popover, Icon } from 'antd'
 import { IFilters } from 'app/components/Filters/types'
+import {IDataParams} from "containers/Widget/components/Workbench/OperatingPanel";
 
 const styles = require('../Workbench.less')
 
@@ -42,6 +43,7 @@ interface IDataColumn {
   format?: IFieldFormatConfig
   calculate?: ICalculateColumn
   costomFilters?: ICustomFiltersColumn
+  fastCalculateType?:string
 }
 
 export interface IDataParamSource extends IDataColumn {
@@ -86,6 +88,7 @@ interface IDropboxProps {
   value: object
   items: IDataParamSource[]
   mode: WidgetMode
+  dataParams: IDataParams
   selectedChartId: number
   dragged: IDataParamSource
   panelList: IDataParamSource[]
@@ -107,6 +110,7 @@ interface IDropboxProps {
   beforeDrop: (name: string, cachedItem: IDataParamSource, resolve: (next: boolean) => void) => void
   onDrop: (name: string, dropIndex: number, dropType: DropType, changedItems: IDataParamSource[], config?: IDataParamConfig) => void
   onItemDateType:(item: IDataParamSource, type) => void
+  onItemFastCalculate:(item: IDataParamSource, type) => void
 }
 
 interface IDropboxStates {
@@ -296,6 +300,7 @@ export class Dropbox extends React.PureComponent<IDropboxProps, IDropboxStates> 
       panelList,
       mode,
       selectedChartId,
+      dataParams,
       dragged,
       dimetionsCount,
       metricsCount,
@@ -311,7 +316,8 @@ export class Dropbox extends React.PureComponent<IDropboxProps, IDropboxStates> 
       onItemCustomFiltersConfig,
       onItemChangeChart,
       onItemRemove,
-      onItemDateType
+      onItemDateType,
+      onItemFastCalculate
     } = this.props
 
     const { entering, items } = this.state
@@ -383,6 +389,7 @@ export class Dropbox extends React.PureComponent<IDropboxProps, IDropboxStates> 
       ? items.map((item) => (
         <DropboxItem
           key={item.name}
+          selectedChartId={selectedChartId}
           container={name}
           item={item}
           dimetionsCount={dimetionsCount}
@@ -400,6 +407,7 @@ export class Dropbox extends React.PureComponent<IDropboxProps, IDropboxStates> 
           onChangeChart={onItemChangeChart}
           onRemove={onItemRemove(item.name)}
           onDateType={onItemDateType}
+          onFastCalculate={onItemFastCalculate}
         />
       ))
       : (

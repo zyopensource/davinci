@@ -9,6 +9,13 @@ export enum SettingTypes {
   CustomFilters = 1 << 6,
   Drills = 1 << 7
 }
+export enum SettingChartTypes {
+  Table = 1 << 0,
+  Line = 1 << 1,
+  Bar = 1 << 2,
+  Pie = 1 << 3,
+  DoubleYAxis = 1 << 4,
+}
 
 export enum ItemTypes {
   Category = 1 << 0,
@@ -31,6 +38,7 @@ export interface ISettingItem {
     settingType: SettingTypes
     itemType: ItemTypes
     itemValueType: ItemValueTypes
+    settingChartType?:SettingChartTypes
   }>
   sub: boolean
   items: Array<{

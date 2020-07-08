@@ -71,7 +71,7 @@ SELECT
 <! group层级维度聚合运算 !>
 <if(typeGroups)>
 <if(groups)>,<endif>
- <typeGroups:{typeGroup|<typeGroup.agg> AS <typeGroup.column>_TYPE}; separator=",">
+ <typeGroups:{typeGroup|<typeGroup.agg> AS <typeGroup.column>_<typeGroup.value>_TYPE}; separator=",">
 <endif>
 <if((groups && aggregators) || (typeGroups && aggregators))>,<endif>
 <if(aggregators)>
@@ -100,7 +100,8 @@ GROUP BY <groups:{group|<if(keywordPrefix && keywordSuffix)><keywordPrefix><grou
 
 querySql(nativeQuery, groups, typeGroups, aggregators, filters, orders, sql, keywordPrefix, keywordSuffix, valueFilters)
 ::=<<
-SELECT *
+SELECT
+L4.*
 FROM
 (
 SELECT
@@ -109,15 +110,16 @@ SELECT
  <groups:{group|<if(keywordPrefix && keywordSuffix)><keywordPrefix><group><keywordSuffix><else><group><endif>}; separator=",">
 <endif>
 <! group层级维度聚合运算 !>
-<if(typeGroups)><if(groups)>,<endif>
-<typeGroups:{typeGroup| <if(typeGroup.columnAgg)><typeGroup.columnAgg><else><typeGroup.column>_TYPE AS <typeGroup.columnAlias><endif>  }; separator=",">
+<if(typeGroups)>
+<if(groups)>,<endif>
+<typeGroups:{typeGroup| <if(typeGroup.columnAgg)><typeGroup.columnAgg><else><typeGroup.column>_<typeGroup.value>_TYPE AS <typeGroup.columnAlias><endif>  }; separator=",">
 <endif>
 <if((groups && aggregators) || (typeGroups && aggregators))>,<endif>
 <if(aggregators)>
 <if(nativeQuery)>
- <aggregators:{agg|<if(agg)><if(keywordPrefix && keywordSuffix)><keywordPrefix><keywordSuffix><else><agg.column><endif><endif>}; separator=",">
+ <aggregators:{agg|<if(agg)><if(keywordPrefix && keywordSuffix)><keywordPrefix><agg.column><keywordSuffix><else><agg.column><endif><endif>}; separator=",">
 <else>
- <aggregators:{agg|`<if(agg)><agg.alias><endif>`}; separator=",">
+ <aggregators:{agg|<if(agg)>`<agg.alias>`<endif>}; separator=",">
 <endif>
 <endif>
 FROM
@@ -132,12 +134,47 @@ WHERE <valueFilters:{filter|<if(filter)><filter><endif>}; separator=" AND ">
 <if(valueFilters)>
      AND <else> WHERE
 <endif>
-<typeGroups:{typeGroup| <if(typeGroup.columnAgg)><typeGroup.columnAgg> != ""<else><typeGroup.columnAlias> != "" <endif>}; separator=" AND ">
+<typeGroups:{typeGroup| <typeGroup.columnAlias> != ""}; separator=" AND ">
 <endif>
 <if(orders)>
-ORDER BY <orders:{order|<if(order)><order.column> <order.direction><endif>}; separator=", ">
+ORDER BY <orders:{order|<if(order)>`<order.column>` <order.direction><endif>}; separator=", ">
 <endif>
 >>
+
+
+queryFastCalculateSql(originSql, dateColumnAlias,fastCalculateSql,fastCalculateColumns, groups, aggregators, keywordPrefix, keywordSuffix)
+::=<<
+SELECT
+<if(groups)>
+<groups:{group|<if(keywordPrefix && keywordSuffix)>A.<keywordPrefix><group><keywordSuffix><else>A.<group><endif>}; separator=",">
+<endif>
+<if(groups && aggregators)>,<endif>
+<if(aggregators)><aggregators:{agg|
+<if(agg)>
+  <if(fastCalculateColumns)>
+  A<agg.fastCalculateType>.`<agg.alias>`
+  <else>
+     <if(agg.fastCalculateType)>
+     B.`<agg.alias>`
+     <else>
+     A.`<agg.alias>`
+     <endif>
+  <endif>
+<endif>}; separator=",">
+<endif>
+FROM
+(<originSql>) A
+<if(fastCalculateSql && fastCalculateColumns)>
+LEFT JOIN
+ <fastCalculateColumns:{fastCalculateColumn|
+ (<fastCalculateSql>) A<fastCalculateColumn.fastCalculateType> ON A<fastCalculateColumn.fastCalculateType>.<fastCalculateColumn.column> = A.<dateColumnAlias>
+ }; separator=" LEFT JOIN ">
+ <elseif(fastCalculateSql)>
+ LEFT JOIN
+ (<fastCalculateSql>) B ON 1=1
+<endif>
+>>
+
 
 queryDistinctSql(columns, filters, sql, keywordPrefix, keywordSuffix)
 ::=<<

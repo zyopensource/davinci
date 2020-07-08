@@ -58,6 +58,7 @@ const TreeSelect: React.FC<DepartmentFilterProps> = (props) => {
    * 初始化树
    */
   useEffect(() => {
+    console.log(value)
     if (rootTreeData.length == 0) {
       setRootTreeData(initRootTreeData())
     }

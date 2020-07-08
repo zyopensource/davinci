@@ -19,6 +19,10 @@ public class SqlFilter {
      * h5页面自定义查询
      */
     private boolean isCustomFilter=false;
+    /**
+     * 单个层级路径，是否按下一级下钻
+     */
+    private boolean isLevelFilter=true;
 
     private Object value;
 

@@ -302,57 +302,36 @@ export class FilterSettingForm extends PureComponent<IFilterSettingFormProps, IF
     const yesterday = moment().startOf('day').subtract(1, 'days').format(DEFAULT_DATETIME_FORMAT)
     const tml = {
       name,
-      operator: '>=',
+      operator: 'BETWEEN',
       type: 'filter',
       sqlType: this.getSqlType(name),
-      value: ''
+      value: []
     }
+    let tomorrow = `${moment(new Date()).add(1, 'days').toISOString().slice(0, 10)} 00:00:00`;
     if (selectedDate === 'today') {
-      tml.value = `'${today}'`
+      tml.value = [`'${today}'`,`'${tomorrow}'`]
     } else if (selectedDate === 'yesterday') {
-      const resultJson = [
-        {
-          ...tml,
-          value: `'${yesterday}'`
-        },
-        {
-          ...tml,
-          operator: '<=',
-          value: `'${today}'`
-        }
-      ]
-      return resultJson
+      tml.value = [`'${yesterday}'`,`'${today}'`]
     } else if (selectedDate === 'yesterdayFromNow') {
-      tml.value = `'${yesterday}'`
+      tml.value =  [`'${yesterday}'`,`'${tomorrow}'`]
     } else if (selectedDate === '7') {
-      tml.value = `'${moment().subtract(7, 'days').format(DEFAULT_DATETIME_FORMAT)}'`
+      tml.value = [`'${moment().subtract(7, 'days').format(DEFAULT_DATETIME_FORMAT)}'`,`'${tomorrow}'`]
     } else if (selectedDate === '30') {
-      tml.value = `'${moment().subtract(30, 'days').format(DEFAULT_DATETIME_FORMAT)}'`
+      tml.value = [`'${moment().subtract(30, 'days').format(DEFAULT_DATETIME_FORMAT)}'`,`'${tomorrow}'`]
     } else if (selectedDate === '90') {
-      tml.value = `'${moment().subtract(90, 'days').format(DEFAULT_DATETIME_FORMAT)}'`
+      tml.value = [`'${moment().subtract(90, 'days').format(DEFAULT_DATETIME_FORMAT)}'`,`'${tomorrow}'`]
     } else if (selectedDate === '365') {
-      tml.value = `'${moment().subtract(365, 'days').format(DEFAULT_DATETIME_FORMAT)}'`
+      tml.value = [`'${moment().subtract(365, 'days').format(DEFAULT_DATETIME_FORMAT)}'`,`'${tomorrow}'`]
     } else if (selectedDate === 'week') {
-      tml.value = `'${moment().startOf('week').format(DEFAULT_DATETIME_FORMAT)}'`
+      tml.value = [`'${moment().startOf('week').format(DEFAULT_DATETIME_FORMAT)}'`,`'${tomorrow}'`]
     } else if (selectedDate === 'month') {
-      tml.value = `'${moment().startOf('month').format(DEFAULT_DATETIME_FORMAT)}'`
+      tml.value = [`'${moment().startOf('month').format(DEFAULT_DATETIME_FORMAT)}'`,`'${tomorrow}'`]
     } else if (selectedDate === 'quarter') {
-      tml.value = `'${moment().startOf('quarter').format(DEFAULT_DATETIME_FORMAT)}'`
+      tml.value = [`'${moment().startOf('quarter').format(DEFAULT_DATETIME_FORMAT)}'`,`'${tomorrow}'`]
     } else if (selectedDate === 'year') {
-      tml.value = `'${moment().startOf('year').format(DEFAULT_DATETIME_FORMAT)}'`
+      tml.value = [`'${moment().startOf('year').format(DEFAULT_DATETIME_FORMAT)}'`,`'${tomorrow}'`]
     } else {
-      const resultJson = [
-        {
-          ...tml,
-          value: `'${datepickerValue[0].format(DEFAULT_DATETIME_FORMAT)}'`
-        },
-        {
-          ...tml,
-          operator: '<=',
-          value: `'${datepickerValue[1].format(DEFAULT_DATETIME_FORMAT)}'`
-        }
-      ]
-      return resultJson
+      tml.value = [`'${datepickerValue[0].format(DEFAULT_DATETIME_FORMAT)}'`,`'${datepickerValue[1].format(DEFAULT_DATETIME_FORMAT)}'`]
     }
     return [{...tml}]
   }

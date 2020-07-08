@@ -511,18 +511,17 @@ public class ViewServiceImpl extends BaseEntityService implements ViewService {
             STGroup stg = new STGroupFile(Constants.SQL_TEMPLATE);
             List<String> groups = executeParam.getGroups();
             List<String> filters = executeParam.getFilters();
-            List<String> valueFilters = new ArrayList<>();
+            List<String> valueFilters;
             if (filters == null) {
                 filters = new ArrayList<>();
             }
             String keywordPrefix = sqlUtils.getKeywordPrefix(source.getJdbcUrl(), source.getDbVersion());
             String keywordSuffix = sqlUtils.getKeywordSuffix(source.getJdbcUrl(), source.getDbVersion());
             List<TypeGroup> typeGroups  = typeGroupService.toTypeGroups(groups,filters,keywordPrefix,keywordSuffix,model);
-            groups = typeGroupService.groupsFilter(groups,typeGroups);
+            groups = typeGroupService.groupsFilter(groups,typeGroups,true);
             valueFilters = typeGroupService.valueFiltersFilter(filters);
             filters = typeGroupService.filtersFilter(filters);
             List<Order> orders = executeParam.getOrders(source.getJdbcUrl(), source.getDbVersion());
-//            orders = typeGroupService.ordersFilter(orders);
             ST st = stg.getInstanceOf("querySql");
             st.add("nativeQuery", executeParam.isNativeQuery());
             st.add("groups", groups);
@@ -531,47 +530,23 @@ public class ViewServiceImpl extends BaseEntityService implements ViewService {
             if (executeParam.isNativeQuery()) {
                 st.add("aggregators", executeParam.getAggregators());
             } else {
-                st.add("aggregators", executeParam.getAggregators(source.getJdbcUrl(), source.getDbVersion()));
+                st.add("aggregators",executeParam.getAggregators(source.getJdbcUrl(), source.getDbVersion()));
             }
             //修复因排序导致下钻异常的问题
             st.add("orders", orders);
-            st.add("filters", convertFilters(filters, source));
-            st.add("valueFilters", convertFilters(valueFilters, source));
+            st.add("filters", ViewExecuteParam.convertFilters(filters, source));
+            st.add("valueFilters", ViewExecuteParam.convertFilters(valueFilters, source));
             st.add("keywordPrefix", keywordPrefix);
             st.add("keywordSuffix", keywordSuffix);
 
             for (int i = 0; i < querySqlList.size(); i++) {
                 st.add("sql", querySqlList.get(i));
-                querySqlList.set(i, st.render());
+                String sql =  typeGroupService.buildFastCalculate(st,executeParam.getAggregators(),typeGroupService.groupsFilter(executeParam.getGroups(),new ArrayList<>(),false),typeGroups,filters,source,model);
+                querySqlList.set(i, sql);
+
             }
         }
     }
-
-    public List<String> convertFilters(List<String> filterStrs, Source source) {
-        List<String> whereClauses = new ArrayList<>();
-        List<SqlFilter> filters = new ArrayList<>();
-        try {
-            if (null == filterStrs || filterStrs.isEmpty()) {
-                return null;
-            }
-
-            for (String str : filterStrs) {
-                SqlFilter obj = JSON.parseObject(str, SqlFilter.class);
-                if (!StringUtils.isEmpty(obj.getName())) {
-                    obj.setName(ViewExecuteParam.getField(obj.getName(), source.getJdbcUrl(), source.getDbVersion()));
-                }
-                filters.add(obj);
-            }
-            filters.forEach(filter -> whereClauses.add(SqlFilter.dealFilter(filter)));
-
-        } catch (Exception e) {
-            log.error("convertFilters error . filterStrs = {}, source = {}, filters = {} , whereClauses = {} ",
-                    JSON.toJSON(filterStrs), JSON.toJSON(source), JSON.toJSON(filters), JSON.toJSON(whereClauses));
-            throw e;
-        }
-        return whereClauses;
-    }
-
 
     /**
      * 获取结果集
@@ -717,7 +692,7 @@ public class ViewServiceImpl extends BaseEntityService implements ViewService {
                     STGroup stg = new STGroupFile(Constants.SQL_TEMPLATE);
                     ST st = stg.getInstanceOf("queryDistinctSql");
                     st.add("columns", param.getColumns());
-                    st.add("filters", convertFilters(param.getFilters(), source));
+                    st.add("filters", ViewExecuteParam.convertFilters(param.getFilters(), source));
                     st.add("sql", querySqlList.get(querySqlList.size() - 1));
                     st.add("keywordPrefix", SqlUtils.getKeywordPrefix(source.getJdbcUrl(), source.getDbVersion()));
                     st.add("keywordSuffix", SqlUtils.getKeywordSuffix(source.getJdbcUrl(), source.getDbVersion()));

@@ -20,19 +20,22 @@
 package edp.davinci.dto.viewDto;
 
 import com.alibaba.druid.util.StringUtils;
+import com.alibaba.fastjson.JSON;
 import edp.core.utils.CollectionUtils;
 import edp.core.utils.SqlUtils;
 import edp.davinci.core.common.Constants;
+import edp.davinci.core.model.SqlFilter;
+import edp.davinci.model.Source;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static edp.core.consts.Consts.*;
 
 @Data
+@Slf4j
 public class ViewExecuteParam {
     private List<String> groups;
     private List<Aggregator> aggregators;
@@ -133,11 +136,23 @@ public class ViewExecuteParam {
     public List<Aggregator> getAggregators(String jdbcUrl, String dbVersion) {
         if (!CollectionUtils.isEmpty(aggregators)) {
             return this.aggregators.stream().map(a -> {
-                String formatColumn = formatColumn(a.getColumn(), a.getFunc(), jdbcUrl, dbVersion, false);
+                String func = a.getFunc();
+                if (a.getFastCalculateType() != null) {
+                    func = func.replace("@"+a.getFastCalculateType()+"@","");
+                }
+                String formatColumn = formatColumn(a.getColumn(), func, jdbcUrl, dbVersion, false);
                 a.setColumn(formatColumn);
-                a.setAlias(formatColumn.split("AS")[1].trim().replaceAll("'",""));
+                String[] formatColumns = formatColumn.split("AS");
+                String alias = formatColumns[1].trim().replaceAll("'", "");
+                if (a.getFastCalculateType() != null) {
+                    alias = alias.replace(func,func+"@"+a.getFastCalculateType()+"@") ;
+                    a.setColumn(formatColumns[0]+" AS '"+alias+"'");
+                }
+                a.setAlias(alias);
                 return a;
-            }).collect(Collectors.toList());
+            }).collect(//去重
+                    Collectors.collectingAndThen(Collectors.toCollection(()
+                            -> new TreeSet<>(Comparator.comparing(Aggregator::getAlias))), ArrayList::new));
         }
         return null;
     }
@@ -184,5 +199,30 @@ public class ViewExecuteParam {
             return keywordPrefix + field + keywordSuffix;
         }
         return field;
+    }
+
+    public static List<String> convertFilters(List<String> filterStrs, Source source) {
+        List<String> whereClauses = new ArrayList<>();
+        List<SqlFilter> filters = new ArrayList<>();
+        try {
+            if (null == filterStrs || filterStrs.isEmpty()) {
+                return null;
+            }
+
+            for (String str : filterStrs) {
+                SqlFilter obj = JSON.parseObject(str, SqlFilter.class);
+                if (!StringUtils.isEmpty(obj.getName())) {
+                    obj.setName(ViewExecuteParam.getField(obj.getName(), source.getJdbcUrl(), source.getDbVersion()));
+                }
+                filters.add(obj);
+            }
+            filters.forEach(filter -> whereClauses.add(SqlFilter.dealFilter(filter)));
+
+        } catch (Exception e) {
+            log.error("convertFilters error . filterStrs = {}, source = {}, filters = {} , whereClauses = {} ",
+                    JSON.toJSON(filterStrs), JSON.toJSON(source), JSON.toJSON(filters), JSON.toJSON(whereClauses));
+            throw e;
+        }
+        return whereClauses;
     }
 }

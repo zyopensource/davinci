@@ -33,6 +33,7 @@ const chartlibs = widgetlibs['chart']
 import { uuid } from 'utils/util'
 
 export function getAggregatorLocale (agg) {
+  agg = agg.replace(/@.*@.*/,"")
   switch (agg) {
     case 'sum': return '总计'
     case 'avg': return '平均数'
@@ -45,7 +46,6 @@ export function getAggregatorLocale (agg) {
     case 'stddev': return '标准偏差'
     case 'var': return '方差'
   }
-  return getAggregatorLocale(agg.split("@calculate@")[0])
 }
 
 export function encodeMetricName (name) {

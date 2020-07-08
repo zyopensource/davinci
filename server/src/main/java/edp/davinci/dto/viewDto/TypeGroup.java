@@ -15,7 +15,7 @@ public class TypeGroup {
     @NotBlank(message = "Invalid group column")
     private String column;
     /**
-     * 字段聚合运算名
+     * 字段聚合运算名(需要对字段进行转换的逻辑)
      */
     private String columnAgg;
 

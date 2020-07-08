@@ -20,6 +20,7 @@ interface ISubject {
   subjectNumber: string,
   subjectCode: string,
   subjectName: string,
+  subjectLongName: string,
   subjectId: string,
   superiorSubjectsId: string,
 }
@@ -31,7 +32,7 @@ const SubjectFilterForm: React.FC<SubjectFilterProps> = (props) => {
       key: costCenter.subjectId,
       title: costCenter.subjectName,
       parent: costCenter.superiorSubjectsId,
-      longName: costCenter.subjectName
+      longName: costCenter.subjectLongName
     }
   })
   return (

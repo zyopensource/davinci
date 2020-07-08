@@ -31,6 +31,8 @@ public class Aggregator {
 
     private String func;
 
+    private String fastCalculateType;
+
     private Calculate calculate;
 
     private String alias;

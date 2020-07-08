@@ -290,9 +290,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
       }
       cols.forEach((c) => {
         let {name} = c
-        if(name.indexOf(dateFlag) != -1){
-          name = name.split(dateFlag)[0]
-        }
+        name = this.getCurrentColumn(name)
         const modelColumn = model[name]
         if (modelColumn) {
           dataParams.cols.items = dataParams.cols.items.concat({
@@ -748,7 +746,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
     }
   }
 
-  private getDateName =(name)=>{
+  private getCurrentColumn =(name)=>{
     if(name.indexOf(dateFlag)!=-1){
       name = name.split(dateFlag)[0]
       return name
@@ -761,22 +759,32 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
     const prop = dataParams[from]
     let {cols, rows} = dataParams
     let{name} = item
-    name = this.getDateName(name)
+    name = this.getCurrentColumn(name)
     dataParams.cols.items = cols.items.map(c=>{
-      if(this.getDateName(c.name)== name){
+      if(this.getCurrentColumn(c.name)== name){
         c.name = `${name}${dateFlag}${type}`
         return c
       }
       return c
     })
     dataParams.rows.items = rows.items.map(c=>{
-      if(this.getDateName(c.name) == name){
+      if(this.getCurrentColumn(c.name) == name){
         c.name = `${name}${dateFlag}${type}`
         return c
       }
       return c
     })
     item.dateType = type
+    prop.items = [...prop.items]
+    this.setWidgetProps(dataParams, styleParams)
+  }
+  private getFastCalculateItem = (from: string) => (item: IDataParamSource, type) => {
+    const {dataParams, styleParams} = this.state
+    const prop = dataParams[from]
+    let {agg} = item
+    item.fastCalculateType = type
+    item.agg = agg.replace(/@.*@/,"")
+    item.agg = `${item.agg}@${type}@`
     prop.items = [...prop.items]
     this.setWidgetProps(dataParams, styleParams)
   }
@@ -1051,14 +1059,16 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
     let aggregators = metrics.items.map((m) => ({
       column: decodeMetricName(m.name),
       func: m.agg,
-      calculate: m.calculate
+      calculate: m.calculate,
+      fastCalculateType: m.fastCalculateType,
     }))
     if (secondaryMetrics) {
       aggregators = aggregators.concat(secondaryMetrics.items
         .map((m) => ({
           column: decodeMetricName(m.name),
           func: m.agg,
-          calculate: m.calculate
+          calculate: m.calculate,
+          fastCalculateType: m.fastCalculateType,
         })))
     }
     if (color) {
@@ -1073,7 +1083,8 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
         .map((l) => ({
           column: decodeMetricName(l.name),
           func: l.agg,
-          calculate: l.calculate
+          calculate: l.calculate,
+          fastCalculateType: l.fastCalculateType,
         })))
     }
     if (size) {
@@ -1081,7 +1092,8 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
         .map((l) => ({
           column: decodeMetricName(l.name),
           func: l.agg,
-          calculate: l.calculate
+          calculate: l.calculate,
+          fastCalculateType: l.fastCalculateType,
         })))
     }
     if (xAxis) {
@@ -1089,7 +1101,8 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
         .map((l) => ({
           column: decodeMetricName(l.name),
           func: l.agg,
-          calculate: l.calculate
+          calculate: l.calculate,
+          fastCalculateType: l.fastCalculateType,
         })))
     }
     if (tip) {
@@ -1097,7 +1110,8 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
         .map((l) => ({
           column: decodeMetricName(l.name),
           func: l.agg,
-          calculate: l.calculate
+          calculate: l.calculate,
+          fastCalculateType: l.fastCalculateType,
         })))
     }
     if (yAxis) {
@@ -1105,7 +1119,8 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
         .map((l) => ({
           column: decodeMetricName(l.name),
           func: l.agg,
-          calculate: l.calculate
+          calculate: l.calculate,
+          fastCalculateType: l.fastCalculateType,
         })))
     }
 
@@ -1839,6 +1854,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
             value={v.value}
             items={v.items}
             mode={mode}
+            dataParams={dataParams}
             selectedChartId={chartModeSelectedChart.id}
             dragged={dragged}
             panelList={panelList}
@@ -1860,6 +1876,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
             beforeDrop={this.beforeDrop}
             onDrop={this.drop}
             onItemDateType={this.getDateTypeItem(k)}
+            onItemFastCalculate={this.getFastCalculateItem(k)}
           />
         )
       })

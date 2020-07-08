@@ -6,14 +6,16 @@ import { getFieldAlias } from '../../Config/Field'
 import { FieldSortTypes } from '../../Config/Sort'
 import { getAggregatorLocale, decodeMetricName } from '../../util'
 import { IChartInfo } from '../../Widget'
-import { getAvailableSettings, getSettingsDropdownList, getSettingKeyByDropItem, MapSettingTypes, MapItemTypes, MapItemValueTypes } from './settings'
+import { getAvailableSettings, getSettingsDropdownList, getSettingKeyByDropItem, MapSettingTypes, MapItemTypes, MapItemValueTypes,MapItemChartTypes } from './settings'
 
 import { Icon, Menu, Dropdown, Tooltip } from 'antd'
+import FastCalculate from "containers/Widget/components/Workbench/Dropbox/settings/FastCalculate";
 const { Item: MenuItem, SubMenu, Divider: MenuDivider } = Menu
 const styles = require('../Workbench.less')
 
 interface IDropboxItemProps {
   container: string
+  selectedChartId: number
   item: IDataParamSourceInBox
   dimetionsCount: number
   metricsCount: number
@@ -30,6 +32,7 @@ interface IDropboxItemProps {
   onCalculate: (item: IDataParamSource) => void
   onCustomFiltersConfig: (item: IDataParamSource) => void
   onDateType: (item: IDataParamSource, type) => void
+  onFastCalculate: (item: IDataParamSource, type) => void
 }
 
 interface IDropboxItemStates {
@@ -78,7 +81,9 @@ export class DropboxItem extends React.PureComponent<IDropboxItemProps, IDropbox
       onSort,
       onChangeColorConfig,
       onChangeFilterConfig,
-      onDateType} = this.props
+      onDateType,
+      onFastCalculate,
+    } = this.props
     const settingKey = getSettingKeyByDropItem(key)
     switch (settingKey) {
       case 'aggregator':
@@ -108,14 +113,20 @@ export class DropboxItem extends React.PureComponent<IDropboxItemProps, IDropbox
       case 'dataType':
         onDateType(item as IDataParamSource,key)
         break
+      case 'fastCalculate':
+        onFastCalculate(item as IDataParamSource,key)
+        break
     }
   }
 
   public render () {
-    const { container, item, dimetionsCount, metricsCount, onChangeChart, onRemove } = this.props
-    const { name: originalName, type, sort, agg, field , calculate} = item
+    const { container,selectedChartId, item, dimetionsCount, metricsCount, onChangeChart, onRemove } = this.props
+    const { name: originalName, type, sort, agg, field , calculate,fastCalculateType} = item
     const { dragging } = this.state
-    const calculateText = calculate === undefined ? '' : '(运算)'
+    let calculateText = !calculate? '' : '(运算)'
+    if(fastCalculateType){
+      calculateText=`${calculateText}(${FastCalculate.items[0][fastCalculateType]})`
+    }
     const name = type === 'value' ? decodeMetricName(originalName) : originalName
 
     let pivotChartSelector
@@ -163,7 +174,7 @@ export class DropboxItem extends React.PureComponent<IDropboxItemProps, IDropbox
     if (type === 'add') {
       contentWithDropdownList = content
     } else {
-      const availableSettings =  getAvailableSettings(MapSettingTypes[container], MapItemTypes[item.type], MapItemValueTypes[item.visualType])
+      const availableSettings =  getAvailableSettings(MapSettingTypes[container], MapItemTypes[item.type], MapItemValueTypes[item.visualType],MapItemChartTypes[selectedChartId])
       const dropdownList = getSettingsDropdownList(availableSettings)
       let menuClass = ''
       if (type === 'value') {

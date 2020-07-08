@@ -35,8 +35,9 @@ const DepartmentFilterForm: React.FC<DepartmentFilterProps> = (props) => {
     }
     return {
       key: department.serialNo,
-      title: name, parent:
-      department.parentSerialNo, longName: department.displayName
+      title: name,
+      parent: department.parentSerialNo,
+      longName: department.displayName
     }
   })
 

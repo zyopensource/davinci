@@ -8,17 +8,19 @@ import Filters from './Filters'
 import Calculate from './Calculate'
 import CustomFilters from './CustomFilters'
 import DataType from './DateType'
+import FastCalculate from './FastCalculate'
 
 import { ViewModelTypes, ViewModelVisualTypes } from 'containers/View/constants'
 import ChartTypes from 'containers/Widget/config/chart/ChartTypes'
-import { SettingTypes, ItemTypes, ItemValueTypes } from './type'
+import {SettingTypes, ItemTypes, ItemValueTypes, SettingChartTypes} from './type'
 
 import { Menu } from 'antd'
 const { Item: MenuItem, SubMenu, Divider: MenuDivider } = Menu
 
+// const SettingsList = [...Aggregator, Format, Field, ...Sort, Filters, Color, Calculate, CustomFilters,DataType,FastCalculate]
 const SettingsList = [...Aggregator, Format, Field, ...Sort, Filters, Color, Calculate, CustomFilters,DataType]
 
-export function getSettingKeyByDropItem (itemKey: string): 'aggregator' | 'field' | 'sort' | 'format' | 'color' | 'calculate' | 'customFilters' | 'filters' | 'tip' | 'dataType'{
+export function getSettingKeyByDropItem (itemKey: string): 'aggregator' | 'field' | 'sort' | 'format' | 'color' | 'calculate' | 'customFilters' | 'filters' | 'tip' | 'dataType'|'fastCalculate'{
   let settingKey
   SettingsList.some((s) => {
     const exists = s.items.some((item) => !!item[itemKey])
@@ -28,13 +30,14 @@ export function getSettingKeyByDropItem (itemKey: string): 'aggregator' | 'field
   return settingKey
 }
 
-export function getAvailableSettings (settingType: SettingTypes, itemType: ItemTypes, itemValueType: ItemValueTypes) {
+export function getAvailableSettings (settingType: SettingTypes, itemType: ItemTypes, itemValueType: ItemValueTypes,settingChartType:SettingChartTypes) {
   const availableSettings = SettingsList.filter((settingItem) => {
     const { constrants } = settingItem
     const byType = constrants.some((constrant) => (
       (!constrant.settingType || (constrant.settingType & settingType))
         && (!constrant.itemType || (constrant.itemType & itemType))
         && (!constrant.itemValueType || (constrant.itemValueType & itemValueType))
+        && (!constrant.settingChartType || (constrant.settingChartType & settingChartType))
     ))
     return byType
   })
@@ -84,6 +87,14 @@ export const MapSettingTypes = {
 export const MapItemTypes = {
   [ViewModelTypes.Category]: ItemTypes.Category,
   [ViewModelTypes.Value]: ItemTypes.Value
+}
+
+export const MapItemChartTypes = {
+  [ChartTypes.Table]: SettingChartTypes.Table,
+  [ChartTypes.Line]: SettingChartTypes.Line,
+  [ChartTypes.Bar]: SettingChartTypes.Bar,
+  [ChartTypes.Pie]: SettingChartTypes.Pie,
+  [ChartTypes.DoubleYAxis]: SettingChartTypes.DoubleYAxis,
 }
 
 export const MapItemValueTypes = {
