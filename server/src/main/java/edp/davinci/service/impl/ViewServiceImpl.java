@@ -521,6 +521,7 @@ public class ViewServiceImpl extends BaseEntityService implements ViewService {
             groups = typeGroupService.groupsFilter(groups,typeGroups,true);
             valueFilters = typeGroupService.valueFiltersFilter(filters);
             filters = typeGroupService.filtersFilter(filters);
+            executeParam.setAggregators(typeGroupService.aggregatorsFilter(executeParam.getAggregators()));
             List<Order> orders = executeParam.getOrders(source.getJdbcUrl(), source.getDbVersion());
             ST st = stg.getInstanceOf("querySql");
             st.add("nativeQuery", executeParam.isNativeQuery());

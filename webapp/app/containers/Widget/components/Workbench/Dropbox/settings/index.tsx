@@ -17,8 +17,8 @@ import {SettingTypes, ItemTypes, ItemValueTypes, SettingChartTypes} from './type
 import { Menu } from 'antd'
 const { Item: MenuItem, SubMenu, Divider: MenuDivider } = Menu
 
-// const SettingsList = [...Aggregator, Format, Field, ...Sort, Filters, Color, Calculate, CustomFilters,DataType,FastCalculate]
-const SettingsList = [...Aggregator, Format, Field, ...Sort, Filters, Color, Calculate, CustomFilters,DataType]
+const SettingsList = [...Aggregator, Format, Field, ...Sort, Filters, Color, Calculate, CustomFilters,DataType,FastCalculate]
+// const SettingsList = [...Aggregator, Format, Field, ...Sort, Filters, Color, Calculate, CustomFilters,DataType]
 
 export function getSettingKeyByDropItem (itemKey: string): 'aggregator' | 'field' | 'sort' | 'format' | 'color' | 'calculate' | 'customFilters' | 'filters' | 'tip' | 'dataType'|'fastCalculate'{
   let settingKey

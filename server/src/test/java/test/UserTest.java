@@ -7,6 +7,8 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class UserTest {
 
@@ -45,6 +47,21 @@ String time = "2020-06-08 00:00:00";
         Date y = c.getTime();
         String year = format.format(y);
         System.out.println("过去一年："+year);
+
+            String line = "sum@qoq@(ssss)";
+            String pattern = "@(.*)@";
+
+            // 创建 Pattern 对象
+            Pattern r = Pattern.compile(pattern);
+
+            // 现在创建 matcher 对象
+            Matcher matcher = r.matcher(line);
+            if (matcher.find( )) {
+                    System.out.println("Found value: " + matcher.group(0) );
+                    System.out.println("Found value: " + matcher.group(1) );
+            } else {
+                    System.out.println("NO MATCH");
+            }
 
        }
 }

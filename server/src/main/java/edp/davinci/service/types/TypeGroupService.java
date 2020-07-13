@@ -7,6 +7,7 @@ import edp.core.utils.SqlUtils;
 import edp.davinci.core.common.Constants;
 import edp.davinci.core.enums.SqlOperatorEnum;
 import edp.davinci.core.enums.types.DateTypeEnum;
+import edp.davinci.core.enums.types.FastCalculateTypeEnum;
 import edp.davinci.core.enums.types.LevelTypeEnum;
 import edp.davinci.core.model.Criterion;
 import edp.davinci.core.model.SqlFilter;
@@ -17,6 +18,7 @@ import edp.davinci.model.mdm.Department;
 import edp.davinci.model.mdm.LevelData;
 import edp.davinci.model.mdm.Subject;
 import edp.davinci.service.ExternalService;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,7 @@ import org.stringtemplate.v4.STGroupFile;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -61,16 +64,16 @@ public class TypeGroupService {
             for (String group : groups) {
                 if (isDateTypeGroup(group)) {
                     String[] groupNames = group.split(Constants.DATE_FLAG);
-                    TypeGroup typeGroup = new TypeGroup(groupNames[0], "date", groupNames[1]);
+                    TypeGroup typeGroup = new TypeGroup(groupNames[0], "date", groupNames[1], "");
                     typeGroup.setColumnAlias(group);
                     typeGroups.add(typeGroup);
                 } else {
                     Model modelVal = JSON.parseObject(modelObj.getString(group), Model.class);
                     String visualType = modelVal.getVisualType();
-                    TypeGroup typeGroup = new TypeGroup(group, visualType, "");
+                    TypeGroup typeGroup = new TypeGroup(group, visualType, "", "");
                     //初始化时间维度为ymd
                     if ("date".equals(visualType)) {
-                        typeGroup.setValue(DateTypeEnum.ymd.name());
+                        typeGroup.setFormatType(DateTypeEnum.ymd.name());
                     }
                     typeGroups.add(typeGroup);
                 }
@@ -98,9 +101,22 @@ public class TypeGroupService {
         return typeGroups;
     }
 
+    /**
+     * 同比环比的计算sql
+     *
+     * @param st          上次查询的sql
+     * @param aggregators 指标聚合
+     * @param groups      涉及到的所有维度集合
+     * @param typeGroups
+     * @param filters
+     * @param source
+     * @param model
+     * @return
+     */
     public String buildFastCalculate(ST st, List<Aggregator> aggregators, List<String> groups, List<TypeGroup> typeGroups, List<String> filters, Source source, String model) {
         //原始查询接口
         String originSql = st.render();
+
         //获取同比环比类型的汇总
         List<String> fastCalculateTypes = aggregators.stream().filter(
                 v -> v.getFastCalculateType() != null && !v.getFastCalculateType().isEmpty())
@@ -116,7 +132,6 @@ public class TypeGroupService {
             SqlFilter sqlFilter = JSON.parseObject(f, SqlFilter.class);
             String name = sqlFilter.getName();
             String visualType = sqlFilter.getVisualType();
-
             if (visualType == null || visualType.isEmpty()) {
                 visualType = getColumnVisualType(name, model);
             }
@@ -125,7 +140,7 @@ public class TypeGroupService {
                 Object value = sqlFilter.getValue();
                 if (SqlOperatorEnum.BETWEEN.getValue().equalsIgnoreCase(operator)) {
                     JSONArray values = (JSONArray) value;
-                    values = values.stream().map(v -> getLastYear(v.toString().replaceAll("'","")))
+                    values = values.stream().map(v -> getLastYear(v.toString().replaceAll("'", "")))
                             .collect(Collectors.collectingAndThen(Collectors.toCollection(()
                                     -> new JSONArray()), JSONArray::new));
                     sqlFilter.setValue(values);
@@ -143,46 +158,49 @@ public class TypeGroupService {
         List<TypeGroup> dateTypeGroups = typeGroups.stream().filter(v -> "date".equals(v.getVisualType())).collect(Collectors.toList());
         String keywordPrefix = sqlUtils.getKeywordPrefix(source.getJdbcUrl(), source.getDbVersion());
         String keywordSuffix = sqlUtils.getKeywordSuffix(source.getJdbcUrl(), source.getDbVersion());
-        //有时间维度的同比环比计算
-        List<Map> fastCalculateColumns = null;
-        String dateColumnAlias = null;
         if (dateTypeGroups.size() > 0) {
-            dateColumnAlias = dateTypeGroups.get(0).getColumnAlias();
-
             String column = dateTypeGroups.get(0).getColumn();
             String visualType = dateTypeGroups.get(0).getVisualType();
-            String value = dateTypeGroups.get(0).getValue();
-            fastCalculateColumns = fastCalculateTypes.stream().map(v -> {
-                Map map = new HashMap();
-                map.put("fastCalculateType", v);
-                map.put("column", column + Constants.DATE_FLAG + value + "_" + v);
-                return map;
-            }).collect(Collectors.toList());
-            fastCalculateTypes = fastCalculateTypes.stream().map(v -> value + "_" + v).collect(Collectors.toList());
+            String formatType = dateTypeGroups.get(0).getFormatType();
             for (String fastCalculateType : fastCalculateTypes) {
-                TypeGroup dateTypeGroup = new TypeGroup(column, visualType, fastCalculateType);
-                dateTypeGroup.setColumnAlias(column + Constants.DATE_FLAG + fastCalculateType);
+                TypeGroup dateTypeGroup = new TypeGroup(column, visualType, formatType + "_" + fastCalculateType, "");
                 buildDateTypeGroup(dateTypeGroup, keywordPrefix, keywordSuffix);
-                typeGroups.add(dateTypeGroup);
+                typeGroups = typeGroups.stream().map(v -> {
+                    if (v.getColumn().equals(column)) {
+                        return dateTypeGroup;
+                    }
+                    return v;
+                }).collect(Collectors.toList());
             }
         }
         st.remove("typeGroups");
         st.add("typeGroups", typeGroups);
         String fastCalculateSql = st.render();
 
-
         STGroup stg = new STGroupFile(Constants.SQL_TEMPLATE);
         ST stFastCalculate = stg.getInstanceOf("queryFastCalculateSql");
         stFastCalculate.add("originSql", originSql);
-        stFastCalculate.add("dateColumnAlias", dateColumnAlias);
         stFastCalculate.add("fastCalculateSql", fastCalculateSql);
-        stFastCalculate.add("fastCalculateColumns", fastCalculateColumns);
+        stFastCalculate.add("fastCalculateTypes", fastCalculateTypes);
         stFastCalculate.add("groups", groups);
         stFastCalculate.add("aggregators", aggregators);
         stFastCalculate.add("keywordPrefix", keywordPrefix);
         stFastCalculate.add("keywordSuffix", keywordSuffix);
         String sql = stFastCalculate.render();
         return sql;
+    }
+
+    private String getCalculateTypeByFunc(String func) {
+        String pattern = "@(.*)@";
+        // 创建 Pattern 对象
+        Pattern r = Pattern.compile(pattern);
+        // 现在创建 matcher 对象
+        Matcher matcher = r.matcher(func);
+        if (matcher.find()) {
+            return matcher.group(1);
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -193,15 +211,15 @@ public class TypeGroupService {
      * @param keywordSuffix
      */
     private void buildDateTypeGroup(TypeGroup typeGroup, String keywordPrefix, String keywordSuffix) {
-        String value = typeGroup.getValue();
+        String formatType = typeGroup.getFormatType();
         String column = typeGroup.getColumn();
         for (DateTypeEnum dateTypeEnum : DateTypeEnum.values()) {
-            if (dateTypeEnum.name().equals(value)) {
+            if (dateTypeEnum.name().equals(formatType)) {
                 ST aggSt = new ST(dateTypeEnum.getAgg());
                 aggSt.add("keywordPrefix", keywordPrefix);
                 aggSt.add("column", column);
                 aggSt.add("keywordSuffix", keywordSuffix);
-                if (DateTypeEnum.yq.name().equals(value)) {
+                if (DateTypeEnum.yq.name().equals(formatType)) {
                     //构造参数， 原有的被传入的替换
                     STGroup typeGroupStg = new STGroupFile(Constants.TYPE_GROUP_TEMPLATE);
                     ST columeAggSt = typeGroupStg.getInstanceOf("yqColumeSql");
@@ -312,7 +330,7 @@ public class TypeGroupService {
         aggSt.add("column", column);
         aggSt.add("keywordSuffix", keywordSuffix);
         aggSt.add("values", values);
-//        typeGroup.setValue(StringUtils.join(values, "|"));
+        typeGroup.setValue(StringUtils.join(values, "|"));
         typeGroup.setAgg(aggSt.render());
     }
 
@@ -450,6 +468,24 @@ public class TypeGroupService {
         }).collect(Collectors.toList());
         return filters;
     }
+    /**
+     *
+     *
+     * @param aggregators
+     * @return
+     */
+    public List<Aggregator> aggregatorsFilter(List<Aggregator>  aggregators) {
+        aggregators=aggregators.stream().map(v->{
+            if(v.getFastCalculateType() == null || v.getFastCalculateType().isEmpty()){
+                String type = getCalculateTypeByFunc(v.getFunc());
+                if(isFastCalculateType(type)){
+                    v.setFastCalculateType(type);
+                }
+            }
+            return v;
+        }).collect(Collectors.toList());
+        return aggregators;
+    }
 
     /**
      * 是否需要在最外层过滤
@@ -512,6 +548,19 @@ public class TypeGroupService {
     public static boolean isLevelVisualType(String visualType) {
         List<LevelTypeEnum> levelTypeEnums = Arrays.asList(LevelTypeEnum.values());
         return levelTypeEnums.stream().filter(v -> v.getName().equals(visualType)).collect(Collectors.toList()).size() > 0;
+    }
+    /**
+     * 是否是快速计算类型数据
+     *
+     * @param type
+     * @return
+     */
+    public static boolean isFastCalculateType(String type) {
+        if(type == null || type.isEmpty()){
+            return false;
+        }
+        List<FastCalculateTypeEnum> fastCalculateTypeEnums = Arrays.asList(FastCalculateTypeEnum.values());
+        return fastCalculateTypeEnums.stream().filter(v -> v.getName().equals(type)).collect(Collectors.toList()).size() > 0;
     }
 
     private String getLastYear(String date) {

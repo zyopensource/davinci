@@ -71,7 +71,7 @@ SELECT
 <! group层级维度聚合运算 !>
 <if(typeGroups)>
 <if(groups)>,<endif>
- <typeGroups:{typeGroup|<typeGroup.agg> AS <typeGroup.column>_<typeGroup.value>_TYPE}; separator=",">
+ <typeGroups:{typeGroup|<typeGroup.agg> AS <typeGroup.column>_<typeGroup.formatType>_TYPE}; separator=",">
 <endif>
 <if((groups && aggregators) || (typeGroups && aggregators))>,<endif>
 <if(aggregators)>
@@ -112,7 +112,7 @@ SELECT
 <! group层级维度聚合运算 !>
 <if(typeGroups)>
 <if(groups)>,<endif>
-<typeGroups:{typeGroup| <if(typeGroup.columnAgg)><typeGroup.columnAgg><else><typeGroup.column>_<typeGroup.value>_TYPE AS <typeGroup.columnAlias><endif>  }; separator=",">
+<typeGroups:{typeGroup| <if(typeGroup.columnAgg)><typeGroup.columnAgg><else><typeGroup.column>_<typeGroup.formatType>_TYPE AS <typeGroup.columnAlias><endif>  }; separator=",">
 <endif>
 <if((groups && aggregators) || (typeGroups && aggregators))>,<endif>
 <if(aggregators)>
@@ -142,7 +142,7 @@ ORDER BY <orders:{order|<if(order)>`<order.column>` <order.direction><endif>}; s
 >>
 
 
-queryFastCalculateSql(originSql, dateColumnAlias,fastCalculateSql,fastCalculateColumns, groups, aggregators, keywordPrefix, keywordSuffix)
+queryFastCalculateSql(originSql,fastCalculateSql,fastCalculateTypes, groups, aggregators, keywordPrefix, keywordSuffix)
 ::=<<
 SELECT
 <if(groups)>
@@ -151,25 +151,30 @@ SELECT
 <if(groups && aggregators)>,<endif>
 <if(aggregators)><aggregators:{agg|
 <if(agg)>
-  <if(fastCalculateColumns)>
-  A<agg.fastCalculateType>.`<agg.alias>`
+ <!有同步环比计算&&有维度!>
+  <if(fastCalculateTypes && groups)>
+  A<agg.fastCalculateType>.
   <else>
+     <!没有维度&&是同比环比（不需要join）!>
      <if(agg.fastCalculateType)>
-     B.`<agg.alias>`
+     B.
+     <!一般指标计算!>
      <else>
-     A.`<agg.alias>`
+     A.
      <endif>
-  <endif>
+  <endif>`<agg.alias>`
 <endif>}; separator=",">
 <endif>
 FROM
 (<originSql>) A
-<if(fastCalculateSql && fastCalculateColumns)>
+<if(fastCalculateSql && fastCalculateTypes && groups)>
 LEFT JOIN
- <fastCalculateColumns:{fastCalculateColumn|
- (<fastCalculateSql>) A<fastCalculateColumn.fastCalculateType> ON A<fastCalculateColumn.fastCalculateType>.<fastCalculateColumn.column> = A.<dateColumnAlias>
+ <fastCalculateTypes:{type|
+ (<fastCalculateSql>) A<type>
+ ON
+ <groups:{group| A<type>.<group> = A.<group>};separator=" AND ">
  }; separator=" LEFT JOIN ">
- <elseif(fastCalculateSql)>
+<elseif(fastCalculateSql)>
  LEFT JOIN
  (<fastCalculateSql>) B ON 1=1
 <endif>

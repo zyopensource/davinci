@@ -30,6 +30,11 @@ public class TypeGroup {
     private String visualType;
 
     /**
+     * 字段格式类型
+     */
+    private String formatType;
+
+    /**
      * 类型值
      */
     private String value;
@@ -45,23 +50,12 @@ public class TypeGroup {
         this.agg = column;
     }
 
-    public TypeGroup(String column, String visualType, String value) {
+    public TypeGroup(String column, String visualType,String formatType, String value) {
         this.column = column;
         this.columnAlias = column;
         this.agg = column;
         this.visualType = visualType;
         this.value = value;
-    }
-
-    public TypeGroup(@NotBlank(message = "Invalid group column") String column, String columnAgg, String columnAlias, String visualType, String value, String agg) {
-        this.column = column;
-        this.columnAgg = columnAgg;
-        this.columnAlias = columnAlias;
-        this.visualType = visualType;
-        this.value = value;
-        this.agg = agg;
-    }
-
-    public TypeGroup() {
+        this.formatType = formatType;
     }
 }
