@@ -181,7 +181,7 @@ export function* getViewData (action: ViewActionType) {
     })
     yield put(viewDataLoaded())
     const { resultList } = asyncData.payload
-    asyncData.payload.resultList = (resultList && resultList.slice(0, 600)) || []
+    // asyncData.payload.resultList = (resultList && resultList.slice(0, 600)) || []
     resolve(asyncData.payload)
   } catch (err) {
     const { response } = err as AxiosError

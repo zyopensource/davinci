@@ -542,7 +542,7 @@ public class ViewServiceImpl extends BaseEntityService implements ViewService {
 
             for (int i = 0; i < querySqlList.size(); i++) {
                 st.add("sql", querySqlList.get(i));
-                String sql =  typeGroupService.buildFastCalculate(st,executeParam.getAggregators(),typeGroupService.groupsFilter(executeParam.getGroups(),new ArrayList<>(),false),typeGroups,filters,source,model);
+                String sql =  typeGroupService.buildFastCalculate(st,executeParam.getAggregators(),orders,typeGroupService.groupsFilter(executeParam.getGroups(),new ArrayList<>(),false),typeGroups,filters,source,model);
                 querySqlList.set(i, sql);
 
             }
@@ -617,7 +617,6 @@ public class ViewServiceImpl extends BaseEntityService implements ViewService {
                     cacheKey = MD5Util.getMD5(slatBuilder.toString() + querySqlList.get(querySqlList.size() - 1), true,
                             32);
                     if (!executeParam.getFlush()) {
-
                         try {
                             Object object = redisUtils.get(cacheKey);
                             if (null != object && executeParam.getCache()) {

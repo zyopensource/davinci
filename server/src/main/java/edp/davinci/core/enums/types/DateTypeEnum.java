@@ -30,7 +30,7 @@ public enum DateTypeEnum {
     ym_qoq("from_timestamp(months_add(<keywordPrefix><column><keywordSuffix>,1),'yyyy-MM')"),
     y_qoq(" from_timestamp(years_add(<keywordPrefix><column><keywordSuffix>,1),'yyyy')"),
     yq_qoq("trunc(months_add(<keywordPrefix><column><keywordSuffix>,3),'Q')"),
-    yw_qoq("CONCAT(cast(year(weeks_add(<keywordPrefix><column><keywordSuffix>,1)) as string),'-W',cast(weeks_add(years_add(<keywordPrefix><column><keywordSuffix>,1)) as string))"),
+    yw_qoq("CONCAT(cast(year(weeks_add(<keywordPrefix><column><keywordSuffix>,1)) as string),'-W',cast(weeks_add(years_add(<keywordPrefix><column><keywordSuffix>,1),1) as string))"),
     ;
     private String agg;
 

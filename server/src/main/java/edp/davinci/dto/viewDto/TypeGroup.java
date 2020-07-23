@@ -8,7 +8,7 @@ import javax.validation.constraints.NotBlank;
  * @author linda
  */
 @Data
-public class TypeGroup {
+public class TypeGroup implements Cloneable{
     /**
      * 字段名
      */
@@ -57,5 +57,24 @@ public class TypeGroup {
         this.visualType = visualType;
         this.value = value;
         this.formatType = formatType;
+    }
+    @Override
+
+    public TypeGroup clone() {
+
+        TypeGroup typeGroup = null;
+
+        try {
+
+            typeGroup = (TypeGroup) super.clone();
+
+        } catch (CloneNotSupportedException ignored) {
+
+            System.out.println(ignored.getMessage());
+
+        }
+
+        return typeGroup;
+
     }
 }

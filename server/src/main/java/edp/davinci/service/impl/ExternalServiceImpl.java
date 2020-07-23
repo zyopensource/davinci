@@ -108,7 +108,7 @@ public class ExternalServiceImpl implements ExternalService, EnvironmentAware {
                     .exchange(url, HttpMethod.GET, entity, arearesponseType)
                     .getBody();
         } catch (RestClientException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
         }
 
         if (lists != null && !lists.isEmpty()) {

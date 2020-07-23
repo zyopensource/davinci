@@ -932,7 +932,8 @@ function getPaginationOptions(props: IChartProps) {
   let totalCount = void 0
   if (pagination) {
     pageNo = pagination.pageNo
-    pageSize = pagination.pageSize
+    // pageSize = pagination.pageSize
+    pageSize = 10
     totalCount = pagination.totalCount
   }
   // const { pageNo, pageSize, totalCount } = pagination

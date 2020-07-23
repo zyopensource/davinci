@@ -15,3 +15,5 @@ levelAgg(keywordPrefix,column,keywordSuffix,values)
 ::=<<
  regexp_extract(<keywordPrefix><column><keywordSuffix>,'(<values:{value|<value>}; separator="|">)',0)
 >>
+
+

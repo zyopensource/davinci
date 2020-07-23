@@ -129,7 +129,7 @@ interface IOperatingPanelProps {
   onSetComputed: (computesField: any[]) => void
   onDeleteComputed: (computesField: any[]) => void
   onSetWidgetProps: (widgetProps: {
-    selectedChart: any; xAxis: IDataParamProperty; pagination: any; data: null; color: IDataParamProperty; drills: {}; secondaryMetrics: { agg: "sum" | "avg" | "count" | "COUNTDISTINCT" | "max" | "min" | "median" | "var" | "dev" | string; visualType: ViewModelVisualTypes; field: IFieldConfig; name: string; format: IFieldFormatConfig; from?: string; sort?: IFieldSortConfig; calculate?: ICalculateColumn; type: DragType; title?: string; chart: IChartInfo; config?: IDataParamConfig }[]; filters: { name: string; type: "category" | "value"; config: IDataParamConfig }[]; label: IDataParamProperty; chartStyles: {}; rows: { agg?: AggregatorType | string; visualType: ViewModelVisualTypes; field: IFieldConfig; name: string; format: IFieldFormatConfig; from?: string; sort: IFieldSortConfig; calculate?: ICalculateColumn; type: DragType; title?: string; chart?: IChartInfo; config?: IDataParamConfig }[]; mode: "pivot" | "chart"; yAxis: IDataParamProperty; size: IDataParamProperty; dimetionAxis: "row" | "col"; tip: IDataParamProperty; customFilters: {}; orders: any[]; model: IViewModel; metrics: { agg: "sum" | "avg" | "count" | "COUNTDISTINCT" | "max" | "min" | "median" | "var" | "dev" | string; visualType: ViewModelVisualTypes; field: IFieldConfig; name: string; format: IFieldFormatConfig; from?: string; sort?: IFieldSortConfig; calculate?: ICalculateColumn; type: DragType; title?: string; chart: IChartInfo; config?: IDataParamConfig }[]; renderType: any; cols: { agg?: AggregatorType | string; visualType: ViewModelVisualTypes; field: IFieldConfig; name: string; format: IFieldFormatConfig; from?: string; sort: IFieldSortConfig; calculate?: ICalculateColumn; type: DragType; title?: string; chart?: IChartInfo; config?: IDataParamConfig }[]
+    selectedChart: any; xAxis: IDataParamProperty; pagination: any; data: null; color: IDataParamProperty; drills: {}; secondaryMetrics: { agg: "sum" | "avg" | "count" | "countdistinct" | "max" | "min" | "median" | "var" | "dev" | string; visualType: ViewModelVisualTypes; field: IFieldConfig; name: string; format: IFieldFormatConfig; from?: string; sort?: IFieldSortConfig; calculate?: ICalculateColumn; type: DragType; title?: string; chart: IChartInfo; config?: IDataParamConfig }[]; filters: { name: string; type: "category" | "value"; config: IDataParamConfig }[]; label: IDataParamProperty; chartStyles: {}; rows: { agg?: AggregatorType | string; visualType: ViewModelVisualTypes; field: IFieldConfig; name: string; format: IFieldFormatConfig; from?: string; sort: IFieldSortConfig; calculate?: ICalculateColumn; type: DragType; title?: string; chart?: IChartInfo; config?: IDataParamConfig }[]; mode: "pivot" | "chart"; yAxis: IDataParamProperty; size: IDataParamProperty; dimetionAxis: "row" | "col"; tip: IDataParamProperty; customFilters: {}; orders: any[]; model: IViewModel; metrics: { agg: "sum" | "avg" | "count" | "COUNTDISTINCT" | "max" | "min" | "median" | "var" | "dev" | string; visualType: ViewModelVisualTypes; field: IFieldConfig; name: string; format: IFieldFormatConfig; from?: string; sort?: IFieldSortConfig; calculate?: ICalculateColumn; type: DragType; title?: string; chart: IChartInfo; config?: IDataParamConfig }[]; renderType: any; cols: { agg?: AggregatorType | string; visualType: ViewModelVisualTypes; field: IFieldConfig; name: string; format: IFieldFormatConfig; from?: string; sort: IFieldSortConfig; calculate?: ICalculateColumn; type: DragType; title?: string; chart?: IChartInfo; config?: IDataParamConfig }[]
   }) => void
   onLoadData: (
     viewId: number,
@@ -1195,8 +1195,10 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
       // filters: filters.items.map((i) => [].concat(i.config.sql)),
       filters: requestParamsFilters,
       orders,
-      pageNo: updatedPagination.pageNo,
-      pageSize: updatedPagination.pageSize,
+      // pageNo: updatedPagination.pageNo,
+      // pageSize: updatedPagination.pageSize,
+      pageNo: 0,
+      pageSize: 0,
       nativeQuery: noAggregators,
       cache: false,
       expired: 0,
@@ -1752,7 +1754,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
     const {
       views,
       selectedView,
-      // distinctColumnValues,
+      distinctColumnValues,
       columnValueLoading,
       controls,
       cache,
@@ -1794,13 +1796,13 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
       customFiltersModalVisible,
       data
     } = this.state
-    let distinctColumnValues = []
+    let groupValues = []
     if(currentEditingItem && data && data.length){
       const {name} = currentEditingItem
-       distinctColumnValues = data.map((d)=>{
+      groupValues = data.map((d)=>{
         return d[name]
       })
-      distinctColumnValues = Array.from(new Set(distinctColumnValues))
+      groupValues = Array.from(new Set(groupValues))
     }
 
     const widgetPropsModel = selectedView && selectedView.model ? selectedView.model : {}
@@ -2290,7 +2292,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
         >
           <ColorSettingForm
             mode={mode}
-            list={distinctColumnValues}
+            list={groupValues}
             loading={columnValueLoading}
             metrics={metrics.items}
             config={colorSettingConfig}
@@ -2380,7 +2382,7 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
             key="sortConfigModal"
             visible={sortModalVisible}
             config={currentEditingItem.sort}
-            list={distinctColumnValues}
+            list={groupValues}
             onSave={this.saveSortConfig}
             onCancel={this.cancelSortConfig}
           />

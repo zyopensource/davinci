@@ -85,16 +85,17 @@ FROM (<sql>) T
 <if(filters)>
 WHERE <filters:{filter|<if(filter)><filter><endif>}; separator=" AND ">
 <endif>
-<if(groups)>
 <if(!nativeQuery)>
+<if(groups)>
 GROUP BY <groups:{group|<if(keywordPrefix && keywordSuffix)><keywordPrefix><group><keywordSuffix><else><group><endif>}; separator=",">
-<endif>
 <endif>
 <! group层级维度聚合运算 !>
 <if(typeGroups)>
 <if(groups)>,<else> GROUP BY <endif>
  <typeGroups:{typeGroup|<typeGroup.agg>}; separator=",">
 <endif>
+<endif>
+
 <endif>
 >>
 
@@ -130,11 +131,49 @@ FROM
 WHERE <valueFilters:{filter|<if(filter)><filter><endif>}; separator=" AND ">
 <endif>
 <! group层级维度聚合运算 !>
-<if(typeGroups)>
-<if(valueFilters)>
-     AND <else> WHERE
+
+<if(orders)>
+ORDER BY <orders:{order|<if(order)>`<order.column>` <order.direction><endif>}; separator=", ">
 <endif>
-<typeGroups:{typeGroup| <typeGroup.columnAlias> != ""}; separator=" AND ">
+>>
+
+
+//同比环比计算
+yoyQoqCalculate(agg)
+::=<<
+  CONCAT(CAST(CAST(((CAST(A.`<agg.alias>` AS FLOAT)- CAST(A<agg.fastCalculateType>.`<agg.alias>` AS FLOAT))/CAST(ABS(A<agg.fastCalculateType>.`<agg.alias>`) AS FLOAT))*100 AS decimal(9,2)) AS STRING),'%') AS '<agg.alias>'
+>>
+
+queryFastCalculateSql(originSql,fastCalculates, groups, orders,aggregators, keywordPrefix, keywordSuffix)
+::=<<
+SELECT
+<if(groups)>
+<groups:{group|<if(keywordPrefix && keywordSuffix)>A.<keywordPrefix><group><keywordSuffix><else>A.<group><endif>}; separator=",">
+<endif>
+<if(groups && aggregators)>,<endif>
+<if(aggregators)>
+<aggregators:{agg|
+     <!快速计算sql!>
+     <if(agg.fastCalculateType)>
+     <yoyQoqCalculate(agg)>
+     <!一般指标计算!>
+     <else>
+     A.`<agg.alias>`
+     <endif>}; separator=",">
+<endif>
+FROM
+(<originSql>) A
+<if(fastCalculates)>
+LEFT JOIN
+ <fastCalculates:{val|
+ (<val.sql>) A<val.type>
+ ON
+ <if(groups)>
+  <groups:{group| A<val.type>.<group> = A.<group>};separator=" AND ">
+ <else>
+ 1=1
+ <endif>
+ }; separator=" LEFT JOIN ">
 <endif>
 <if(orders)>
 ORDER BY <orders:{order|<if(order)>`<order.column>` <order.direction><endif>}; separator=", ">
@@ -142,43 +181,7 @@ ORDER BY <orders:{order|<if(order)>`<order.column>` <order.direction><endif>}; s
 >>
 
 
-queryFastCalculateSql(originSql,fastCalculateSql,fastCalculateTypes, groups, aggregators, keywordPrefix, keywordSuffix)
-::=<<
-SELECT
-<if(groups)>
-<groups:{group|<if(keywordPrefix && keywordSuffix)>A.<keywordPrefix><group><keywordSuffix><else>A.<group><endif>}; separator=",">
-<endif>
-<if(groups && aggregators)>,<endif>
-<if(aggregators)><aggregators:{agg|
-<if(agg)>
- <!有同步环比计算&&有维度!>
-  <if(fastCalculateTypes && groups)>
-  A<agg.fastCalculateType>.
-  <else>
-     <!没有维度&&是同比环比（不需要join）!>
-     <if(agg.fastCalculateType)>
-     B.
-     <!一般指标计算!>
-     <else>
-     A.
-     <endif>
-  <endif>`<agg.alias>`
-<endif>}; separator=",">
-<endif>
-FROM
-(<originSql>) A
-<if(fastCalculateSql && fastCalculateTypes && groups)>
-LEFT JOIN
- <fastCalculateTypes:{type|
- (<fastCalculateSql>) A<type>
- ON
- <groups:{group| A<type>.<group> = A.<group>};separator=" AND ">
- }; separator=" LEFT JOIN ">
-<elseif(fastCalculateSql)>
- LEFT JOIN
- (<fastCalculateSql>) B ON 1=1
-<endif>
->>
+
 
 
 queryDistinctSql(columns, filters, sql, keywordPrefix, keywordSuffix)

@@ -25,8 +25,8 @@ import edp.davinci.service.ExternalService;
  * @version 1.0.0
  * @date 2019年11月18日
  */
-@Aspect // 切面注解
-@Component
+//@Aspect // 切面注解
+//@Component
 public class CurrentUserDataProfileAspect {
 	
 	private static final String _ALL = "_ALL";
