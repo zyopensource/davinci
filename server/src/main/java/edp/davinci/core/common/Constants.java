@@ -162,9 +162,9 @@ public class Constants extends Consts {
 
     public static final String UCIN_APPID = "datav";
 
-    public static final String CALCULATE_FLAG= "@calculate@";
+    public static final String CALCULATE_FLAG = "@calculate@";
 
-    public static final String DATE_FLAG= "_time_";
+    public static final String DATE_FLAG = "_time_";
 
     /**
      * 主数据部门集合redis KEY
@@ -180,6 +180,8 @@ public class Constants extends Consts {
      * 支出科目集合redis KEY
      */
     public static final String MDM_SUBJECTS_REDIS_KEY = "DATAV_MDM_SUBJECTS";
+
+    public static String[] DATE_FORMATS = {"yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm", "yyyy-MM-dd HH", "yyyy-MM-dd", "yyyy-MM", "yyyy"};
 
 
     public static char getSqlTempDelimiter(String sqlTempDelimiter) {

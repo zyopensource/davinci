@@ -145,7 +145,7 @@ public class ViewExecuteParam {
                 String[] formatColumns = formatColumn.split("AS");
                 String alias = formatColumns[1].trim().replaceAll("'", "");
                 if (a.getFastCalculateType() != null) {
-                    alias = alias.replace(func,func+"@"+a.getFastCalculateType()+"@") ;
+                    alias = alias.replaceFirst(func,func+"@"+a.getFastCalculateType()+"@") ;
                     a.setColumn(formatColumns[0]+" AS '"+alias+"'");
                 }
                 a.setAlias(alias);

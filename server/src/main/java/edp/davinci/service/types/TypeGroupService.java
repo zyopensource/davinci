@@ -20,6 +20,7 @@ import edp.davinci.model.mdm.Subject;
 import edp.davinci.service.ExternalService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.stringtemplate.v4.ST;
@@ -78,7 +79,7 @@ public class TypeGroupService {
                 }
             }
         }
-        typeGroups = typeGroups.stream().filter(typeGroup->isTypeGroupVisualType(typeGroup.getVisualType())).collect(Collectors.toList());
+        typeGroups = typeGroups.stream().filter(typeGroup -> isTypeGroupVisualType(typeGroup.getVisualType())).collect(Collectors.toList());
         if (typeGroups != null && typeGroups.size() > 0) {
             typeGroups = typeGroups.stream().map(typeGroup -> {
                 String visualType = typeGroup.getVisualType();
@@ -113,7 +114,7 @@ public class TypeGroupService {
      * @param model
      * @return
      */
-    public String buildFastCalculate(ST st, List<Aggregator> aggregators,List<Order> orders, List<String> groups, List<TypeGroup> typeGroups, List<String> filters, Source source, String model) {
+    public String buildFastCalculate(ST st, List<Aggregator> aggregators, List<Order> orders, List<String> groups, List<TypeGroup> typeGroups, List<String> filters, Source source, String model) {
         //原始查询接口
         String originSql = st.render();
         Set dateColumn = new HashSet();
@@ -136,8 +137,8 @@ public class TypeGroupService {
                 visualType = getColumnVisualType(name, model);
             }
             if ("date".equals(visualType)) {
-                dateColumn.add(name);
-                if(fastCalculateTypes.contains(FastCalculateTypeEnum.QOQ.getName())){
+                dateColumn.add(sqlFilter.getColumn());
+                if (fastCalculateTypes.contains(FastCalculateTypeEnum.QOQ.getName())) {
                     throw new ServerException("时间的筛选和环比不能同时存在");
                 }
                 String operator = sqlFilter.getOperator();
@@ -148,6 +149,9 @@ public class TypeGroupService {
                             .collect(Collectors.collectingAndThen(Collectors.toCollection(()
                                     -> new JSONArray()), JSONArray::new));
                     sqlFilter.setValue(values);
+                }
+                if (SqlOperatorEnum.REGEXP.getValue().equalsIgnoreCase(operator)) {
+                    sqlFilter.setValue(getLastYear(value.toString()));
                 }
             }
             return JSON.toJSONString(sqlFilter);
@@ -160,10 +164,10 @@ public class TypeGroupService {
         st.remove("valueFilters");
         //过滤有时间维度的字段（同比环比只能至多有一个时间维度字段）
         List<TypeGroup> dateTypeGroups = typeGroups.stream().filter(v -> "date".equals(v.getVisualType())).collect(Collectors.toList());
-        for (TypeGroup dateTypeGroup :dateTypeGroups) {
+        for (TypeGroup dateTypeGroup : dateTypeGroups) {
             dateColumn.add(dateTypeGroup.getColumn());
         }
-        if(dateColumn.size()>1){
+        if (dateColumn.size() > 1) {
             throw new ServerException("同比环比至多只能存在一个日期维度字段");
         }
         String keywordPrefix = sqlUtils.getKeywordPrefix(source.getJdbcUrl(), source.getDbVersion());
@@ -465,7 +469,7 @@ public class TypeGroupService {
             return !"成本中心".equals(sqlFilter.getValue().toString().trim())
                     && !"支出科目".equals(sqlFilter.getValue().toString().trim())
                     //日期类型（可能格式化后的），需要放到最外层去过滤，放到里面会找不到
-                    && !isOutSideFilter(sqlFilter.getVisualType())
+                    && !sqlFilter.isOutSideFilter()
                     ;
         }).map(v -> {
             SqlFilter sqlFilter = JSON.parseObject(v, SqlFilter.class);
@@ -490,7 +494,7 @@ public class TypeGroupService {
         filters = filters.stream().filter(v -> {
             SqlFilter sqlFilter = JSON.parseObject(v, SqlFilter.class);
             //只取日期类型的过滤，放到最外层做过滤，相应的filtersFilter需要去掉
-            return isOutSideFilter(sqlFilter.getVisualType());
+            return sqlFilter.isOutSideFilter();
         }).collect(Collectors.toList());
         return filters;
     }
@@ -574,6 +578,7 @@ public class TypeGroupService {
         List<LevelTypeEnum> levelTypeEnums = Arrays.asList(LevelTypeEnum.values());
         return levelTypeEnums.stream().filter(v -> v.getName().equals(visualType)).collect(Collectors.toList()).size() > 0;
     }
+
     /**
      * 是否是typeGroup类型数据
      *
@@ -598,8 +603,27 @@ public class TypeGroupService {
         return fastCalculateTypeEnums.stream().filter(v -> v.getName().equals(type)).collect(Collectors.toList()).size() > 0;
     }
 
+
+    public static String getDateFormatStr(String date) {
+        String dateFormat = null;
+        for (String str : Constants.DATE_FORMATS) {
+            SimpleDateFormat format = new SimpleDateFormat(str);
+            try {
+                format.setLenient(false);
+                format.parse(date);
+                dateFormat = str;
+                break;
+            } catch (ParseException e) {
+                continue;
+            }
+
+        }
+        return dateFormat;
+    }
+
     private String getLastYear(String date) {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String dateFormat = getDateFormatStr(date);
+        SimpleDateFormat format = new SimpleDateFormat(dateFormat);
         Calendar c = Calendar.getInstance();
         //过去一年
         try {
