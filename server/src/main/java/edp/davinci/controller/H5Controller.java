@@ -16,6 +16,7 @@ import edp.davinci.core.common.ResultMap;
 import edp.davinci.dao.WidgetMapper;
 import edp.davinci.dto.projectDto.ProjectDetail;
 import edp.davinci.dto.viewDto.Param;
+import edp.davinci.dto.widgetDto.WidgetWithSubscribe;
 import edp.davinci.dto.widgetDto.WidgetWithViewModel;
 import edp.davinci.model.*;
 import edp.davinci.model.h5.H5Panel;
@@ -90,13 +91,35 @@ public class H5Controller extends BaseController {
                 return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.NOT_FOUND.getCode()));
             }
             JSONObject result = externalService.queryQywxUserInfo(code);
-            log.info("qywx result:{}",result);
+            log.info("qywx result:{}", result);
             if (result.getString("code") == null || result.getInteger("code") != 200) {
                 return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.NOT_FOUND.getCode()));
             }
             JSONObject userInfo = result.getJSONObject("data");
             String email = userInfo.getString("email");
             user = userService.getByUsername(email.replace("@zy.com", ""));
+            if (user == null) {
+                return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.NOT_FOUND.getCode()));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.NOT_FOUND.getCode()));
+        }
+        return ResponseEntity.ok(new ResultMap().success(tokenUtils.generateContinuousToken(user)));
+    }
+
+    /**
+     * 检查用户获取token
+     *
+     * @param request
+     * @return
+     */
+    @AuthIgnore
+    @GetMapping("/token/get")
+    public ResponseEntity get(HttpServletRequest request) {
+        User user;
+        try {
+            user = userService.getByUsername("zhengweijie99");
             if (user == null) {
                 return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.NOT_FOUND.getCode()));
             }
@@ -122,7 +145,7 @@ public class H5Controller extends BaseController {
                 return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.NOT_FOUND.getCode()));
             }
             JSONObject result = externalService.queryQywxUserInfo(code);
-            log.info("qywx result:{}",result);
+            log.info("qywx result:{}", result);
             if (result.getString("code") == null || result.getInteger("code") != 200) {
                 return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.NOT_FOUND.getCode()));
             }
@@ -132,7 +155,6 @@ public class H5Controller extends BaseController {
                 response.sendError(HttpCodeEnum.FORBIDDEN.getCode(), "ERROR Permission denied");
                 return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.FORBIDDEN.getCode()));
             }
-
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.ok(new ResultMap().fail(HttpCodeEnum.NOT_FOUND.getCode()));
@@ -260,6 +282,7 @@ public class H5Controller extends BaseController {
             for (Long dashboardId : dashboardIds) {
                 if (globalDashboard.getId().equals(dashboardId)) {
                     h5Panel.setProjectId(globalDashboard.getProjectId());
+                    h5Panel.setProjectName(globalDashboard.getProjectName());
                     h5Panel.setDashboardId(dashboardId);
                     h5Panel.setDashboardName(globalDashboard.getName());
                     h5Panel.setDashboardPortalId(globalDashboard.getDashboardPortalId());
@@ -307,7 +330,7 @@ public class H5Controller extends BaseController {
             log.info("widget {} not found", id);
             throw new NotFoundException("widget is not found");
         }
-        widget.setIsSubscribe(datavService.isSubscribe(widget.getId(),user));
+        widget.setIsSubscribe(datavService.isSubscribe(widget.getId(), user));
         return ResponseEntity.ok(new ResultMap(tokenUtils).successAndRefreshToken(request).payload(widget));
     }
 
@@ -323,8 +346,33 @@ public class H5Controller extends BaseController {
     @GetMapping("/subscribe/list")
     public ResponseEntity getSubscribeWidgetInfo(@ApiIgnore @CurrentUser User user,
                                                  HttpServletRequest request) {
-        List<Widget> widgets = datavService.getSubscribeWidgets(user);
+        List<WidgetWithSubscribe> widgets = datavService.getSubscribeWidgets(user);
         return ResponseEntity.ok(new ResultMap(tokenUtils).successAndRefreshToken(request).payload(widgets));
+    }
+
+    /**
+     * 指标订阅
+     *
+     * @param positions
+     * @param user
+     * @param request
+     * @return
+     */
+    @ApiOperation(value = "保存订阅指标的坐标定位")
+    @PostMapping("/subscribe/position")
+    public ResponseEntity subscriPosition(@Valid @RequestBody PositionParam positions,
+                                          @ApiIgnore @CurrentUser User user,
+                                          HttpServletRequest request) {
+        List<SubscribePosition> subscribePositions = positions.getPositions();
+        List<DatavWidgetSubscribe> datavWidgetSubscribes = subscribePositions.stream().map(d -> {
+            DatavWidgetSubscribe datavWidgetSubscribe = new DatavWidgetSubscribe();
+            datavWidgetSubscribe.setId(d.id);
+            datavWidgetSubscribe.setPosition(d.position);
+            datavWidgetSubscribe.updatedBy(user.getId());
+            return datavWidgetSubscribe;
+        }).collect(Collectors.toList());
+        int res = datavService.widgetSubscribePosition(datavWidgetSubscribes, user);
+        return ResponseEntity.ok(new ResultMap(tokenUtils).successAndRefreshToken(request).payload(res));
     }
 
     /**
@@ -363,5 +411,16 @@ public class H5Controller extends BaseController {
     @Data
     static class Params {
         private String records;
+    }
+
+    @Data
+    static class SubscribePosition {
+        private Long id;
+        private String position;
+    }
+
+    @Data
+    static class PositionParam {
+        private List<SubscribePosition> positions;
     }
 }

@@ -782,6 +782,12 @@ export class OperatingPanel extends React.Component<IOperatingPanelProps, IOpera
     const {dataParams, styleParams} = this.state
     const prop = dataParams[from]
     let {agg} = item
+    item.format = {
+      formatType: "percentage",
+      percentage: {
+        decimalPlaces: 2
+      }
+    }
     item.fastCalculateType = type
     item.agg = agg.replace(/@.*@/,"")
     item.agg = `${item.agg}@${type}@`

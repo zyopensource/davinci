@@ -23,7 +23,9 @@ import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author linda
@@ -57,5 +59,18 @@ public class MdmController extends BaseController {
                                          HttpServletRequest request) {
         List<Subject> subjects = externalService.querySubjects();
         return ResponseEntity.ok(new ResultMap(tokenUtils).successAndRefreshToken(request).payloads(subjects));
+    }
+    @ApiOperation(value = "get levels")
+    @GetMapping("/levels")
+    public ResponseEntity getLevels(@ApiIgnore @CurrentUser User user,
+                                         HttpServletRequest request) {
+        List<CostCenter> costCenters = externalService.queryCostCenters();
+        List<Subject> subjects = externalService.querySubjects();
+        List<Department> departments = externalService.queryDepartments();
+        Map result = new HashMap(3);
+        result.put("costCenters",costCenters);
+        result.put("subjects",subjects);
+        result.put("departments",departments);
+        return ResponseEntity.ok(new ResultMap(tokenUtils).successAndRefreshToken(request).payload(result));
     }
 }

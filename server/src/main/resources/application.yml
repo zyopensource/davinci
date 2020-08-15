@@ -38,7 +38,7 @@ spring:
     time-between-eviction-runs-millis: 30000
     min-evictable-idle-time-millis: 300000
     test-while-idle: true
-    test-on-borrow: false
+    test-on-borrow: true
     test-on-return: false
     filters: stat
     break-after-acquire-failure: true

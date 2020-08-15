@@ -1,5 +1,6 @@
 package edp.davinci.dao;
 
+import edp.davinci.dto.widgetDto.WidgetWithSubscribe;
 import edp.davinci.model.DatavWidgetSubscribe;
 import edp.davinci.model.Widget;
 import org.apache.ibatis.annotations.Param;
@@ -14,7 +15,7 @@ import java.util.List;
 @Component
 public interface DatavMapper {
 
-    List<Widget> selectSubscribeWidgets(@Param("userId") Long userId);
+    List<WidgetWithSubscribe> selectSubscribeWidgets(@Param("userId") Long userId);
 
     Widget selectSubscribeWidgetByWidgetId(@Param("widgetId") Long widgetId);
 
@@ -22,4 +23,7 @@ public interface DatavMapper {
     int deleteSubscribeWidgets(@Param("userId") Long userId,@Param("widgetId") Long widgetId);
 
     int insertSubscribeWidgets(DatavWidgetSubscribe datavWidgetSubscribe);
+
+    int updateSubscribePositionBatch(List<DatavWidgetSubscribe> list);
+
 }

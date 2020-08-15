@@ -5,6 +5,7 @@ import edp.core.exception.ServerException;
 import edp.core.exception.UnAuthorizedExecption;
 import edp.davinci.dao.DatavMapper;
 import edp.davinci.dto.projectDto.ProjectInfo;
+import edp.davinci.dto.widgetDto.WidgetWithSubscribe;
 import edp.davinci.model.DatavWidgetSubscribe;
 import edp.davinci.model.Project;
 import edp.davinci.model.User;
@@ -40,7 +41,7 @@ public class DatavServiceImpl implements DatavService {
 
     @Override
     public boolean isSubscribe(Long widgetId, User user) {
-        List<Widget> widgets = datavMapper.selectSubscribeWidgets(user.getId());
+        List<WidgetWithSubscribe> widgets = datavMapper.selectSubscribeWidgets(user.getId());
         if (widgets.size() == 0) {
             return false;
         }
@@ -53,14 +54,14 @@ public class DatavServiceImpl implements DatavService {
     }
 
     @Override
-    public List<Widget> getSubscribeWidgets(User user) {
+    public List<WidgetWithSubscribe> getSubscribeWidgets(User user) {
         List<ProjectInfo> projects = projectService.getProjects(user);
         Set<Long> widgetIds = new HashSet<>();
         for (ProjectInfo projectInfo : projects) {
             List<Long> widgetIdList = widgetService.getWidgets(projectInfo.getId(), user).stream().map(v -> v.getId()).collect(Collectors.toList());
             widgetIds.addAll(widgetIdList);
         }
-        List<Widget> widgets = datavMapper.selectSubscribeWidgets(user.getId()).stream().filter(v -> widgetIds.contains(v.getId())).collect(Collectors.toList());
+        List<WidgetWithSubscribe> widgets = datavMapper.selectSubscribeWidgets(user.getId()).stream().filter(v -> widgetIds.contains(v.getId())).collect(Collectors.toList());
         return widgets;
     }
 
@@ -76,6 +77,11 @@ public class DatavServiceImpl implements DatavService {
             log.info("create widgetSubscribe error");
             throw new ServerException("create widgetSubscribe error");
         }
+    }
+
+    @Override
+    public int widgetSubscribePosition(List<DatavWidgetSubscribe> datavWidgetSubscribes, User user) {
+        return datavMapper.updateSubscribePositionBatch(datavWidgetSubscribes);
     }
 
     @Override

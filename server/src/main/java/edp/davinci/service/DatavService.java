@@ -1,5 +1,6 @@
 package edp.davinci.service;
 
+import edp.davinci.dto.widgetDto.WidgetWithSubscribe;
 import edp.davinci.model.DatavWidgetSubscribe;
 import edp.davinci.model.User;
 import edp.davinci.model.Widget;
@@ -25,7 +26,7 @@ public interface DatavService {
      * @param user
      * @return
      */
-    List<Widget> getSubscribeWidgets(User user);
+    List<WidgetWithSubscribe> getSubscribeWidgets(User user);
 
     /**
      * 指标订阅
@@ -34,7 +35,13 @@ public interface DatavService {
      * @return
      */
     DatavWidgetSubscribe widgetSubscribe(DatavWidgetSubscribe datavWidgetSubscribe, User user);
-
+    /**
+     * 保存订阅指标的坐标
+     *
+     * @param datavWidgetSubscribes
+     * @return
+     */
+    int widgetSubscribePosition(List<DatavWidgetSubscribe> datavWidgetSubscribes, User user);
     /**
      * 取消指标订阅
      *

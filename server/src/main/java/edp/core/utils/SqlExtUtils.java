@@ -76,8 +76,9 @@ public class SqlExtUtils {
 
 	private synchronized static List<String> parseAndCacheColumnNames(DataSource dataSource, String tableName) {
 
-		if (tableColumns.containsKey(tableName))
+		if (tableColumns.containsKey(tableName)) {
 			return tableColumns.get(tableName);
+		}
 		Connection connection = null;
 		ResultSet rs = null;
 
@@ -162,9 +163,9 @@ public class SqlExtUtils {
         }
 		//
 		String[] sqls = SqlExtUtils.resolveWrappersql(originSql);
-		Select select = null;
+		Select select;
 		try {
-			select = (Select) CCJSqlParserUtil.parse(sqls[0]);
+			select = (Select) SqlParserTool.getStatement(sqls[0]);
 		} catch (JSQLParserException e) {
 			optLogger.error("rebuildDataProfileSql_ERROR",e);
 			throw new RuntimeException("sql解析错误");
@@ -186,14 +187,18 @@ public class SqlExtUtils {
 			}
 		}
 		//如果不包含需要过滤的列，直接返回
-		if(!matchAny)return originSql;
+		if(!matchAny) {
+			return originSql;
+		}
 		
 		Expression newExpression = null;
 		Iterator<UserDataProfileItem> iterator = dataProfiles.values().iterator();
 		UserDataProfileItem item;
 		while(iterator.hasNext()){
 			item =iterator.next();
-			if(!columnNames.contains(item.getName().toLowerCase()))continue;
+			if(!columnNames.contains(item.getName().toLowerCase())) {
+				continue;
+			}
 			newExpression = appendDataProfileCondition(table, selectBody.getWhere(), item);
 			selectBody.setWhere(newExpression);
 			//主表已经处理的条件，join表不在处理
@@ -207,7 +212,9 @@ public class SqlExtUtils {
 				table = (Table) join.getRightItem();
 				columnNames = SqlExtUtils.getColumnNames(dataSource, table.getName().toLowerCase());
 				for (UserDataProfileItem item2 : dataProfiles.values()) {
-					if(!columnNames.contains(item2.getName().toLowerCase()))continue;
+					if(!columnNames.contains(item2.getName().toLowerCase())) {
+						continue;
+					}
 					newExpression = appendDataProfileCondition(table, join.getOnExpression(), item2);
 					join.setOnExpression(newExpression);
 				}

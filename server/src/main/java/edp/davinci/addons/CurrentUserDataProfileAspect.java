@@ -53,7 +53,9 @@ public class CurrentUserDataProfileAspect {
 				break;
 			}
 		}
-		if(user == null)return;
+		if(user == null){
+			return;
+		}
 		
 		//获取外部权限数据
         List<UserDataProfileItem> userDataProfiles = externalService.queryUserDataProfiles(user.getEmail());

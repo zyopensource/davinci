@@ -11,5 +11,6 @@ public class DatavWidgetSubscribe extends RecordInfo<DatavWidgetSubscribe> {
     private Long id;
     private Long userId;
     private Long widgetId;
+    private String position;
     private boolean isDelete;
 }

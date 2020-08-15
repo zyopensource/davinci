@@ -78,6 +78,8 @@ public class ViewServiceImpl extends BaseEntityService implements ViewService {
 
     @Autowired
     private ViewMapper viewMapper;
+    @Autowired
+    private ViewService viewService;
 
     @Autowired
     private SourceMapper sourceMapper;
@@ -493,7 +495,7 @@ public class ViewServiceImpl extends BaseEntityService implements ViewService {
             throw new UnAuthorizedExecption("you have not permission to get data");
         }
 
-        return  getResultDataList(projectService.isMaintainer(projectDetail, user), viewWithSource, executeParam, user);
+        return  viewService.getResultDataList(projectService.isMaintainer(projectDetail, user), viewWithSource, executeParam, user);
     }
 
     private ViewWithSource getViewWithSource(Long id) {

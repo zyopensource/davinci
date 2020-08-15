@@ -146,7 +146,7 @@ ORDER BY <orders:{order|<if(order)>`<order.column>` <order.direction><endif>}; s
 //同比环比计算
 yoyQoqCalculate(agg)
 ::=<<
-  CONCAT(CAST(CAST(((CAST(A.`<agg.alias>` AS FLOAT)- CAST(A<agg.fastCalculateType>.`<agg.alias>` AS FLOAT))/CAST(ABS(A<agg.fastCalculateType>.`<agg.alias>`) AS FLOAT))*100 AS decimal(9,2)) AS STRING),'%') AS '<agg.alias>'
+  (CAST(A.`<agg.alias>` AS FLOAT)- CAST(A<agg.fastCalculateType>.`<agg.alias>` AS FLOAT))/CAST(ABS(A<agg.fastCalculateType>.`<agg.alias>`) AS FLOAT) AS '<agg.alias>'
 >>
 
 queryFastCalculateSql(originSql,fastCalculates, groups, orders,aggregators, keywordPrefix, keywordSuffix)
@@ -186,7 +186,16 @@ ORDER BY <orders:{order|<if(order)>`<order.column>` <order.direction><endif>}; s
 >>
 
 
-
+queryJurisdictionFilterSql(originSql, filters)
+::=<<
+SELECT * FROM
+(
+<originSql>
+) JF
+<if(filters)>
+WHERE <filters:{filter|JF.<filter.name> <filter.operator> <filter.value>}; separator=" AND ">
+<endif>
+>>
 
 
 queryDistinctSql(columns, filters, sql, keywordPrefix, keywordSuffix)
